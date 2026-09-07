@@ -248,33 +248,50 @@ export const COSTS = [
    Shared
    ========================================================================== */
 
+/** Supplied by Eli, 2026-09-08. Wording is his — don't paraphrase it. */
 export const DISCLAIMER =
+  "General guidance only — not a substitute for veterinary care.";
+
+/**
+ * Longer form, used where there's room to say it properly.
+ */
+export const DISCLAIMER_LONG =
   "Cool Stuff with Coco shares general guidance for dog owners. It isn't veterinary care and it can't replace your vet. If you're worried about your dog, ring your vet or your nearest out-of-hours clinic.";
 
 /**
- * TODO(Eli): verified hotline 1 / 2.
+ * Emergency numbers supplied by Eli on 2026-09-08. These are used verbatim as
+ * given — do not "helpfully update", reformat or substitute them, and do not
+ * add numbers from any other source.
  *
- * Left empty on purpose. A pet emergency number produced from memory is a
- * liability, not a placeholder — the footer renders the TODO instead.
+ * Both are US lines. TODO(Eli): if the site takes meaningful UK/EU traffic,
+ * these need a regional equivalent alongside them.
  */
-export const HOTLINES: Array<{ name: string; number: string; note: string }> = [];
+export const HOTLINES: Array<{ name: string; number: string; note: string }> = [
+  {
+    name: "ASPCA Animal Poison Control",
+    number: "(888) 426-4435",
+    note: "If she's eaten something she shouldn't have.",
+  },
+  {
+    name: "Pet Poison Helpline",
+    number: "(855) 764-7661",
+    note: "Second line, if the first is busy.",
+  },
+];
 
 export const IG_HANDLE = "@coolstuffwithcoco";
 export const IG_URL = "https://instagram.com/coolstuffwithcoco";
 export const SITE_NAME = "Cool Stuff with Coco";
 
 /**
- * TODO(Eli): DOMAIN DECISION NEEDED.
+ * Confirmed by Eli, 2026-09-08: the site ships on coolstuffwithcoco.com, so
+ * brand name, IG handle and domain now all agree on "stuff". This supersedes
+ * brief §8 entirely.
  *
- * On 2026-09-07 you corrected the brand name to "Cool Stuff with Coco", which
- * reverses brief §8 (that said the name was "Cool Things with Coco" and only
- * the IG handle was "stuff"). Name and handle now agree.
+ * Every canonical URL, the sitemap, robots.txt and the JSON-LD read from this
+ * one constant.
  *
- * The domain below does NOT. The brief says coolthingswithcoco.com was the one
- * purchased, so it's left as-is rather than silently repointed at a domain that
- * may not be owned. Every canonical URL, the sitemap, robots and the JSON-LD
- * all read from this one constant, so switching it is a one-line change.
- *
- * Confirm which domain ships, and whether coolstuffwithcoco.com needs buying.
+ * The GitHub repo is still named `coolthingswithcoco` — that's only a repo
+ * name and doesn't affect anything served.
  */
-export const SITE_URL = "https://coolthingswithcoco.com";
+export const SITE_URL = "https://coolstuffwithcoco.com";

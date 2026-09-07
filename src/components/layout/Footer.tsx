@@ -3,6 +3,7 @@ import { BrandImage } from "@/components/brand/BrandImage";
 import { Paw } from "@/components/brand/Icons";
 import {
   DISCLAIMER,
+  DISCLAIMER_LONG,
   HOTLINES,
   IG_HANDLE,
   IG_URL,
@@ -24,54 +25,47 @@ export function Footer({ bare = false }: { bare?: boolean }) {
   return (
     <footer className="bg-ink text-paper">
       <div className="shell py-16">
-        {/* Disclaimer first — it's the most important thing down here */}
-        <div className="max-w-[62ch]">
+        {/*
+          Emergency numbers first, disclaimer with them. This is the block that
+          actually matters at 2am, so it sits at the top of the footer rather
+          than under four columns of navigation, and it's set at readable size
+          on ink (16.09:1) rather than shrunk into the small print.
+        */}
+        <div className="rounded-2xl border-2 border-paper/25 p-6 sm:p-8">
           <div className="mb-4 flex items-center gap-3">
-            <Paw className="h-5 w-5 text-coral" />
-            <span className="t-h3">Before you go</span>
+            <Paw aria-hidden className="h-5 w-5 text-coral" />
+            <h2 className="t-h3">In an emergency</h2>
           </div>
-          <p className="t-body opacity-90">{DISCLAIMER}</p>
+
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {HOTLINES.map((h) => (
+              <li key={h.name}>
+                <a
+                  href={`tel:${h.number.replace(/[^+\d]/g, "")}`}
+                  className="t-h3 underline decoration-coral decoration-2 underline-offset-4"
+                >
+                  {h.number}
+                </a>
+                <span className="block font-semibold opacity-95">{h.name}</span>
+                <span className="t-small block opacity-75">{h.note}</span>
+              </li>
+            ))}
+          </ul>
+
+          <p className="t-small mt-6 border-t border-paper/20 pt-4 opacity-90">
+            {DISCLAIMER}
+          </p>
         </div>
 
-        {/* Hotlines — deliberately unpopulated */}
-        <div className="mt-10 border-t border-paper/20 pt-8">
-          <h2 className="t-h3 mb-3">In an emergency</h2>
-          {HOTLINES.length > 0 ? (
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {HOTLINES.map((h) => (
-                <li key={h.name}>
-                  <a
-                    href={`tel:${h.number.replace(/[^+\d]/g, "")}`}
-                    className="font-semibold underline decoration-coral decoration-2 underline-offset-4"
-                  >
-                    {h.name}: {h.number}
-                  </a>
-                  <span className="t-small block opacity-75">{h.note}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="t-small max-w-[52ch] rounded-lg border-2 border-dashed border-paper/40 p-4 opacity-90">
-              <strong className="font-semibold">
-                TODO(Eli): verified hotline 1 / 2
-              </strong>
-              <br />
-              Left blank on purpose. An emergency number produced from memory is
-              a liability, not a placeholder — add the two verified numbers to{" "}
-              <code className="text-coral">HOTLINES</code> in{" "}
-              <code className="text-coral">lib/content/guides.ts</code> and they
-              render here as tel: links.
-            </p>
-          )}
-        </div>
+        <p className="t-body mt-8 max-w-[62ch] opacity-80">{DISCLAIMER_LONG}</p>
 
         {/* Columns */}
         <div className="mt-12 grid gap-10 border-t border-paper/20 pt-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <BrandImage
-              slot="logoMono"
-              className="mb-4 h-12 w-auto"
-              sizes="200px"
+              slot="logoBadge"
+              className="mb-4 h-20 w-20"
+              sizes="80px"
             />
             <p className="t-small opacity-75">
               Dog stuff, from Coco and the person who feeds her.
@@ -137,11 +131,9 @@ export function Footer({ bare = false }: { bare?: boolean }) {
               {IG_HANDLE}
             </a>
             {/*
-              Brand name and IG handle now agree (both "stuff") after Eli's
-              correction on 2026-09-07, which reverses brief §8. The DOMAIN is
-              now the odd one out — see SITE_URL in lib/content/guides.ts.
-              No visitor-facing note here any more, because there's nothing
-              confusing left on the page itself.
+              Brand name, IG handle and domain now all agree on "stuff", so the
+              naming clash flagged in brief §8 is fully resolved and there's no
+              visitor-facing note needed here.
             */}
           </div>
         </div>
