@@ -1,0 +1,603 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Cool Things with Coco — design tokens
+   Palette is LOCKED (inherited from the guide PDFs + email template).
+   Do not add hues. Derive tints/shades with color-mix() against ink/paper.
+
+   Measured WCAG contrast (see README):
+     ink on paper .......... 16.09  ✓ body
+     ink on coral ........... 6.74  ✓ body
+     ink on bubblegum ....... 8.54  ✓ body
+     ink on sky ............ 11.64  ✓ body
+     ink on mint ........... 14.21  ✓ body
+     ink on butter ......... 15.21  ✓ body
+     coral on paper ......... 2.39  ✗ FAILS body AND large text
+
+   => Coral is a FILL ONLY. Never coral text on paper, at any size.
+      Display type is ink. Text on coral is ink.
+   ========================================================================== */
+
+@theme {
+  --color-ink: #211c1a;
+  --color-paper: #fdf9f5;
+  --color-coral: #f4837e;
+  --color-bubblegum: #ff99c8;
+  --color-sky: #a8defa;
+  --color-mint: #d0f4e0;
+  --color-butter: #fcf5bf;
+
+  /* Derived, not new hues */
+
+  /*
+    Secondary text colour. 75% is not arbitrary — it's the LOWEST ink opacity
+    that clears 4.5:1 on all six backgrounds in this palette. Measured:
+
+              55%   60%   65%   70%   75%
+      paper   3.77  4.40  5.17  6.10  7.23
+      bubblegum 3.07 3.45  3.88  4.38  4.98  <- the binding constraint
+      sky     3.42  3.90  4.51  5.21  5.98
+      mint    3.63  4.23  4.89  5.72  6.74
+      butter  3.68  4.29  5.03  5.92  7.01
+
+    Bubblegum is the tightest wash, so anything lighter than 75% fails AA
+    there. DO NOT introduce a lighter ink for body text — use this token, or
+    ink itself. Below 75% is for decorative borders and icons only.
+  */
+  --color-ink-muted: color-mix(in oklab, var(--color-ink) 75%, transparent);
+  --color-coral-deep: color-mix(in oklab, var(--color-coral) 82%, var(--color-ink));
+  --color-paper-warm: color-mix(in oklab, var(--color-paper) 92%, var(--color-coral));
+
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-wave: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+
+* {
+  min-width: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Prevent iOS text inflation in landscape */
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+/* Visible keyboard focus everywhere. Never remove without replacement. */
+:focus-visible {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Only suppress the ring for pointer users who didn't tab here */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+::selection {
+  background: var(--color-butter);
+  color: var(--color-ink);
+}
+
+/* --------------------------------------------------------------------------
+   Type scale
+   Sentence case at display size — no all-caps eyebrows anywhere.
+   -------------------------------------------------------------------------- */
+
+.t-display-xl {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(3.25rem, 11vw, 9rem);
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+/*
+  Hero headline. Deliberately smaller than display-xl: it sits in a flanking
+  column roughly a third of the viewport wide, so display-xl's 9rem cap wraps
+  it to five lines and pushes the fold. Sized to hold three lines in that
+  column at every width.
+*/
+.t-hero {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 5vw, 4.25rem);
+  line-height: 0.94;
+  letter-spacing: -0.025em;
+}
+
+/*
+  The answering line on the right of the hero. Deliberately ~0.7 of .t-hero:
+  both flanking blocks stay large enough to frame Coco, but the h1 clearly
+  leads. Matching their sizes made the supporting line outweigh the headline.
+*/
+.t-hero-echo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 3.5vw, 3rem);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+}
+
+.t-display-l {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.25rem, 7vw, 5rem);
+  line-height: 0.92;
+  letter-spacing: -0.022em;
+  text-wrap: balance;
+}
+
+.t-h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.65rem, 4vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.t-h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.t-lead {
+  font-size: clamp(1.125rem, 2.2vw, 1.375rem);
+  line-height: 1.5;
+  /* 46ch, not 34ch — under a wide display heading, 34ch reads as a cramped
+     column rather than a deliberate measure. Still well inside the 80ch cap. */
+  max-width: 46ch;
+}
+
+.t-body {
+  max-width: 68ch;
+}
+
+.t-small {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Layout
+   -------------------------------------------------------------------------- */
+
+.shell {
+  width: 100%;
+  max-width: 84rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 5vw, 4rem);
+}
+
+.section-pad {
+  padding-block: clamp(4.5rem, 11vw, 9rem);
+}
+
+/* --------------------------------------------------------------------------
+   Coral is a fill. This is the only button that means "click this".
+   -------------------------------------------------------------------------- */
+
+.btn-coral {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-coral);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.9rem 1.6rem;
+  border-radius: 999px;
+  border: 2px solid var(--color-ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.18s var(--ease-settle),
+    box-shadow 0.18s var(--ease-settle),
+    background-color 0.18s ease;
+  box-shadow: 0 3px 0 var(--color-ink);
+  will-change: transform;
+}
+
+.btn-coral:hover {
+  background: var(--color-coral-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--color-ink);
+}
+
+/* Press state — answers the user's action, so it stays even under reduced motion */
+.btn-coral:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--color-ink);
+}
+
+.btn-coral:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 3px 0 var(--color-ink);
+}
+
+/* Compact variant for the top bar, where the full-size pill wraps to two
+   lines on a 390px viewport and collides with the logo. */
+.btn-coral-sm {
+  font-size: 0.875rem;
+  padding: 0.6rem 1.1rem;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .btn-coral-sm {
+    font-size: 1rem;
+    padding: 0.9rem 1.6rem;
+  }
+}
+
+.btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 0.85rem 1.5rem;
+  border-radius: 999px;
+  border: 2px solid var(--color-ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.btn-quiet:hover {
+  background: color-mix(in oklab, var(--color-ink) 8%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-coral {
+    transition: background-color 0.18s ease;
+  }
+  .btn-coral:hover {
+    transform: none;
+    box-shadow: 0 3px 0 var(--color-ink);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Arc-masked section transition.
+   A band whose top edge is a wide, shallow circle — the section-flip device.
+   Pure clip-path, no layout cost, no CLS.
+   -------------------------------------------------------------------------- */
+
+.arc-top {
+  /* 140% wide ellipse anchored above the band's own top edge */
+  border-start-start-radius: 50% 6vw;
+  border-start-end-radius: 50% 6vw;
+}
+
+/* --------------------------------------------------------------------------
+   Hero load sequence — CSS, deliberately NOT JavaScript.
+
+   These run on first paint with no hydration dependency. Doing this in Motion
+   instead cost 2.35s of LCP render delay, because the hero text couldn't paint
+   until ~196KB of JS had downloaded and hydrated.
+
+   The h1 is NOT in this sequence. It paints immediately at full opacity — it
+   is the hero content, and the brief requires it readable before anything
+   moves. Everything else settles around it.
+   -------------------------------------------------------------------------- */
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise-in 0.7s var(--ease-settle) both;
+  }
+  .rise-1 {
+    animation-delay: 0.05s;
+  }
+  .rise-2 {
+    animation-delay: 0.18s;
+  }
+  .rise-3 {
+    animation-delay: 0.3s;
+  }
+  .rise-4 {
+    animation-delay: 0.42s;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Ambient loops — decorative shapes only.
+
+   These run forever, so the rules are strict: only ever applied to
+   `aria-hidden` decoration, only `transform` (compositor-only, no repaint),
+   long slow periods so nothing draws the eye away from the copy, and every
+   one of them stops dead under `prefers-reduced-motion`.
+
+   Never put a loop on text, a control, or anything carrying meaning.
+   -------------------------------------------------------------------------- */
+
+@keyframes spin-slow {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  33% {
+    translate: 10px -14px;
+    rotate: 4deg;
+  }
+  66% {
+    translate: -8px -6px;
+    rotate: -3deg;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.06;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .spin-slow {
+    animation: spin-slow 14s linear infinite;
+  }
+  .bob {
+    animation: bob 4.5s ease-in-out infinite;
+  }
+  .drift {
+    animation: drift 18s ease-in-out infinite;
+  }
+  .breathe {
+    animation: breathe 9s ease-in-out infinite;
+  }
+  /* Offsets so a group of shapes never moves in lockstep */
+  .delay-1 {
+    animation-delay: -2.5s;
+  }
+  .delay-2 {
+    animation-delay: -6s;
+  }
+  .delay-3 {
+    animation-delay: -11s;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Once-only reveal. Static end-state is the default so no-JS and
+   reduced-motion users see finished content.
+   -------------------------------------------------------------------------- */
+
+/*
+  CSS scroll-driven, NOT JavaScript.
+
+  Doing this with Motion's whileInView put `opacity: 0` inline in the
+  server-rendered HTML, so content stayed invisible until ~196KB of JS
+  hydrated — including the two guide panels, which are the primary route out
+  of the home page. Same class of bug as the hero's LCP delay.
+
+  Here the resting state IS the finished state, so:
+    - no JS, no hydration gate, no content ever hidden behind an animation
+    - browsers without scroll-driven animation support (Firefox, Safari < 26)
+      simply show the finished content
+    - `prefers-reduced-motion` shows the finished content
+
+  Purely decorative, so per the scroll-driven-animation guidance this is
+  progressive enhancement with no JS fallback. The `animation-range: entry`
+  check filters out browsers with only partial support.
+*/
+.reveal {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .reveal {
+      animation: rise-in linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 26%;
+    }
+
+    /* Sideways entrances for the split panels */
+    .reveal-left {
+      animation: slide-in-left linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 24%;
+    }
+    .reveal-right {
+      animation: slide-in-right linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 24%;
+    }
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Waving paw — three decaying swings, then rest. Never loops.
+   -------------------------------------------------------------------------- */
+
+@keyframes paw-wave {
+  0% {
+    rotate: 0deg;
+  }
+  15% {
+    rotate: -21deg;
+  }
+  32% {
+    rotate: 13deg;
+  }
+  50% {
+    rotate: -11deg;
+  }
+  68% {
+    rotate: 6deg;
+  }
+  84% {
+    rotate: -3deg;
+  }
+  100% {
+    rotate: 0deg;
+  }
+}
+
+.paw {
+  /*
+    Rotation origin sits at the bottom of the foreleg — the shoulder joint —
+    not the centre of the graphic. This is what makes it read as a wave from
+    the shoulder rather than a spinning sticker.
+    Matches the leg's base in the viewBox (x 43/100, y 119/120).
+  */
+  transform-origin: 43% 99%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .paw[data-wave="true"] {
+    animation: paw-wave 1.5s var(--ease-wave) both;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Ear twitch — one shot on scroll-in.
+   -------------------------------------------------------------------------- */
+
+@keyframes ear-twitch {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  30% {
+    rotate: -7deg;
+  }
+  55% {
+    rotate: 3deg;
+  }
+  75% {
+    rotate: -1.5deg;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ear[data-twitch="true"] {
+    animation: ear-twitch 0.62s var(--ease-wave) both;
+    transform-origin: 50% 92%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Utility
+   -------------------------------------------------------------------------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Placeholder asset boxes — must read as obviously unfinished, never as design */
+.ph {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      color-mix(in oklab, var(--color-ink) 7%, transparent) 0 10px,
+      transparent 10px 20px
+    ),
+    color-mix(in oklab, var(--color-ink) 5%, var(--color-paper));
+  border: 2px dashed color-mix(in oklab, var(--color-ink) 35%, transparent);
+  color: var(--color-ink-muted);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  text-align: center;
+  padding: 1rem;
+  overflow: hidden;
+}
