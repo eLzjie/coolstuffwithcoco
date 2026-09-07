@@ -31,64 +31,49 @@ export type AssetSlot = {
 };
 
 export const BRAND = {
-  /* ---- Logo family ------------------------------------------------------ */
-  logoFull: {
-    file: "logo-full.svg",
-    w: 320,
-    h: 120,
+  /* ---- Logo -------------------------------------------------------------
+     The delivered logo is a SQUARE badge (the pastel "COCO" lockup with Coco
+     peeking over the top), not a horizontal wordmark. It's used at a larger
+     size than a wordmark would be, because the badge contains lettering that
+     has to stay legible.
+
+     TODO(Eli): a horizontal variant and a single-colour version would both
+     earn their keep — the badge is wide-ish for a tight mobile nav, and a
+     mono version would sit better on the ink footer. Not blocking.
+     ---------------------------------------------------------------------- */
+  logoBadge: {
+    file: "logo.png",
+    w: 1254,
+    h: 1254,
     alt: "Cool Stuff with Coco",
-    note: "Full logo, stacked lockup",
-    ready: false,
-  },
-  logoHorizontal: {
-    file: "logo-horizontal.svg",
-    w: 420,
-    h: 96,
-    alt: "Cool Stuff with Coco",
-    note: "Horizontal logo variant",
-    ready: false,
-  },
-  submark: {
-    file: "submark.svg",
-    w: 96,
-    h: 96,
-    alt: "Cool Stuff with Coco",
-    note: "Submark",
-    ready: false,
-  },
-  logoMono: {
-    file: "logo-mono.svg",
-    w: 420,
-    h: 96,
-    alt: "Cool Stuff with Coco",
-    note: "Single-colour logo (footer, on ink)",
-    ready: false,
+    note: "Square badge logo",
+    ready: true,
   },
 
-  /* ---- Coco photography ------------------------------------------------- */
+  /* ---- Coco ------------------------------------------------------------- */
   cocoHero: {
-    file: "coco-hero.jpg",
-    w: 1400,
-    h: 1600,
-    alt: "Coco, a French Bulldog, looking directly at the camera",
-    note: "HERO — Coco head-on, eyes near upper third, shot tight. This is the LCP image; needs to be sharp and centred.",
-    ready: false,
+    file: "coco-hero.png",
+    w: 1024,
+    h: 1280,
+    alt: "Coco, a fawn French Bulldog, sitting and looking at the camera",
+    note: "HERO — illustrated render, seated, head tilted. This is the LCP image.",
+    ready: true,
   },
   cocoAbout: {
     file: "coco-about.jpg",
-    w: 1000,
-    h: 1100,
-    alt: "Coco sitting, one front paw raised",
-    note: "ABOUT — Coco seated, body angled, LEFT foreleg clear of her body so the animated paw can overlay her shoulder.",
-    ready: false,
+    w: 1024,
+    h: 1280,
+    alt: "Coco sitting on a cushioned outdoor chair in evening light",
+    note: "ABOUT — real photo, Coco seated square-on. The animated paw overlays her left side.",
+    ready: true,
   },
   cocoAvatar: {
-    file: "coco-avatar.png",
-    w: 200,
-    h: 200,
+    file: "coco-avatar.jpg",
+    w: 1024,
+    h: 1280,
     alt: "Coco",
-    note: "Coco avatar likeness (illustrated)",
-    ready: false,
+    note: "Avatar likeness (illustrated render)",
+    ready: true,
   },
 
   /* ---- "Guess the signal" on /decode -----------------------------------
@@ -121,22 +106,30 @@ export const BRAND = {
     ready: false,
   },
 
-  /* ---- Guide covers ----------------------------------------------------- */
+  /* ---- Guide covers -----------------------------------------------------
+     Designed SVG stand-ins, drawn in the locked palette — not labelled grey
+     boxes. They read as real covers at thumbnail size, which is the only size
+     they ever appear at on the site.
+
+     TODO(Eli): swap for the real PDF cover art when it exists. Change the
+     filename to .jpg/.png and keep w/h at 800×1035 (A-series-ish 1:1.294) or
+     update both numbers together.
+     ---------------------------------------------------------------------- */
   coverDecode: {
-    file: "cover-decode.jpg",
+    file: "cover-decode.svg",
     w: 800,
     h: 1035,
     alt: "Decode Your Dog — guide cover",
     note: "Cover: Decode Your Dog",
-    ready: false,
+    ready: true,
   },
   coverVetbill: {
-    file: "cover-vetbill.jpg",
+    file: "cover-vetbill.svg",
     w: 800,
     h: 1035,
     alt: "The $1,000 Vet Bill — guide cover",
     note: "Cover: The $1,000 Vet Bill",
-    ready: false,
+    ready: true,
   },
 
   /* ---- Open Graph ------------------------------------------------------- */

@@ -32,7 +32,7 @@ export function Community() {
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <Heart aria-hidden className="mb-5 h-8 w-8 text-coral" />
-            <h2 id="community-heading" className="t-display-l max-w-[20ch] text-ink">
+            <h2 id="community-heading" className="reveal-heading t-display-l max-w-[20ch] text-ink">
               She has been at this a while.
             </h2>
           </div>
@@ -56,28 +56,35 @@ export function Community() {
                   rel="noopener noreferrer"
                   className="block overflow-hidden rounded-2xl border-2 border-ink/15"
                 >
-                  {p.ready ? (
-                    <Image
-                      src={`/brand/community/${p.file}`}
-                      alt={p.alt}
-                      width={640}
-                      height={640}
-                      sizes="(max-width: 640px) 45vw, 30vw"
-                      className="h-auto w-full"
-                    />
-                  ) : (
-                    <div
-                      className="ph"
-                      style={{ aspectRatio: "1 / 1" }}
-                      role="img"
-                      aria-label={`Placeholder: ${p.alt}`}
-                    >
-                      <span>
-                        <strong className="block font-semibold">Placeholder</strong>
-                        {p.alt}
-                      </span>
-                    </div>
-                  )}
+                  {/*
+                    Square tile with object-cover. The source photos are all
+                    different shapes, so cropping to a common square is what
+                    makes the grid read as a grid — and the fixed aspect-ratio
+                    box reserves the space, so CLS stays 0.
+                  */}
+                  <div className="relative aspect-square">
+                    {p.ready ? (
+                      <Image
+                        src={`/brand/community/${p.file}`}
+                        alt={p.alt}
+                        width={p.w}
+                        height={p.h}
+                        sizes="(max-width: 640px) 45vw, 30vw"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="ph absolute inset-0"
+                        role="img"
+                        aria-label={`Placeholder: ${p.alt}`}
+                      >
+                        <span>
+                          <strong className="block font-semibold">Placeholder</strong>
+                          {p.alt}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </a>
               </Parallax>
             </li>

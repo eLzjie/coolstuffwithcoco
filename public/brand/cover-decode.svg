@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1035" width="800" height="1035" role="img" aria-label="Decode Your Dog — guide cover">
+  <title>Decode Your Dog — guide cover</title>
+
+  <!--
+    Designed stand-in for the real PDF cover art, drawn in the locked palette.
+    Bubblegum = /decode territory (curiosity). Coral appears only on the small
+    tag, since coral is reserved as the action colour.
+
+    Font stack degrades to any bold sans if Poppins isn't installed — this only
+    ever renders at ~112px wide on the site, so the fallback is invisible.
+  -->
+
+  <defs>
+    <clipPath id="d-card">
+      <rect width="800" height="1035" rx="18" />
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#d-card)">
+    <rect width="800" height="1035" fill="#FF99C8" />
+
+    <!-- Paper field the type sits on -->
+    <circle cx="400" cy="300" r="330" fill="#FDF9F5" opacity="0.55" />
+    <circle cx="120" cy="880" r="200" fill="#FCF5BF" opacity="0.6" />
+    <circle cx="700" cy="960" r="140" fill="#FDF9F5" opacity="0.4" />
+
+    <!-- The eye: the cover motif, because the hook is "do you know what
+         this look means?" A single wide eye with the crescent of white. -->
+    <g transform="translate(400 300)">
+      <ellipse cx="0" cy="0" rx="150" ry="112" fill="#211C1A" />
+      <ellipse cx="0" cy="0" rx="138" ry="100" fill="#FDF9F5" />
+      <!-- iris pushed to the side: the sideways glance -->
+      <circle cx="42" cy="4" r="72" fill="#7A5230" />
+      <circle cx="42" cy="4" r="38" fill="#211C1A" />
+      <circle cx="20" cy="-18" r="15" fill="#FDF9F5" opacity="0.9" />
+      <!-- upper lid -->
+      <path d="M-150 -6 Q-70 -132 0 -128 Q92 -124 150 -10 Q80 -66 0 -66 Q-74 -66 -150 -6 Z" fill="#211C1A" />
+    </g>
+
+    <!-- Title -->
+    <g font-family="Poppins, 'Segoe UI', Verdana, sans-serif" font-weight="700" fill="#211C1A">
+      <text x="64" y="668" font-size="104" letter-spacing="-3">Decode</text>
+      <text x="64" y="768" font-size="104" letter-spacing="-3">your dog</text>
+      <text x="64" y="856" font-size="34" font-weight="400" opacity="0.8">Read what she&#8217;s already telling you.</text>
+    </g>
+
+    <!-- Free tag -->
+    <g transform="translate(64 916)">
+      <rect width="196" height="58" rx="29" fill="#F4837E" stroke="#211C1A" stroke-width="4" />
+      <text x="98" y="38" font-family="Poppins, 'Segoe UI', Verdana, sans-serif" font-weight="700"
+            font-size="26" fill="#211C1A" text-anchor="middle">Free guide</text>
+    </g>
+
+    <!-- Paw mark, bottom right -->
+    <g transform="translate(648 902) scale(1.5)" fill="#211C1A" opacity="0.5">
+      <ellipse cx="24" cy="31" rx="11" ry="9" />
+      <ellipse cx="11" cy="19" rx="5" ry="6.5" />
+      <ellipse cx="19.5" cy="12" rx="5" ry="7" />
+      <ellipse cx="28.5" cy="12" rx="5" ry="7" />
+      <ellipse cx="37" cy="19" rx="5" ry="6.5" />
+    </g>
+
+    <rect x="2" y="2" width="796" height="1031" rx="17" fill="none" stroke="#211C1A" stroke-width="4" />
+  </g>
+</svg>

@@ -24,7 +24,7 @@ export function SeenCoco() {
     <section className="section-pad relative isolate overflow-hidden bg-butter" aria-labelledby="seen-heading">
       <Ambient variant="balls" />
       <div className="shell">
-        <h2 id="seen-heading" className="t-display-l max-w-[22ch] text-ink">
+        <h2 id="seen-heading" className="reveal-heading t-display-l max-w-[22ch] text-ink">
           You&apos;ve probably met her already.
         </h2>
         <p className="t-lead mt-5 text-ink/75">
@@ -41,26 +41,33 @@ export function SeenCoco() {
                   className="overflow-hidden rounded-2xl border-2 border-ink/15"
                   style={{ rotate: `${i % 2 === 0 ? -1.6 : 1.4}deg` }}
                 >
-                  {s.ready ? (
-                    <Image
-                      src={`/brand/community/${s.file}`}
-                      alt={s.alt}
-                      width={600}
-                      height={750}
-                      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 45vw, 22vw"
-                      className="h-auto w-full"
-                    />
-                  ) : (
-                    <div className="ph" style={{ aspectRatio: "4 / 5" }} role="img" aria-label={`Placeholder: ${s.alt}`}>
-                      <span>
-                        <strong className="block font-semibold">Placeholder</strong>
-                        {s.alt}
-                        <span className="mt-1 block opacity-60">
-                          /brand/community/{s.file}
+                  {/* 4:5 box, reserved up front so CLS stays 0 either way */}
+                  <div className="relative aspect-4/5">
+                    {s.ready ? (
+                      <Image
+                        src={`/brand/community/${s.file}`}
+                        alt={s.alt}
+                        width={s.w}
+                        height={s.h}
+                        sizes="(max-width: 1024px) 45vw, 22vw"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="ph absolute inset-0"
+                        role="img"
+                        aria-label={`Placeholder: ${s.alt}`}
+                      >
+                        <span>
+                          <strong className="block font-semibold">Placeholder</strong>
+                          {s.alt}
+                          <span className="mt-1 block opacity-60">
+                            /brand/community/{s.file}
+                          </span>
                         </span>
-                      </span>
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
                 </figure>
               </Parallax>
             </li>

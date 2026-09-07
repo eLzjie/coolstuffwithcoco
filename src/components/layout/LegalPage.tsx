@@ -29,7 +29,7 @@ export function LegalPage({
         <div className="shell py-6">
           {/* No aria-label — see the note in Hero.tsx */}
           <Link href="/">
-            <BrandImage slot="logoHorizontal" className="h-9 w-auto" sizes="180px" />
+            <BrandImage slot="logoBadge" className="h-14 w-14 sm:h-16 sm:w-16" sizes="64px" />
           </Link>
         </div>
 
