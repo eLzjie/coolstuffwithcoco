@@ -80,7 +80,7 @@ export function Hero() {
       <motion.div
         aria-hidden
         style={{ y: circlesFar }}
-        className="pointer-events-none absolute inset-0 -z-20"
+        className="decor-layer pointer-events-none absolute inset-0 -z-20"
       >
         <span className="breathe absolute -left-[20%] top-[58%] block h-[42vw] w-[42vw] rounded-full bg-butter/40" />
         <span className="breathe delay-2 absolute -right-[16%] top-[18%] block h-[30vw] w-[30vw] rounded-full bg-sky/30" />
@@ -89,17 +89,20 @@ export function Hero() {
       <motion.div
         aria-hidden
         style={{ y: circlesY }}
-        className="pointer-events-none absolute inset-0 -z-10"
+        className="decor-layer pointer-events-none absolute inset-0 -z-10"
       >
         <span className="drift absolute left-[8%] top-[70%] block h-[28vw] w-[28vw] rounded-full bg-bubblegum/35" />
         <span className="drift delay-1 absolute right-[16%] top-[62%] block h-[20vw] w-[20vw] rounded-full bg-mint/60" />
         {/*
-          Loose brand furniture, sparse and slow. Hidden below sm — on a 390px
-          viewport these landed on top of the headline and clipped at the
-          edges, and the hero is already busy enough there.
+          One piece of loose furniture, sitting in the empty space above the
+          headline. Hidden below sm, where it landed on the headline itself.
+
+          There was a second ball at right-[8%] — removed: with the wider Coco
+          and the right-hand column it sat directly on top of "miss it.", and
+          the scroll cue below already has a spinning ball, so it was
+          duplicating a mark rather than adding one.
         */}
         <Bone aria-hidden className="drift delay-3 absolute left-[6%] top-[26%] hidden h-8 w-8 text-ink/15 sm:block" />
-        <Ball aria-hidden className="bob delay-2 absolute right-[8%] top-[46%] hidden h-7 w-7 text-coral/50 sm:block" />
       </motion.div>
 
       {/* ---- Top bar ---- */}
@@ -111,7 +114,7 @@ export function Hero() {
           visible descriptive text while assets are pending).
         */}
         <Link href="/" className="flex items-center gap-2">
-          <BrandImage slot="logoHorizontal" className="h-9 w-auto" sizes="180px" />
+          <BrandImage slot="logoBadge" className="h-14 w-14 sm:h-16 sm:w-16" sizes="64px" />
         </Link>
         <Link href="#guides" className="btn-coral btn-coral-sm">
           Free guides
@@ -119,7 +122,7 @@ export function Hero() {
       </div>
 
       {/* ---- Fold ---- */}
-      <div className="shell relative grid min-h-[78svh] grid-cols-1 items-center gap-6 pb-16 lg:min-h-[84svh] lg:grid-cols-[1.2fr_auto_0.9fr]">
+      <div className="shell relative grid min-h-[78svh] grid-cols-1 items-center gap-6 pb-16 lg:min-h-[84svh] lg:grid-cols-[1fr_auto_0.8fr]">
         {/* Left column of the headline */}
         {/*
           NO entrance animation on the h1. It's the LCP element and the brief
@@ -140,15 +143,19 @@ export function Hero() {
 
         {/* Coco. Outer div owns the CSS entrance, inner owns the scroll
             transform — one element can't hold both without them fighting. */}
-        <div className="rise rise-2 relative z-0 mx-auto w-[min(78vw,30rem)] lg:col-start-2 lg:w-[min(34vw,32rem)]">
+        <div className="rise rise-2 relative z-0 mx-auto w-[min(90vw,34rem)] lg:col-start-2 lg:w-[min(42vw,40rem)]">
           <motion.div
             style={{ scale: cocoScale, y: cocoY, willChange: off ? undefined : "transform" }}
           >
+            {/*
+              No rounded frame or crop: the render has a clean white ground, so
+              she reads better sitting straight on the paper than boxed in.
+            */}
             <BrandImage
               slot="cocoHero"
               priority
-              sizes="(max-width: 1024px) 78vw, 34vw"
-              className="w-full rounded-4xl object-cover"
+              sizes="(max-width: 1024px) 90vw, 42vw"
+              className="w-full"
             />
           </motion.div>
         </div>

@@ -29,7 +29,7 @@ export function GuideSplit() {
   return (
     <section id="guides" className="scroll-mt-8" aria-labelledby="guides-heading">
       <div className="shell pb-10 pt-20">
-        <h2 id="guides-heading" className="t-display-l max-w-[24ch] text-ink">
+        <h2 id="guides-heading" className="reveal-heading t-display-l max-w-[24ch] text-ink">
           Two guides. Both free. Pick the one that sounds like your week.
         </h2>
       </div>
@@ -49,7 +49,11 @@ export function GuideSplit() {
 
           <p className="t-body mt-6 max-w-[42ch] text-ink/80">{DECODE.promise}</p>
 
-          <div className="mt-8 flex items-end gap-6">
+          {/*
+            Stacks on mobile. Side by side at 390px left the pill about 150px
+            wide, so the label wrapped to two lines and the button ballooned.
+          */}
+          <div className="mt-8 flex flex-col items-start gap-5 sm:flex-row sm:items-end sm:gap-6">
             <BrandImage
               slot="coverDecode"
               className="w-28 shrink-0 rotate-[-4deg] rounded-lg shadow-[0_6px_0_var(--color-ink)]"
@@ -57,7 +61,7 @@ export function GuideSplit() {
             />
             <Link
               href="/decode"
-              className="btn-coral"
+              className="btn-coral whitespace-nowrap"
               onClick={() =>
                 track("view_content", {
                   lead_magnet: "decode",
@@ -98,7 +102,11 @@ export function GuideSplit() {
             </div>
           </dl>
 
-          <div className="mt-8 flex items-end gap-6">
+          {/*
+            Stacks on mobile. Side by side at 390px left the pill about 150px
+            wide, so the label wrapped to two lines and the button ballooned.
+          */}
+          <div className="mt-8 flex flex-col items-start gap-5 sm:flex-row sm:items-end sm:gap-6">
             <BrandImage
               slot="coverVetbill"
               className="w-28 shrink-0 rounded-lg shadow-[0_6px_0_var(--color-ink)]"
@@ -106,7 +114,7 @@ export function GuideSplit() {
             />
             <Link
               href="/vetbill"
-              className="btn-coral"
+              className="btn-coral whitespace-nowrap"
               onClick={() =>
                 track("view_content", {
                   lead_magnet: "vetbill",
