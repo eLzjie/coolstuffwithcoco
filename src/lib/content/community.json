@@ -52,34 +52,35 @@
       "ready": true
     }
   ],
+  "_adNote": "Ad stills live in /public/ad/ (not community/). Filenames are descriptive rather than sequential so they carry meaning in image search and in the repo — image SEO reads the filename, and ad-01.jpg says nothing. Source PNGs were 7.4MB total; re-encoded to JPG q82 at 752KB with no visible loss.",
   "adStills": [
     {
-      "file": "ad-01.jpg",
-      "w": 1200,
-      "h": 1500,
-      "alt": "Coco giving a sideways glance — the Decode Your Dog ad",
-      "ready": false
+      "file": "coco-french-bulldog-side-eye-body-language.jpg",
+      "w": 1122,
+      "h": 1402,
+      "alt": "Coco, a fawn French Bulldog, turning her head away while keeping her eyes on the camera, with the whites of her eyes showing",
+      "ready": true
     },
     {
-      "file": "ad-02.jpg",
-      "w": 1200,
-      "h": 1500,
-      "alt": "Coco sitting calmly beside a first-aid pouch — the vet bill ad",
-      "ready": false
+      "file": "coco-french-bulldog-pet-first-aid-kit.jpg",
+      "w": 1122,
+      "h": 1402,
+      "alt": "Coco, a fawn French Bulldog, sitting upright and calm beside a coral pet first-aid kit",
+      "ready": true
     },
     {
-      "file": "ad-03.jpg",
-      "w": 1200,
-      "h": 1500,
-      "alt": "Coco with her head tilted to one side",
-      "ready": false
+      "file": "coco-french-bulldog-head-tilt.jpg",
+      "w": 1122,
+      "h": 1402,
+      "alt": "Coco, a fawn French Bulldog, with her head tilted to one side and ears up",
+      "ready": true
     },
     {
-      "file": "ad-04.jpg",
-      "w": 1200,
-      "h": 1500,
-      "alt": "Coco resting a paw on a small stack of guides",
-      "ready": false
+      "file": "coco-french-bulldog-dog-care-guides.jpg",
+      "w": 1122,
+      "h": 1402,
+      "alt": "Coco, a fawn French Bulldog, lying down with one paw resting on a stack of dog care guides",
+      "ready": true
     }
   ]
 }

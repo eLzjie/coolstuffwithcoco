@@ -45,7 +45,7 @@ export function SeenCoco() {
                   <div className="relative aspect-4/5">
                     {s.ready ? (
                       <Image
-                        src={`/brand/community/${s.file}`}
+                        src={`/ad/${s.file}`}
                         alt={s.alt}
                         width={s.w}
                         height={s.h}
@@ -62,7 +62,7 @@ export function SeenCoco() {
                           <strong className="block font-semibold">Placeholder</strong>
                           {s.alt}
                           <span className="mt-1 block opacity-60">
-                            /brand/community/{s.file}
+                            /ad/{s.file}
                           </span>
                         </span>
                       </div>
