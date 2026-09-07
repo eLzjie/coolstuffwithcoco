@@ -1,0 +1,64 @@
+{
+  "_note": "Curated Instagram grid, read from this file so the section works today without Graph API access. TODO(Eli): the IG feed needs a Graph API token and a business account. When that's wired, swap the loader in Community.tsx for the API response — the component's shape already matches, so no redesign. Until then, add real posts here.",
+  "_shape": "file = filename inside /public/brand/community/ · alt = describe the photo · url = permalink to the post",
+  "posts": [
+    {
+      "file": "ig-01.jpg",
+      "alt": "Coco asleep upside down on the sofa",
+      "url": "https://instagram.com/coolstuffwithcoco",
+      "ready": false
+    },
+    {
+      "file": "ig-02.jpg",
+      "alt": "Coco mid-zoomie in the garden",
+      "url": "https://instagram.com/coolstuffwithcoco",
+      "ready": false
+    },
+    {
+      "file": "ig-03.jpg",
+      "alt": "Coco doing the head tilt",
+      "url": "https://instagram.com/coolstuffwithcoco",
+      "ready": false
+    },
+    {
+      "file": "ig-04.jpg",
+      "alt": "Coco refusing to walk past a puddle",
+      "url": "https://instagram.com/coolstuffwithcoco",
+      "ready": false
+    },
+    {
+      "file": "ig-05.jpg",
+      "alt": "Coco in the back of the car after the vet",
+      "url": "https://instagram.com/coolstuffwithcoco",
+      "ready": false
+    },
+    {
+      "file": "ig-06.jpg",
+      "alt": "Coco with her chewed tennis ball",
+      "url": "https://instagram.com/coolstuffwithcoco",
+      "ready": false
+    }
+  ],
+  "adStills": [
+    {
+      "file": "ad-01.jpg",
+      "alt": "Still from Coco's body language video",
+      "ready": false
+    },
+    {
+      "file": "ad-02.jpg",
+      "alt": "Still from the vet bill ad",
+      "ready": false
+    },
+    {
+      "file": "ad-03.jpg",
+      "alt": "Still from Coco's side-eye ad",
+      "ready": false
+    },
+    {
+      "file": "ad-04.jpg",
+      "alt": "Coco's email header illustration",
+      "ready": false
+    }
+  ]
+}
