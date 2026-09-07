@@ -16,7 +16,11 @@
  */
 
 export type AssetSlot = {
-  /** Filename inside /public/brand/ */
+  /**
+   * Filename inside /public/brand/ — or an absolute public path starting with
+   * "/" when the asset lives elsewhere and shouldn't be duplicated (e.g. an
+   * ad still in /public/ad/ that also serves as a signal photo).
+   */
   file: string;
   /** Intrinsic width in px — reserves layout space */
   w: number;
@@ -90,28 +94,39 @@ export const BRAND = {
      matter more than most: each has to show the signal clearly enough that a
      visitor can read it and commit to a guess. Keys match the ids in SIGNALS.
      ---------------------------------------------------------------------- */
+  /*
+    Already covered: the /decode ad still was generated from the side-eye
+    prompt, so it IS this signal. Referenced in place from /public/ad/ rather
+    than copied, so there's one file on disk and one thing to replace.
+  */
   "signal-whale-eye": {
-    file: "signal-whale-eye.jpg",
-    w: 900,
-    h: 900,
-    alt: "Coco with her head turned away, eyes still on the camera",
+    file: "/ad/coco-french-bulldog-side-eye-body-language.jpg",
+    w: 1122,
+    h: 1402,
+    alt: "Coco with her head turned away, eyes still on the camera and the whites showing",
     note: "SIGNAL — the side-eye. Head turned away, eyes tracking the camera, whites of the eye visible.",
-    ready: false,
+    ready: true,
   },
+  /*
+    Still to generate — prompts in docs/specs/decode-signal-image-prompts.md.
+    Both must land on the same Bubblegum ground as the side-eye above, because
+    the quiz steps through them one at a time and a background change between
+    taps reads as a glitch. Drop into /public/ad/ and flip `ready`.
+  */
   "signal-yawn": {
-    file: "signal-yawn.jpg",
-    w: 900,
-    h: 900,
-    alt: "Coco mid-yawn",
+    file: "/ad/coco-french-bulldog-yawn-calming-signal.jpg",
+    w: 1122,
+    h: 1402,
+    alt: "Coco mid-yawn, eyes squeezed shut and mouth wide open",
     note: "SIGNAL — the yawn. Mid-yawn, in daylight, clearly not sleepy.",
     ready: false,
   },
   "signal-tail": {
-    file: "signal-tail.jpg",
-    w: 900,
-    h: 900,
-    alt: "Coco standing alert with her tail held high",
-    note: "SIGNAL — the stiff high wag. Standing alert, weight forward, tail up. Hardest of the three to shoot.",
+    file: "/ad/coco-french-bulldog-stiff-high-tail-arousal.jpg",
+    w: 1122,
+    h: 1402,
+    alt: "Coco standing alert, weight forward, tail held high and stiff",
+    note: "SIGNAL — the stiff high wag. Standing alert, weight forward, tail up. Hardest of the three.",
     ready: false,
   },
 
@@ -170,4 +185,7 @@ export const BRAND = {
 
 export type BrandKey = keyof typeof BRAND;
 
-export const brandSrc = (key: BrandKey) => `/brand/${BRAND[key].file}`;
+export const brandSrc = (key: BrandKey) => {
+  const file = BRAND[key].file;
+  return file.startsWith("/") ? file : `/brand/${file}`;
+};
