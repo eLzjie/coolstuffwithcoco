@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BrandImage } from "@/components/brand/BrandImage";
+import { BrandLockup } from "@/components/brand/BrandLockup";
 import { OfferScaffold } from "@/components/shared/OfferScaffold";
 import { Footer } from "@/components/layout/Footer";
 import { VETBILL } from "@/lib/content/guides";
@@ -22,7 +23,7 @@ export default function VetBillThankYou() {
       <main id="main">
         <section className="bg-sky">
           <div className="shell py-6">
-            <BrandImage slot="logoBadge" className="h-14 w-14 sm:h-16 sm:w-16" sizes="64px" />
+            <BrandLockup />
           </div>
 
           <div className="shell grid items-center gap-10 pb-20 lg:grid-cols-[1.1fr_0.9fr]">

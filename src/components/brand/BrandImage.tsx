@@ -10,6 +10,12 @@ type Props = {
   priority?: boolean;
   /** Override alt when context makes the manifest default wrong. */
   alt?: string;
+  /**
+   * Purely decorative — renders with an empty alt and is skipped by screen
+   * readers. Use when adjacent text already carries the meaning, e.g. the
+   * logo badge next to the wordmark.
+   */
+  decorative?: boolean;
 };
 
 /**
@@ -19,7 +25,14 @@ type Props = {
  * The placeholder reserves the exact same space as the real image, so swapping
  * an asset in never shifts layout.
  */
-export function BrandImage({ slot, className, sizes, priority, alt }: Props) {
+export function BrandImage({
+  slot,
+  className,
+  sizes,
+  priority,
+  alt,
+  decorative,
+}: Props) {
   const asset = BRAND[slot];
 
   if (!asset.ready) {
@@ -27,8 +40,9 @@ export function BrandImage({ slot, className, sizes, priority, alt }: Props) {
       <div
         className={`ph ${className ?? ""}`}
         style={{ aspectRatio: `${asset.w} / ${asset.h}` }}
-        role="img"
-        aria-label={`Placeholder for: ${asset.alt}`}
+        {...(decorative
+          ? { "aria-hidden": true }
+          : { role: "img", "aria-label": `Placeholder for: ${asset.alt}` })}
       >
         <span>
           <strong className="block font-semibold">Placeholder</strong>
@@ -44,7 +58,7 @@ export function BrandImage({ slot, className, sizes, priority, alt }: Props) {
   return (
     <Image
       src={brandSrc(slot)}
-      alt={alt ?? asset.alt}
+      alt={decorative ? "" : (alt ?? asset.alt)}
       width={asset.w}
       height={asset.h}
       sizes={sizes}

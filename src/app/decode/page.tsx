@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BrandImage } from "@/components/brand/BrandImage";
+import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Paw } from "@/components/brand/Icons";
 import { GuessTheSignal } from "@/components/decode/GuessTheSignal";
 import { GhlFormEmbed } from "@/components/shared/GhlFormEmbed";
@@ -38,18 +39,18 @@ export default function DecodePage() {
         <section className="relative overflow-hidden bg-paper">
           {/* Non-clickable logo — no route out of here */}
           <div className="shell py-6">
-            <BrandImage slot="logoBadge" className="h-14 w-14 sm:h-16 sm:w-16" sizes="64px" />
+            <BrandLockup />
           </div>
 
-          <div className="shell grid items-center gap-10 pb-16 lg:grid-cols-[1.05fr_0.95fr] lg:pb-24">
+          <div className="shell grid items-center gap-6 pb-10 lg:grid-cols-[1fr_1.05fr] lg:gap-10 lg:pb-16">
             <div>
-              <h1 className="t-display-xl max-w-[18ch] text-ink">{DECODE.hook}</h1>
-              <p className="t-display-l mt-4 max-w-[16ch] text-ink/80">
+              <h1 className="t-hero max-w-[20ch] text-ink">{DECODE.hook}</h1>
+              <p className="t-hero-echo mt-3 max-w-[20ch] text-ink/80">
                 {DECODE.subhook}
               </p>
-              <p className="t-lead mt-6 text-ink/75">{DECODE.promise}</p>
+              <p className="t-lead mt-5 text-ink/75">{DECODE.promise}</p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-7 flex flex-wrap gap-3">
                 <a href="#get" className="btn-coral">
                   Get the free guide
                 </a>
@@ -59,12 +60,12 @@ export default function DecodePage() {
               </div>
             </div>
 
-            <div className="mx-auto w-[min(72vw,26rem)]">
+            <div className="mx-auto w-[min(88vw,32rem)]">
               <BrandImage
                 slot="cocoHero"
                 priority
-                sizes="(max-width: 1024px) 72vw, 32vw"
-                className="w-full rounded-4xl"
+                sizes="(max-width: 1024px) 88vw, 42vw"
+                className="w-full"
               />
             </div>
           </div>

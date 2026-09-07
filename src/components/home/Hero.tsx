@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform, useReducedMotion } from "motion/react";
 import { BrandImage } from "@/components/brand/BrandImage";
+import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Ball, Bone, Paw } from "@/components/brand/Icons";
 import { useIsNarrow } from "@/lib/useIsNarrow";
 
@@ -107,15 +108,7 @@ export function Hero() {
 
       {/* ---- Top bar ---- */}
       <div className="rise rise-1 shell relative z-20 flex items-center justify-between py-6">
-        {/*
-          No aria-label here on purpose: the logo image's alt already names the
-          link, and an aria-label that doesn't contain the visible text trips
-          axe's label-content-name-mismatch rule (the placeholder box renders
-          visible descriptive text while assets are pending).
-        */}
-        <Link href="/" className="flex items-center gap-2">
-          <BrandImage slot="logoBadge" className="h-14 w-14 sm:h-16 sm:w-16" sizes="64px" />
-        </Link>
+        <BrandLockup href="/" />
         <Link href="#guides" className="btn-coral btn-coral-sm">
           Free guides
         </Link>

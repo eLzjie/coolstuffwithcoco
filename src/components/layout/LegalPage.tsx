@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { BrandImage } from "@/components/brand/BrandImage";
+import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Footer } from "@/components/layout/Footer";
 
 /**
@@ -27,10 +26,7 @@ export function LegalPage({
     <>
       <main id="main" className="bg-paper">
         <div className="shell py-6">
-          {/* No aria-label — see the note in Hero.tsx */}
-          <Link href="/">
-            <BrandImage slot="logoBadge" className="h-14 w-14 sm:h-16 sm:w-16" sizes="64px" />
-          </Link>
+          <BrandLockup href="/" />
         </div>
 
         <div className="shell pb-24 pt-8">

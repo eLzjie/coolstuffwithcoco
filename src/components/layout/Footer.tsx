@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BrandImage } from "@/components/brand/BrandImage";
+import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Paw } from "@/components/brand/Icons";
 import {
   DISCLAIMER,
@@ -62,11 +62,7 @@ export function Footer({ bare = false }: { bare?: boolean }) {
         {/* Columns */}
         <div className="mt-12 grid gap-10 border-t border-paper/20 pt-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <BrandImage
-              slot="logoBadge"
-              className="mb-4 h-20 w-20"
-              sizes="80px"
-            />
+            <BrandLockup onInk className="mb-4" />
             <p className="t-small opacity-75">
               Dog stuff, from Coco and the person who feeds her.
             </p>

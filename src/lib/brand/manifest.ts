@@ -53,8 +53,17 @@ export const BRAND = {
   /* ---- Coco ------------------------------------------------------------- */
   cocoHero: {
     file: "coco-hero.png",
-    w: 1024,
-    h: 1280,
+    // MUST match the file exactly. This was once declared 1024x1280 against an
+    // 815x1087 file, so the browser reserved a 0.80 box from these attributes
+    // and reflowed to the real 0.75 on load. If the crop changes, re-probe and
+    // update BOTH numbers.
+    //
+    // Cropped from 815 to 675 wide: the render carried ~166px of empty
+    // transparent margin (113 left, 53 right), so a fifth of the layout width
+    // was blank and Coco read smaller than her box. Full height kept — content
+    // starts at y=3, so there was nothing to trim vertically.
+    w: 675,
+    h: 1087,
     alt: "Coco, a fawn French Bulldog, sitting and looking at the camera",
     note: "HERO — illustrated render, seated, head tilted. This is the LCP image.",
     ready: true,
