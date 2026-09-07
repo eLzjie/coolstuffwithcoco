@@ -2,7 +2,6 @@
 
 import { BrandImage } from "@/components/brand/BrandImage";
 import { GhlFormEmbed } from "@/components/shared/GhlFormEmbed";
-import { Reveal } from "@/components/motion/Reveal";
 
 /**
  * PROPOSED ADDITION (§4.1) — "What lands in your inbox".
@@ -22,11 +21,9 @@ export function InboxPreview() {
     <section className="section-pad bg-paper" aria-labelledby="inbox-heading">
       <div className="shell grid items-start gap-14 lg:grid-cols-[1fr_0.85fr]">
         <div>
-          <Reveal>
-            <h2 id="inbox-heading" className="t-display-l max-w-[22ch] text-ink">
-              Here&apos;s what actually turns up.
-            </h2>
-          </Reveal>
+          <h2 id="inbox-heading" className="reveal-heading t-display-l max-w-[22ch] text-ink">
+            Here&apos;s what actually turns up.
+          </h2>
           <p className="t-lead mt-5 text-ink/75">
             No guessing. This is the format, a couple of times a month, from
             Coco.

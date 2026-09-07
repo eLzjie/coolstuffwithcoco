@@ -2,7 +2,6 @@
 
 import { Bone } from "@/components/brand/Icons";
 import { Ambient } from "@/components/motion/Ambient";
-import { Reveal } from "@/components/motion/Reveal";
 
 /**
  * The Library — a soft tease of the paid bundle.
@@ -22,11 +21,9 @@ export function Library() {
       <div className="shell">
         <Bone aria-hidden className="mb-6 h-9 w-9 text-ink" />
 
-        <Reveal>
-          <h2 id="library-heading" className="t-display-l max-w-[26ch] text-ink">
-            The free ones are the start of it.
-          </h2>
-        </Reveal>
+        <h2 id="library-heading" className="reveal-heading t-display-l max-w-[26ch] text-ink">
+          The free ones are the start of it.
+        </h2>
 
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="t-body space-y-4 text-ink/80">

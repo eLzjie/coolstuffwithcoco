@@ -43,7 +43,7 @@ const SETS: Record<Variant, Array<{ Icon: typeof Paw; cls: string }>> = {
 
 export function Ambient({ variant = "mixed" }: { variant?: Variant }) {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+    <div aria-hidden className="decor-layer pointer-events-none absolute inset-0 -z-10 overflow-hidden">
       {SETS[variant].map(({ Icon, cls }, i) => (
         <Icon key={i} className={`absolute ${cls}`} />
       ))}

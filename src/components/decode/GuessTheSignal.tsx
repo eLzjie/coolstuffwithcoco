@@ -67,7 +67,7 @@ export function GuessTheSignal() {
       <Ambient variant="paws" />
       <div className="shell">
         <Speech aria-hidden className="mb-6 h-9 w-9 text-ink" />
-        <h2 id="signals-heading" className="t-display-l max-w-[22ch] text-ink">
+        <h2 id="signals-heading" className="reveal-heading t-display-l max-w-[22ch] text-ink">
           Three of hers. Have a go.
         </h2>
         <p className="t-lead mt-5 text-ink/75">

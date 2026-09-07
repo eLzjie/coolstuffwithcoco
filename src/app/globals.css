@@ -45,6 +45,19 @@
     ink itself. Below 75% is for decorative borders and icons only.
   */
   --color-ink-muted: color-mix(in oklab, var(--color-ink) 75%, transparent);
+
+  /*
+    ILLUSTRATION ONLY — Coco's actual colouring, sampled from her photos.
+
+    These are NOT part of the UI palette and must never be used for text,
+    buttons, borders or section washes. They exist so drawn depictions of Coco
+    (the waving paw) match the real dog: she's a fawn Frenchie with a dark
+    mask and charcoal pads, not a black silhouette.
+  */
+  --coco-fur: #d9ae7e;
+  --coco-fur-shade: #c2915f;
+  --coco-pad: #4a3f38;
+  --coco-mask: #3a2e28;
   --color-coral-deep: color-mix(in oklab, var(--color-coral) 82%, var(--color-ink));
   --color-paper-warm: color-mix(in oklab, var(--color-paper) 92%, var(--color-coral));
 
@@ -125,9 +138,11 @@ body {
 .t-hero {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(2.5rem, 5vw, 4.25rem);
-  line-height: 0.94;
-  letter-spacing: -0.025em;
+  /* Capped at 3.5rem: at 4.25rem it crowded the fold on desktop and left
+     Coco too little room between the two type columns. Mobile is unchanged. */
+  font-size: clamp(2.5rem, 4.2vw, 3.5rem);
+  line-height: 0.96;
+  letter-spacing: -0.022em;
 }
 
 /*
@@ -138,9 +153,10 @@ body {
 .t-hero-echo {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(1.75rem, 3.5vw, 3rem);
-  line-height: 0.98;
-  letter-spacing: -0.02em;
+  /* Kept at ~0.7 of .t-hero so the h1 still clearly leads */
+  font-size: clamp(1.6rem, 2.9vw, 2.5rem);
+  line-height: 1;
+  letter-spacing: -0.018em;
 }
 
 .t-display-l {
@@ -318,7 +334,7 @@ body {
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(16px) scale(0.96);
   }
   to {
     opacity: 1;
@@ -327,8 +343,10 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  /* Time-based, not scroll-driven, so the overshoot can live in the easing
+     here rather than in the keyframes. */
   .rise {
-    animation: rise-in 0.7s var(--ease-settle) both;
+    animation: rise-in 0.72s var(--ease-wave) both;
   }
   .rise-1 {
     animation-delay: 0.05s;
@@ -397,6 +415,19 @@ body {
   }
 }
 
+/*
+  Wrapper for decorative animated layers.
+
+  `contain: paint` tells the browser these descendants can't affect anything
+  outside the box, which keeps a scaling 42vw circle from being attributed as
+  a layout shift. Without it the hero's `breathe` circle registered 0.0036 CLS
+  — harmless, but it isn't zero, and decoration should never show up in a
+  layout metric at all.
+*/
+.decor-layer {
+  contain: paint;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .spin-slow {
     animation: spin-slow 14s linear infinite;
@@ -445,50 +476,109 @@ body {
   progressive enhancement with no JS fallback. The `animation-range: entry`
   check filters out browsers with only partial support.
 */
-.reveal {
+.reveal,
+.reveal-left,
+.reveal-right,
+.reveal-heading {
   opacity: 1;
   transform: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   @supports ((animation-timeline: view()) and (animation-range: entry)) {
-    .reveal {
-      animation: rise-in linear both;
+    .reveal,
+    .reveal-left,
+    .reveal-right,
+    .reveal-heading {
       animation-timeline: view();
-      animation-range: entry 10% cover 26%;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      /* Slightly longer range than a fade needs, so the overshoot has room
+         to read instead of snapping past in a few pixels of scroll. */
+      animation-range: entry 8% cover 30%;
     }
 
-    /* Sideways entrances for the split panels */
+    .reveal {
+      animation-name: pop-in;
+    }
+    .reveal-heading {
+      animation-name: pop-heading;
+    }
     .reveal-left {
-      animation: slide-in-left linear both;
-      animation-timeline: view();
-      animation-range: entry 5% cover 24%;
+      animation-name: swing-in-left;
     }
     .reveal-right {
-      animation: slide-in-right linear both;
-      animation-timeline: view();
-      animation-range: entry 5% cover 24%;
+      animation-name: swing-in-right;
     }
   }
 }
 
-@keyframes slide-in-left {
-  from {
+/* --------------------------------------------------------------------------
+   Playful entrances.
+
+   Overshoot is expressed in the KEYFRAMES, not in a timing function: on a
+   scroll-driven timeline the easing is the scroll itself, so a bouncy
+   cubic-bezier does nothing. Putting the overshoot at ~62% of the keyframe
+   means the element scales past its resting size and settles as you scroll —
+   which is what reads as "pop" rather than "fade".
+   -------------------------------------------------------------------------- */
+
+@keyframes pop-in {
+  0% {
     opacity: 0;
-    transform: translateX(-26px);
+    transform: translateY(26px) scale(0.86);
   }
-  to {
+  62% {
+    opacity: 1;
+    transform: translateY(0) scale(1.045);
+  }
+  100% {
     opacity: 1;
     transform: none;
   }
 }
 
-@keyframes slide-in-right {
-  from {
+@keyframes swing-in-left {
+  0% {
     opacity: 0;
-    transform: translateX(26px);
+    transform: translateX(-42px) rotate(-3.5deg) scale(0.9);
   }
-  to {
+  64% {
+    opacity: 1;
+    transform: translateX(0) rotate(1.2deg) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes swing-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(42px) rotate(3.5deg) scale(0.9);
+  }
+  64% {
+    opacity: 1;
+    transform: translateX(0) rotate(-1.2deg) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* For headings — a squash-and-stretch rise, no sideways travel */
+@keyframes pop-heading {
+  0% {
+    opacity: 0;
+    transform: translateY(34px) scaleY(0.82);
+  }
+  58% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1.06);
+  }
+  100% {
     opacity: 1;
     transform: none;
   }

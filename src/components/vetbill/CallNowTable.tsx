@@ -37,7 +37,7 @@ export function CallNowTable() {
       <Ambient variant="care" />
       <div className="shell">
         <Cross aria-hidden className="mb-6 h-9 w-9 text-ink" />
-        <h2 id="table-heading" className="t-display-l max-w-[24ch] text-ink">
+        <h2 id="table-heading" className="reveal-heading t-display-l max-w-[24ch] text-ink">
           Go now, or ring in the morning?
         </h2>
         <p className="t-lead mt-5 text-ink/80">

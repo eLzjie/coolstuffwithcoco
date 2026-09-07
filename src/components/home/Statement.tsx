@@ -40,7 +40,7 @@ export function Statement() {
       aria-labelledby="statement-heading"
     >
       {/* Circle field */}
-      <motion.div aria-hidden style={{ y: fieldY }} className="pointer-events-none absolute inset-0 -z-10">
+      <motion.div aria-hidden style={{ y: fieldY }} className="decor-layer pointer-events-none absolute inset-0 -z-10">
         <span className="breathe absolute -left-[10%] top-[4%] block h-[34vw] w-[34vw] rounded-full bg-paper/45" />
         <span className="breathe delay-1 absolute right-[2%] top-[38%] block h-[26vw] w-[26vw] rounded-full bg-paper/35" />
         <span className="breathe delay-3 absolute left-[36%] bottom-[-8%] block h-[22vw] w-[22vw] rounded-full bg-butter/45" />

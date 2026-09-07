@@ -40,7 +40,7 @@ export default function VetBillPage() {
         {/* ---- Hero: reassuring, not scary ---- */}
         <section className="relative overflow-hidden bg-paper">
           <div className="shell py-6">
-            <BrandImage slot="logoHorizontal" className="h-9 w-auto" sizes="180px" />
+            <BrandImage slot="logoBadge" className="h-14 w-14 sm:h-16 sm:w-16" sizes="64px" />
           </div>
 
           <div className="shell grid items-center gap-10 pb-16 lg:grid-cols-[1.05fr_0.95fr] lg:pb-24">
@@ -78,7 +78,7 @@ export default function VetBillPage() {
         {/* ---- Cost transparency: the value here IS the transparency ---- */}
         <section className="section-pad bg-paper" aria-labelledby="cost-heading">
           <div className="shell">
-            <h2 id="cost-heading" className="t-display-l max-w-[22ch] text-ink">
+            <h2 id="cost-heading" className="reveal-heading t-display-l max-w-[22ch] text-ink">
               What these nights actually cost
             </h2>
             <p className="t-lead mt-5 text-ink/75">
@@ -112,7 +112,7 @@ export default function VetBillPage() {
         {/* ---- What's inside ---- */}
         <section className="section-pad bg-sky" aria-labelledby="inside-heading">
           <div className="shell">
-            <h2 id="inside-heading" className="t-display-l max-w-[20ch] text-ink">
+            <h2 id="inside-heading" className="reveal-heading t-display-l max-w-[20ch] text-ink">
               What&apos;s in it
             </h2>
             <p className="t-lead mt-5 text-ink/80">{VETBILL.intro}</p>
@@ -148,7 +148,7 @@ export default function VetBillPage() {
         <section className="section-pad bg-paper" aria-labelledby="who-heading">
           <div className="shell">
             <Heart aria-hidden className="mb-6 h-8 w-8 text-coral" />
-            <h2 id="who-heading" className="t-display-l max-w-[18ch] text-ink">
+            <h2 id="who-heading" className="reveal-heading t-display-l max-w-[18ch] text-ink">
               This is for you if
             </h2>
             <ul className="mt-10 grid gap-4 sm:grid-cols-2">

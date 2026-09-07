@@ -38,7 +38,7 @@ export default function DecodePage() {
         <section className="relative overflow-hidden bg-paper">
           {/* Non-clickable logo — no route out of here */}
           <div className="shell py-6">
-            <BrandImage slot="logoHorizontal" className="h-9 w-auto" sizes="180px" />
+            <BrandImage slot="logoBadge" className="h-14 w-14 sm:h-16 sm:w-16" sizes="64px" />
           </div>
 
           <div className="shell grid items-center gap-10 pb-16 lg:grid-cols-[1.05fr_0.95fr] lg:pb-24">
@@ -76,7 +76,7 @@ export default function DecodePage() {
         {/* ---- What's inside ---- */}
         <section className="section-pad bg-paper" aria-labelledby="inside-heading">
           <div className="shell">
-            <h2 id="inside-heading" className="t-display-l max-w-[20ch] text-ink">
+            <h2 id="inside-heading" className="reveal-heading t-display-l max-w-[20ch] text-ink">
               What&apos;s in it
             </h2>
             <p className="t-lead mt-5 text-ink/75">{DECODE.intro}</p>
@@ -98,7 +98,7 @@ export default function DecodePage() {
         {/* ---- Who it's for ---- */}
         <section className="section-pad bg-butter" aria-labelledby="who-heading">
           <div className="shell">
-            <h2 id="who-heading" className="t-display-l max-w-[18ch] text-ink">
+            <h2 id="who-heading" className="reveal-heading t-display-l max-w-[18ch] text-ink">
               This is for you if
             </h2>
             <ul className="mt-10 grid gap-4 sm:grid-cols-2">
