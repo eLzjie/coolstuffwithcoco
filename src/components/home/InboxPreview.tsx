@@ -1,7 +1,7 @@
 "use client";
 
 import { BrandImage } from "@/components/brand/BrandImage";
-import { GhlFormEmbed } from "@/components/shared/GhlFormEmbed";
+import { CaptureSlot } from "@/components/forms/CaptureSlot";
 
 /**
  * PROPOSED ADDITION (§4.1) — "What lands in your inbox".
@@ -68,7 +68,7 @@ export function InboxPreview() {
             Not ready for a guide? Get the emails and decide later.
           </p>
           <div className="mt-6">
-            <GhlFormEmbed magnet="newsletter" height={260} />
+            <CaptureSlot magnet="newsletter" />
           </div>
         </div>
       </div>

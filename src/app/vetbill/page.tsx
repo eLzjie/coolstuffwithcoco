@@ -3,7 +3,7 @@ import { BrandImage } from "@/components/brand/BrandImage";
 import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Cross, Heart } from "@/components/brand/Icons";
 import { CallNowTable } from "@/components/vetbill/CallNowTable";
-import { GhlFormEmbed } from "@/components/shared/GhlFormEmbed";
+import { CaptureSlot } from "@/components/forms/CaptureSlot";
 import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/motion/Reveal";
 import { ViewContent } from "@/components/shared/ViewContent";
@@ -176,7 +176,7 @@ export default function VetBillPage() {
               nothing is wrong.
             </p>
             <div className="mt-8 rounded-2xl border-2 border-ink/20 bg-paper p-6 sm:p-8">
-              <GhlFormEmbed magnet="vetbill" height={300} />
+              <CaptureSlot magnet="vetbill" redirectTo="/vetbill/thank-you" />
             </div>
           </div>
         </section>

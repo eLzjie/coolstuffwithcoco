@@ -10,6 +10,7 @@
  */
 
 import { hasConsent, onConsentChange } from "@/lib/consent";
+import type { LeadMagnet } from "@/lib/leadMagnet";
 import { getAttribution } from "@/lib/utm";
 
 export type EventName =
@@ -38,15 +39,20 @@ const META_EVENT: Record<EventName, string> = {
   decline_offer: "CustomizeProduct",
 };
 
-export type LeadMagnet = "decode" | "vetbill";
+
+/** Events Meta has no standard name for — sent via trackCustom. */
+const CUSTOM_EVENTS: ReadonlySet<EventName> = new Set(["form_start"]);
 
 export type EventPayload = {
   lead_magnet?: LeadMagnet;
   content_name?: string;
   value?: number;
   currency?: string;
-  /** Shared with the server so Pixel + CAPI dedupe on the same event. */
-  event_id?: string;
+  /**
+   * Shared with the server so the Pixel and CAPI dedupe to one conversion.
+   * Generated per submit by the route handler and returned to the client.
+   */
+  eventId?: string;
   [key: string]: unknown;
 };
 
@@ -63,13 +69,6 @@ declare global {
 let queue: Array<{ name: EventName; payload: EventPayload }> = [];
 let flushBound = false;
 
-export function newEventId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return `evt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-}
-
 function emit(name: EventName, payload: EventPayload) {
   const body = { ...getAttribution(), ...payload };
 
@@ -85,19 +84,56 @@ function emit(name: EventName, payload: EventPayload) {
   if (typeof window === "undefined") return;
 
   const metaName = META_EVENT[name];
-  const opts = body.event_id ? { eventID: body.event_id as string } : undefined;
 
-  // Standard vs custom: anything not in Meta's standard list goes through trackCustom.
-  const isStandard = !metaName.includes("_");
+  /*
+    eventID is what Meta deduplicates the Pixel against the server-side CAPI
+    call. Both halves must carry the SAME id or one conversion is counted
+    twice — which trains the ad account on inflated numbers.
+  */
+  const opts = payload.eventId
+    ? { eventID: String(payload.eventId) }
+    : undefined;
+
+  // Explicit, not inferred from punctuation: the old test keyed off an
+  // underscore in the mapped name, which was right only because the one
+  // custom event happened to contain one.
+  const isStandard = !CUSTOM_EVENTS.has(name);
   window.fbq?.(isStandard ? "track" : "trackCustom", metaName, body, opts);
   window.gtag?.("event", name, body);
 }
+
+/**
+ * Conversion events are DROPPED when consent is absent, never queued.
+ *
+ * Replaying one later would send Meta a `lead` carrying an `eventId` whose
+ * server-side CAPI counterpart fired at submit time — likely outside Meta's
+ * deduplication window by then, so the same conversion gets counted twice and
+ * the ad account optimises on inflated numbers.
+ *
+ * Deferring a page_view costs nothing. Deferring a conversion corrupts data.
+ */
+const NEVER_QUEUE: ReadonlySet<EventName> = new Set([
+  "lead",
+  "purchase_bundle",
+  "purchase_single",
+  "purchase_bump",
+]);
+
+/** Bound the queue so a consent-denied session can't grow it forever. */
+const QUEUE_MAX = 50;
 
 export function track(name: EventName, payload: EventPayload = {}) {
   if (typeof window === "undefined") return;
 
   if (!hasConsent("analytics")) {
-    queue.push({ name, payload });
+    if (NEVER_QUEUE.has(name)) {
+      if (DEBUG) {
+        console.log(`[coco:track] dropped (no consent, not queueable): ${name}`);
+      }
+      return;
+    }
+
+    if (queue.length < QUEUE_MAX) queue.push({ name, payload });
     if (DEBUG) {
       console.log(`[coco:track] queued (no consent yet): ${name}`);
     }
@@ -115,3 +151,5 @@ export function track(name: EventName, payload: EventPayload = {}) {
 
   emit(name, payload);
 }
+
+export type { LeadMagnet };
