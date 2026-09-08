@@ -7,8 +7,15 @@ import { CaptureSlot } from "@/components/forms/CaptureSlot";
 import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/motion/Reveal";
 import { ViewContent } from "@/components/shared/ViewContent";
-import { BRAND } from "@/lib/brand/manifest";
-import { COSTS, COST_SOURCES, VETBILL } from "@/lib/content/guides";
+import { Faq } from "@/components/shared/Faq";
+import { Preventable } from "@/components/vetbill/Preventable";
+import {
+  COSTS,
+  COST_SOURCES,
+  VETBILL,
+  VETBILL_STATS,
+} from "@/lib/content/guides";
+import { VETBILL_FAQ } from "@/lib/content/faq";
 
 export const metadata: Metadata = {
   title: VETBILL.title,
@@ -18,7 +25,6 @@ export const metadata: Metadata = {
     title: VETBILL.title,
     description: VETBILL.promise,
     url: "/vetbill",
-    images: BRAND.ogVetbill.ready ? [`/brand/${BRAND.ogVetbill.file}`] : undefined,
   },
 };
 
@@ -73,6 +79,28 @@ export default function VetBillPage() {
           </div>
         </section>
 
+        {/*
+          ---- The three numbers the guide opens with ----
+          Statements about OWNERS, not about dogs, and that's the point:
+          nobody believes the emergency will be theirs, so the useful fact is
+          how many people were equally sure and then had minutes to decide.
+        */}
+        <section
+          className="border-y-2 border-ink bg-butter py-8"
+          aria-label="Emergency preparedness in numbers"
+        >
+          <div className="shell">
+            <dl className="grid gap-6 text-center sm:grid-cols-3 sm:text-left">
+              {VETBILL_STATS.map((s) => (
+                <div key={s.label}>
+                  <dt className="t-display-l leading-none text-ink">{s.figure}</dt>
+                  <dd className="t-small mt-2 text-ink/80">{s.label}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+
         {/* ---- Signature moment ---- */}
         <CallNowTable />
 
@@ -114,12 +142,11 @@ export default function VetBillPage() {
                 <strong className="font-semibold">
                   These are ranges, not quotes.
                 </strong>{" "}
-                They&apos;re US figures gathered from published pet-insurance
-                and veterinary-cost sources to give you a sense of scale before
-                you&apos;re standing at a counter. Real prices swing hard by
-                state, city and clinic, and a specialty hospital costs more than
-                a general practice. Your own vet is the only place to get a
-                number that applies to your dog.
+                They&apos;re the same US figures printed in the guide, there to
+                give you a sense of scale before you&apos;re standing at a
+                counter. Real prices swing hard by state, city and clinic, and a
+                specialty hospital costs more than a general practice. Your own
+                vet is the only place to get a number that applies to your dog.
               </p>
               <p className="t-small mt-3 text-ink-muted">
                 Sources:{" "}
@@ -175,6 +202,22 @@ export default function VetBillPage() {
             </p>
           </div>
         </section>
+
+        {/* ---- What you can actually do about it ---- */}
+        <Preventable />
+
+        {/*
+          ---- Q&A ----
+          Before the capture form: someone who arrived searching "how much is
+          an emergency vet visit" gets the answer here rather than being made
+          to trade an email for it. The guide is the depth, not the gate.
+        */}
+        <Faq
+          items={VETBILL_FAQ}
+          heading="What people ask before it happens"
+          intro="Direct answers, taken from the guide. General guidance only — none of this can diagnose your dog."
+          className="bg-paper"
+        />
 
         {/* ---- Who it's for ---- */}
         <section className="section-pad bg-paper" aria-labelledby="who-heading">

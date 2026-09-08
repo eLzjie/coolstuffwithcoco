@@ -52,8 +52,14 @@ export function CallNowTable() {
         <h2 id="table-heading" className="reveal-heading t-display-l max-w-[24ch] text-ink">
           Go now, or ring in the morning?
         </h2>
+        {/*
+          Counted, not written. This said "Six of them" while the table held
+          eight — the row list grew when it was aligned to the guide and the
+          sentence didn't. A hardcoded count next to a mapped array is a
+          promise that breaks silently every time someone edits the data.
+        */}
         <p className="t-lead mt-5 text-ink/80">
-          Six of them, out of the full table in the guide.
+          {TRIAGE.length} of them, out of the full table in the guide.
         </p>
 
         <div className="mt-10 overflow-hidden rounded-2xl border-2 border-ink bg-paper">

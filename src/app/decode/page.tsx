@@ -7,8 +7,10 @@ import { CaptureSlot } from "@/components/forms/CaptureSlot";
 import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/motion/Reveal";
 import { ViewContent } from "@/components/shared/ViewContent";
-import { BRAND } from "@/lib/brand/manifest";
+import { Faq } from "@/components/shared/Faq";
+import { ReadMethod } from "@/components/decode/ReadMethod";
 import { DECODE } from "@/lib/content/guides";
+import { DECODE_FAQ } from "@/lib/content/faq";
 
 export const metadata: Metadata = {
   title: DECODE.title,
@@ -18,7 +20,6 @@ export const metadata: Metadata = {
     title: DECODE.title,
     description: DECODE.promise,
     url: "/decode",
-    images: BRAND.ogDecode.ready ? [`/brand/${BRAND.ogDecode.file}`] : undefined,
   },
 };
 
@@ -95,6 +96,22 @@ export default function DecodePage() {
             </ul>
           </div>
         </section>
+
+        {/* ---- The R.E.A.D. method: a named, quotable framework ---- */}
+        <ReadMethod />
+
+        {/*
+          ---- Q&A ----
+          Sits BEFORE the capture section on purpose. These are the questions
+          people arrive already asking, so answering them earns the email
+          rather than withholding until the form. The form is right below.
+        */}
+        <Faq
+          items={DECODE_FAQ}
+          heading="The questions everyone actually asks"
+          intro="Straight answers, taken from the guide. No preamble."
+          className="bg-paper-warm"
+        />
 
         {/* ---- Who it's for ---- */}
         <section className="section-pad bg-butter" aria-labelledby="who-heading">

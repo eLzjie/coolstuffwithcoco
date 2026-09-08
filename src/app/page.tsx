@@ -8,7 +8,6 @@ import { Library } from "@/components/home/Library";
 import { Community } from "@/components/home/Community";
 import { InboxPreview } from "@/components/home/InboxPreview";
 import { Footer } from "@/components/layout/Footer";
-import { BRAND } from "@/lib/brand/manifest";
 import { IG_URL, SITE_NAME, SITE_URL } from "@/lib/content/guides";
 
 export const metadata: Metadata = {
@@ -21,7 +20,6 @@ export const metadata: Metadata = {
     description:
       "Coco's free guides for dog owners. Plain-spoken, and written for the stuff that actually comes up.",
     url: "/",
-    images: BRAND.ogHome.ready ? [`/brand/${BRAND.ogHome.file}`] : undefined,
   },
 };
 

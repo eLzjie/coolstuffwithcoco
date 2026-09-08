@@ -582,3 +582,185 @@ Carried forward, plus new:
   original. Check this before relying on a name merge field in an email.
 - Visual/mobile pass and a Lighthouse re-run on the new legal, contact and
   newsletter sections.
+
+---
+
+# Session 4 — 2026-09-08 (branch `staging`)
+
+Analytics (GA4 + GTM), then SEO/GEO/AEO. The research phase changed the plan
+twice, and reading the delivered guides turned up a content contradiction.
+
+## GA4 and Tag Manager
+
+`track.ts` already called `window.gtag`, so most of this was wiring plus the
+GA4 name mapping it lacked. Events now use GA4's **recommended** names
+(`generate_lead`, `view_item`, `begin_checkout`, `purchase`, `view_promotion`)
+so they land in built-in reports rather than "unassigned".
+
+Three things that are wrong by default and are now handled:
+
+- **`send_page_view: false`.** `AnalyticsBoot` already fires `page_view` per
+  pathname change. Leaving the config tag's own enabled double-counts the first
+  view of every session — only the first, which reads as a data quirk rather
+  than a bug.
+- **Consent Mode v2 runs `beforeInteractive`, from the root layout.** Next
+  requires that strategy at the root, and Google reads consent state at tag
+  initialisation — a default set afterwards applies to nothing already sent,
+  silently. Every signal defaults to granted, matching the US-only posture, so
+  it changes nothing today; a banner later only has to call `setConsent()`.
+- **GA4 gets a curated param set.** Forwarding `getAttribution()` would spend
+  the 50-custom-dimension property budget on UTMs GA4 already parses from the
+  URL, and unregistered params are dropped. Meta still gets the full body.
+
+Both ids come from `NEXT_PUBLIC_` env vars, **unset outside production** — so
+dev, preview and the test suites can't pollute the one property the ad spend is
+judged on. Unset renders no tag at all.
+
+### `npm run check:tags`
+
+Asserts the rendered markup: one GA4 loader, one config, consent present as a
+real early inline script, loaders deferred rather than inlined ahead of it.
+14/14 with ids set, 2/2 asserting nothing renders without them.
+
+It documents two traps that made its own first version report false failures:
+**a `<link rel="preload">` is not a loader** (it fetches without executing), and
+**React serialises every inline script into the RSC flight payload too**, so
+everything appears twice in the HTML. Both made correct output look broken.
+
+**What it cannot check:** a GA4 Configuration tag added inside the GTM
+container. That's the likeliest cause of double-counting and it lives in
+Google's UI. Documented loudly in `Tags.tsx`; verify in GA4 Realtime that one
+page load produces one `page_view`.
+
+## Two pieces of standard GEO advice, dropped after research
+
+- **FAQ rich results were fully removed on 7 May 2026.** `FAQPage` is still
+  valid schema but produces no rich result for anyone. It's emitted as a cheap
+  byproduct, labelled as such — nobody should add to it expecting SERP
+  decoration.
+- **llms.txt is ignored in practice.** Of 500M+ AI crawler visits in one 2026
+  study, 408 fetched it, and Google has said publicly it won't support it,
+  comparing it to the keywords meta tag. Not built.
+
+Both point the same way: **crawlers read the HTML.** So the work went into
+visible content and hygiene rather than schema files.
+
+## The guides contradicted the site
+
+The v5 PDFs landed in `docs/specs/`, and reading them showed the cost table
+disagreed with the guide it advertises:
+
+| | site said | guide says |
+|---|---|---|
+| Bloat surgery | $3,000–8,000 | **$2,000–7,500** |
+| Swallowed object | $2,000–3,500 | **$1,500–5,000** |
+| Emergency exam | $100–250 | **$150–500** (incl. diagnostics) |
+
+A reader takes the page's number, downloads the PDF, and finds a different one.
+The page yields — the guide is what they keep. `COSTS` now mirrors Section 1 of
+the guide exactly, and `COST_SOURCES` carries the guide's own attributions
+(Rover 2026, Forbes, ASPCA, RVC) instead of the separately-researched set.
+
+**Rule now recorded in `guides.ts`: the guide is the source of truth for
+anything a reader can compare. Don't re-research these separately.**
+
+Same pass also found:
+
+- Both chapter lists were **missing a section** that's in the guide (decode's
+  7-day challenge; vetbill's five costly mistakes).
+- The hazard audit was described as twenty minutes; the guide says ten.
+- `CallNowTable` said "Six of them" while the table held eight. Now counted
+  from `TRIAGE.length` — a hardcoded count beside a mapped array breaks
+  silently every time the data is edited.
+- **All three `SIGNALS` claims checked out** against the guide, so those
+  `verify: true` flags are cleared with the evidence quoted in the docblock.
+- `TRIAGE` rows now come from the guide's own Section 2 rather than being
+  written here — better provenance, and the page and PDF can't drift.
+  **One deliberate difference kept:** the guide's second column says "safe to
+  monitor"; the site still says "ring your vet today". A landing page is read
+  without the guide's surrounding caveats, so it shouldn't hand out permission
+  to wait.
+
+## New content on /decode and /vetbill
+
+- **The R.E.A.D. method** gets its own section on /decode. A named, four-step,
+  self-contained framework is *quotable* — an assistant can lift it as a unit
+  and attribute it, in a way it can't lift three paragraphs of good advice.
+  It's also the guide's most useful page, and giving it away doesn't
+  cannibalise the download.
+- **Answer-first Q&A** on both pages (9 and 7 questions), from the guides only.
+  The technique is the ordering: question as heading, direct answer in the
+  **first sentence**, detail after. "There are a few reasons dogs eat grass…"
+  is unquotable; "Grass eating is normal and usually harmless" can be lifted
+  with attribution.
+- **The Preventable Five** on /vetbill. This one is load-bearing for *tone*,
+  not SEO: the rest of the page is necessarily large frightening numbers, and
+  that's only defensible alongside what to actually do. Don't remove it to
+  shorten the page.
+- Both Q&A sections sit **before** the capture form. Someone who arrived
+  searching "how much is an emergency vet visit" gets the answer rather than
+  being made to trade an email for it.
+- Insurance answer stays **neutral by design** — the guide opens that section
+  by saying it isn't licensed to advise, and the page must match.
+
+## SEO hygiene
+
+- **`sitemap.ts` no longer stamps `new Date()`.** Every URL previously claimed
+  to have changed at deploy time, so a CSS tweak announced that the privacy
+  policy and both guides were rewritten. Crawlers weight `lastmod` by whether
+  it has been truthful, so that spends the signal for nothing. Hand-maintained
+  dates now.
+- **`robots.ts` names the AI crawlers explicitly** — GPTBot, ClaudeBot,
+  PerplexityBot, Google-Extended and the rest. The wildcard already allowed
+  them; naming them records that it's a *decision*, because "allow everything"
+  and "we decided to allow the AI crawlers" look identical in a config file.
+  Being crawlable is the precondition for being cited.
+- **Generated OG images** for all three main pages via `ImageResponse`. All
+  three `og*` manifest slots were `ready: false` while
+  `twitter: summary_large_image` was declared — promising a large-image card
+  and supplying no image, which renders blank everywhere a link is shared.
+
+### The OG gotcha worth knowing
+
+The routes built and served valid 1200×630 PNGs while every page still rendered
+**no `og:image` at all**. The cause was in the page metadata:
+
+```ts
+openGraph: { images: BRAND.ogDecode.ready ? [...] : undefined }
+```
+
+An `images` key that is **present-but-undefined suppresses the file convention
+entirely** — it does not fall through to it. Deleting the key made og:image,
+its type/width/height/alt *and* twitter:image all appear.
+
+Consequence: the `og*` manifest slots are now unreferenced, and flipping their
+`ready` flag does nothing on its own. Switching to designed artwork means
+deleting the three `opengraph-image.tsx` files and pointing `openGraph.images`
+at the real files — in that order.
+
+## Test state
+
+| Suite | Result |
+|---|---|
+| `npm run test:api` | 39/39 |
+| `npm run test:crm` | 19/19 |
+| `npm run test:traffic` | 19/19 |
+| `npm run check:ghl` | passing |
+| `npm run check:tags` | 14/14 with ids, 2/2 without — **new** |
+| `tsc`, `lint`, `build` | clean |
+
+Mobile verified at 390px on both guide pages: no horizontal scroll, no clipped
+text, new sections render correctly.
+
+## Still open
+
+- **LCP not re-measured.** Lighthouse isn't installed in this environment. The
+  loaders are `afterInteractive` and verified not inlined, which is the
+  mechanism that keeps them off the LCP path — but that's an architectural
+  guarantee, not a measurement. Worth one real Lighthouse run before spend.
+- **Mark `generate_lead` as a key event in the GA4 UI.** The code sends it;
+  GA4 won't treat it as a conversion until someone ticks that box.
+- **Don't add a GA4 tag to the GTM container** (see above).
+- Designed OG artwork, to replace the generated cards.
+- Everything in `docs/LEGAL-REVIEW.md` — entity name and governing law still
+  blank, refund mechanics still unverified against a checkout.
