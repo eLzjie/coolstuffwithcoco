@@ -17,6 +17,7 @@ import {
 } from "@/lib/validation";
 import { TextField } from "@/components/forms/TextField";
 import { FormSuccess } from "@/components/forms/FormSuccess";
+import { rememberCapture } from "@/lib/recentCapture";
 
 /**
  * The one capture form, used in three places.
@@ -221,6 +222,12 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
     setStatus("submitting");
 
     const consented = consentForSubmit();
+    /*
+      Bound once. The request body and the sessionStorage stash must be the
+      same string — if they normalise differently, the waitlist would tag an
+      address that isn't the contact we just created.
+    */
+    const submittedEmail = values.email.trim().toLowerCase();
     const abort = new AbortController();
     const timeout = window.setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS);
 
@@ -230,7 +237,7 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
         headers: { "Content-Type": "application/json" },
         signal: abort.signal,
         body: JSON.stringify({
-          email: values.email.trim().toLowerCase(),
+          email: submittedEmail,
           // Omitted entirely for the newsletter rather than sent empty, so a
           // blank can't overwrite a name captured on an earlier submission.
           ...(isNewsletter
@@ -285,6 +292,17 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
         a dead end. It does concede slightly more to a honeypot bot than the
         old silent 200; misleading a real person is the worse failure.
       */
+      /*
+        Remember the address for the thank-you page's waitlist, so the very
+        next screen doesn't ask for something we were given four seconds ago.
+        sessionStorage, never the URL — see lib/recentCapture.ts.
+
+        Placed AFTER the discard check below would be wrong: we only want to
+        remember an address that actually landed. Placed here, it runs only on
+        a genuine success.
+      */
+      if (data.eventId) rememberCapture(submittedEmail);
+
       if (!data.eventId) {
         setFormError(SERVER_COPY.discarded);
         setStatus("error");

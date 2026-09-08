@@ -64,6 +64,50 @@ const DRY = process.argv.includes("--dry");
  * What lands IN the CRM is asserted by `npm run test:crm`, not here. This
  * suite only sees the HTTP boundary, which is how the merge hid for so long.
  */
+/* -------------------------------------------------------------------------
+   SEND GUARD — read this before removing it
+   -------------------------------------------------------------------------
+   Since delivery moved to a Contact Tag trigger (2026-09-09), applying
+   `lead-magnet-*` IS the delivery. So every happy-path case in this file now
+   causes GoHighLevel to actually send a guide email.
+
+   The addresses are all @example.com, which is reserved by RFC 2606 and has
+   no MX record. That means the sends do not reach a person — they HARD BOUNCE.
+   A run of this suite is therefore a burst of hard bounces from a sending
+   domain that is days old and has already had a forward test land in spam.
+
+   Hard bounces are the single fastest way to wreck a young domain's
+   reputation, and the entire launch rests on the delivery email working. Which
+   makes casually running this suite the day before launch a genuinely
+   expensive mistake, and one with no visible symptom until sends start
+   failing.
+
+   Hence the guard. To run the CRM-writing cases you must opt in:
+
+     ALLOW_CRM_SENDS=1 npm run test:api
+     ALLOW_CRM_SENDS=1 npm run test:crm
+
+   Better options in most situations:
+     - `npm run test:api -- --dry` covers validation and spam with no writes.
+     - Suppress or pause the delivery workflows in GHL for the duration.
+     - Point the suites at a seed address you control that can actually
+       receive, instead of example.com.
+
+   Do not delete this guard to make CI green. Set the variable in the place
+   that genuinely wants sends.
+   ------------------------------------------------------------------------- */
+if (!DRY && process.env.ALLOW_CRM_SENDS !== "1") {
+  console.error(
+    "\nRefusing to run CRM-writing cases.\n\n" +
+      "Delivery now triggers on the lead-magnet-* tag, so these cases make GHL\n" +
+      "send real guide emails to @example.com addresses, which hard bounce and\n" +
+      "damage a sending domain that is only days old.\n\n" +
+      "  Safe:      npm run test:api -- --dry\n" +
+      "  Intended:  ALLOW_CRM_SENDS=1 npm run test:api\n",
+  );
+  process.exit(2);
+}
+
 const RUN = Date.now().toString(36);
 const addr = (label) => `qa-cocotest-${RUN}-${label}@example.com`;
 

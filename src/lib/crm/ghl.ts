@@ -529,6 +529,66 @@ async function addTags(contactId: string, tags: string[]) {
 
 
 /* -------------------------------------------------------------------------
+   Library waitlist — interest, not a purchase
+   ------------------------------------------------------------------------- */
+
+/**
+ * Adds someone to the Library waitlist.
+ *
+ * Deliberately the narrowest possible operation: ONE additive tag on a contact
+ * that already exists. It writes no custom fields, sets no buyer_state, and
+ * creates nothing — because joining a waitlist is not a purchase and must not
+ * look like one anywhere downstream.
+ *
+ * `buyer_state` in particular stays untouched. Its documented values are
+ * Bought bundle / Bought single / Declined and it is set by workflow only. A
+ * waitlist join is none of those, and writing one would corrupt the buyer
+ * split the pipeline exists to measure.
+ *
+ * The upsert is by email, so a visitor who somehow reaches the thank-you page
+ * without having submitted gets created rather than erroring — the same
+ * behaviour as any other capture. It does NOT apply an `audience-*` or
+ * `lead-magnet-*` tag, so it cannot accidentally trigger a guide delivery.
+ *
+ * Returns nothing. The caller reports success on a 2xx and does not need the
+ * id for anything.
+ */
+export async function joinLibraryWaitlist(email: string): Promise<void> {
+  const locationId = env("GHL_LOCATION_ID");
+
+  const res = await fetch(`${API}/contacts/upsert`, {
+    method: "POST",
+    headers: headers(),
+    cache: "no-store",
+    body: JSON.stringify({ locationId, email }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`GHL waitlist upsert ${res.status}: ${await safeText(res)}`);
+  }
+
+  const body = (await res.json()) as { contact?: { id?: string } };
+  const contactId = body.contact?.id;
+  if (!contactId) throw new Error("GHL waitlist upsert returned no contact id");
+
+  /*
+    Additive endpoint, so it cannot clobber the lead-magnet or delivered tags
+    the delivery workflows depend on. GHL's upsert REPLACES the tag array,
+    which is why tags never go on an upsert body anywhere in this file.
+  */
+  await addTags(contactId, [WAITLIST_TAG]);
+}
+
+/**
+ * The tag the waitlist writes.
+ *
+ * Segment on this in GHL for the "tell them when it ships" send. Keep it
+ * distinct from any buyer tag: these people have paid nothing, and a campaign
+ * that treats them as customers is the fastest way to a complaint.
+ */
+export const WAITLIST_TAG = "library-waitlist";
+
+/* -------------------------------------------------------------------------
    Contact form — a question, not a lead
    ------------------------------------------------------------------------- */
 
