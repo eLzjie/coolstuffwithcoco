@@ -92,10 +92,24 @@ the record of "this person has this guide", so clearing it means they don't.
 
 ```bash
 npm run check:ghl      # every custom field the code writes exists
-npm run test:api       # the HTTP boundary: 39 cases
-npm run test:crm       # reads GHL back and asserts what landed: 19 cases
-npm run cleanup:qa -- --delete   # remove the contacts those runs created
+npm run test:api -- --dry        # HTTP boundary only, no CRM writes
+npm run cleanup:qa -- --delete   # remove contacts a run created
 ```
+
+To point any of these at a deployed URL, pass a flag rather than an env var —
+it works the same in PowerShell, cmd and bash, and doesn't linger in the shell:
+
+```
+npm run check:tags -- --base=https://www.coolstuffwithcoco.com
+npm run test:api   -- --base=https://www.coolstuffwithcoco.com --dry
+```
+
+**The CRM-writing cases need `ALLOW_CRM_SENDS=1`** and will not run without
+it. That is deliberate: since delivery triggers on the tag, those cases make
+GHL genuinely send, to `@example.com` addresses that have no MX record and
+therefore hard bounce — from a sending domain only days old. Run them when you
+actually want sends, having first suppressed the delivery workflows or pointed
+the suite at an address that can receive.
 
 `test:crm` is the one that matters here — it asserts the `lead-magnet-*` tags
 actually land, which is now the same thing as asserting delivery will fire.

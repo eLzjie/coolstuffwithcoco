@@ -31,7 +31,7 @@
  * Running it
  * ---------------------------------------------------------------------------
  *   npm run test:crm                 # against localhost:3000
- *   BASE=http://localhost:3055 npm run test:crm
+ *   npm run test:crm -- --base=http://localhost:3055
  *
  * Needs a running server plus real GHL credentials in .env.local. It WRITES
  * real contacts, so every address is `qa-crm-<timestamp>-*@example.com` —
@@ -54,7 +54,32 @@
  * */
 import { readFileSync } from "node:fs";
 
-const BASE = process.env.BASE ?? "http://localhost:3000";
+/**
+ * Target base URL.
+ *
+ * Accepts `--base=<url>` as well as the BASE env var, and the flag exists for
+ * a specific reason: this project is developed on Windows/PowerShell, where
+ * the POSIX `BASE=... npm run x` form is a syntax error —
+ *
+ *   BASE=https://example.com : The term 'BASE=https://example.com' is not
+ *   recognized as the name of a cmdlet...
+ *
+ * The PowerShell equivalent is `$env:BASE="..."; npm run x`, which also leaks
+ * the variable into the rest of the shell session. A flag works identically in
+ * bash, PowerShell and cmd, and doesn't persist:
+ *
+ *   npm run <script> -- --base=https://www.coolstuffwithcoco.com
+ *
+ * Precedence: flag, then env var, then the local default.
+ */
+function resolveBase() {
+  const flag = process.argv.find((a) => a.startsWith("--base="));
+  if (flag) return flag.slice("--base=".length).replace(/\/$/, "");
+  if (process.env.BASE) return process.env.BASE.replace(/\/$/, "");
+  return "http://localhost:3000";
+}
+
+const BASE = resolveBase();
 const ENV_FILE = new URL("../.env.local", import.meta.url);
 
 /* Load credentials WITHOUT printing them. Never log a value from here. */

@@ -3,7 +3,7 @@
  * Verifies the Google tag markup in the RENDERED page.
  *
  *   NEXT_PUBLIC_GA4_ID=G-… NEXT_PUBLIC_GTM_ID=GTM-… npm run build
- *   BASE=http://localhost:3080 npm run check:tags
+ *   npm run check:tags -- --base=http://localhost:3080
  *
  * ---------------------------------------------------------------------------
  * Why check the output rather than unit-test the components
@@ -61,8 +61,38 @@
  * for duplicate page_view hits in GA4 Realtime.
  */
 
-const BASE = process.env.BASE ?? "http://localhost:3000";
-const EXPECT_TAGS = process.env.EXPECT_TAGS !== "0";
+/**
+ * Target base URL.
+ *
+ * Accepts `--base=<url>` as well as the BASE env var, and the flag exists for
+ * a specific reason: this project is developed on Windows/PowerShell, where
+ * the POSIX `BASE=... npm run x` form is a syntax error —
+ *
+ *   BASE=https://example.com : The term 'BASE=https://example.com' is not
+ *   recognized as the name of a cmdlet...
+ *
+ * The PowerShell equivalent is `$env:BASE="..."; npm run x`, which also leaks
+ * the variable into the rest of the shell session. A flag works identically in
+ * bash, PowerShell and cmd, and doesn't persist:
+ *
+ *   npm run <script> -- --base=https://www.coolstuffwithcoco.com
+ *
+ * Precedence: flag, then env var, then the local default.
+ */
+function resolveBase() {
+  const flag = process.argv.find((a) => a.startsWith("--base="));
+  if (flag) return flag.slice("--base=".length).replace(/\/$/, "");
+  if (process.env.BASE) return process.env.BASE.replace(/\/$/, "");
+  return "http://localhost:3000";
+}
+
+const BASE = resolveBase();
+/*
+  `--no-tags` asserts the opposite: that NOTHING renders. Same shell-portability
+  reason as --base. EXPECT_TAGS=0 still works.
+*/
+const EXPECT_TAGS =
+  !process.argv.includes("--no-tags") && process.env.EXPECT_TAGS !== "0";
 
 let pass = 0;
 let fail = 0;

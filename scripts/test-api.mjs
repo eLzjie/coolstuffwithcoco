@@ -3,7 +3,7 @@
  * API tests for POST /api/subscribe against a running server.
  *
  *   npm run test:api                      # defaults to http://localhost:3000
- *   BASE=http://localhost:3031 npm run test:api
+ *   npm run test:api -- --base=http://localhost:3031
  *
  * ---------------------------------------------------------------------------
  * THIS WRITES TO THE LIVE CRM
@@ -30,7 +30,32 @@
  * one. A CRM full of test rows makes a genuine problem easy to miss.
  * */
 
-const BASE = process.env.BASE ?? "http://localhost:3000";
+/**
+ * Target base URL.
+ *
+ * Accepts `--base=<url>` as well as the BASE env var, and the flag exists for
+ * a specific reason: this project is developed on Windows/PowerShell, where
+ * the POSIX `BASE=... npm run x` form is a syntax error —
+ *
+ *   BASE=https://example.com : The term 'BASE=https://example.com' is not
+ *   recognized as the name of a cmdlet...
+ *
+ * The PowerShell equivalent is `$env:BASE="..."; npm run x`, which also leaks
+ * the variable into the rest of the shell session. A flag works identically in
+ * bash, PowerShell and cmd, and doesn't persist:
+ *
+ *   npm run <script> -- --base=https://www.coolstuffwithcoco.com
+ *
+ * Precedence: flag, then env var, then the local default.
+ */
+function resolveBase() {
+  const flag = process.argv.find((a) => a.startsWith("--base="));
+  if (flag) return flag.slice("--base=".length).replace(/\/$/, "");
+  if (process.env.BASE) return process.env.BASE.replace(/\/$/, "");
+  return "http://localhost:3000";
+}
+
+const BASE = resolveBase();
 const DRY = process.argv.includes("--dry");
 
 /**
