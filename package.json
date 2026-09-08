@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "check:ghl": "node scripts/check-ghl-fields.mjs",
-    "test:traffic": "node scripts/test-traffic-source.mjs"
+    "test:traffic": "node scripts/test-traffic-source.mjs",
+    "test:api": "node scripts/test-api.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.4",

@@ -16,12 +16,13 @@
  *    key's exact form (`utm_source` vs `contact.utm_source`) is ambiguous and
  *    a wrong key is accepted and silently dropped. Ids can't be wrong.
  *
- *  - Of the 12 fields in the build spec, only 5 existed at time of writing:
- *      present  utm_source utm_medium utm_campaign utm_content buyer_state
- *      MISSING  parent_audience lead_magnet interest traffic_source
- *               campaign utm_term landing_page
- *    Missing fields are skipped and named in a single warning per cold start,
- *    rather than sent blind and dropped. Run `npm run check:ghl` for a report.
+ *  - Every field this file writes now EXISTS in the sub-account, created via
+ *    the API on 2026-09-08. `npm run check:ghl` verifies that and exits
+ *    non-zero if any goes missing, so it can gate a deploy.
+ *
+ *    The id-resolution below stays regardless: a field can be renamed or
+ *    deleted in the GHL UI at any time, and this way that shows up as a named
+ *    warning instead of a column that quietly stops filling.
  */
 
 import { TRAFFIC_SOURCE, type TrafficSource } from "@/lib/trafficSource";
@@ -71,12 +72,36 @@ export type ContactFields = {
  * behaviour and workflows respectively, never at capture — writing them here
  * would clobber state the automation owns.
  */
-function fieldValues(c: ContactFields): Record<string, string> {
+function fieldValues(
+  c: ContactFields,
+  /**
+   * False when the contact already carries a `lead-magnet-*` tag, i.e. this
+   * isn't the magnet that acquired them.
+   */
+  isFirstTouch: boolean,
+): Record<string, string> {
   const out: Record<string, string> = {
     parent_audience: PARENT_AUDIENCE,
-    lead_magnet: LEAD_MAGNET_FIELD[c.leadMagnet],
     traffic_source: c.trafficSource,
   };
+
+  /*
+    `lead_magnet` is FIRST-TOUCH and must not be overwritten.
+
+    It's a single-select, so it can only hold one value — and its job is
+    attribution: which guide brought this person in. Writing it on every
+    submission means someone who takes Decode this week and Vet Bill next week
+    ends up attributed to Vet Bill, and the acquisition fact is gone for good.
+
+    Caught by a real end-to-end test, not by reading the code: the comment
+    below the constant already claimed first-touch while the write was
+    unconditional. The full set of magnets someone holds lives on the
+    `lead-magnet-*` tags, which is what the nurture workflows trigger on —
+    never read this field to decide what someone has.
+  */
+  if (isFirstTouch) {
+    out.lead_magnet = LEAD_MAGNET_FIELD[c.leadMagnet];
+  }
   // Only send what we actually have; empty strings overwrite real data with
   // blanks on a repeat submission.
   if (c.campaign) out.campaign = c.campaign;
@@ -214,7 +239,18 @@ export async function upsertContact(c: ContactFields): Promise<UpsertResult> {
     fieldIds(),
   ]);
 
-  const wanted = fieldValues(c);
+  /*
+    First touch = no `lead-magnet-*` tag yet.
+
+    When `before` is null the lookup failed and we don't know, and the safe
+    choice there is to SKIP the write. An unset `lead_magnet` can be backfilled
+    from the `lead-magnet-*` tags at any time; an overwritten one cannot be
+    recovered. Prefer the recoverable failure.
+  */
+  const isFirstTouch =
+    before !== null && !before.some((t) => t.startsWith("lead-magnet-"));
+
+  const wanted = fieldValues(c, isFirstTouch);
 
   const customFields: Array<{ id: string; field_value: string }> = [];
   const missing: string[] = [];

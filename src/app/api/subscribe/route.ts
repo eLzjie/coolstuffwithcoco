@@ -171,6 +171,19 @@ export async function POST(req: NextRequest) {
       don't know. Deliver in that case: a duplicate email is recoverable and
       visible, a guide that never arrives after someone paid to acquire the
       click is not.
+
+      KNOWN LIMIT, measured: GHL's contact search index is eventually
+      consistent. A tag written moments ago can be absent from the very next
+      read — observed taking a second or two to appear during testing. So two
+      submissions of the same pair within that window can both see "not
+      delivered" and both deliver.
+
+      Not defended further here on purpose. The form already blocks it
+      client-side (the button disables while submitting and the success state
+      refuses re-submit), so the realistic path is closed; the remaining case
+      is someone deliberately replaying the request, where a duplicate email
+      is a much smaller problem than the extra infrastructure a distributed
+      lock would need.
     */
     shouldDeliver =
       result.existingTags === null ||

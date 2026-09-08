@@ -2,12 +2,14 @@
  * traffic_source derivation.
  *
  * A fixed dropdown in GHL, so these strings must match the field's options
- * EXACTLY or the write lands wrong. They're centralised here for that reason —
- * one place to fix if a spelling differs.
+ * EXACTLY or the write lands on a value the dropdown doesn't have. They're
+ * centralised here for that reason — one place to change if either side moves.
  *
- * TODO(Eli): confirm each string byte-for-byte against the GHL dropdown,
- * especially "Paid — Other". The build spec renders it with an em dash; if the
- * dropdown uses a hyphen the value won't match.
+ * VERIFIED 2026-09-08: the `contact.traffic_source` dropdown was created via
+ * the API with exactly these six options, so they match byte-for-byte —
+ * including the EM DASH in "Paid — Other". If you edit that option in the GHL
+ * UI, change it here too; a hyphen there and an em dash here look identical at
+ * a glance and fail silently.
  */
 export const TRAFFIC_SOURCE = {
   meta: "Meta",
