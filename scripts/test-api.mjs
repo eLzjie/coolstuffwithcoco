@@ -8,8 +8,10 @@
  * ---------------------------------------------------------------------------
  * THIS WRITES TO THE LIVE CRM
  * ---------------------------------------------------------------------------
- * The happy-path cases create real contacts in GoHighLevel and fire the real
- * delivery webhook. Every address used is `qa-cocotest-<runid>-*@` so a run is
+ * The happy-path cases create real contacts in GoHighLevel, and applying the
+ * `lead-magnet-*` tag is what triggers the real delivery workflow — so these
+ * cases DO cause GHL to send. Every address used is `qa-cocotest-<runid>-*@`
+ * (example.com, which cannot receive mail) so a run is
  * trivially searchable and deletable, and the run id makes each run distinct
  * so repeat runs don't collide with each other's idempotency state.
  *

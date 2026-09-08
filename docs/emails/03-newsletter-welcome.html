@@ -1,0 +1,193 @@
+<!--
+  WF-1c &mdash; Newsletter welcome
+  Trigger: Contact Tag = lead-magnet-newsletter
+
+  Subject:  You're on the list 🐾
+  Preview:  A couple of dog things a month. That's the whole deal.
+
+  Mobile-first: the base layout IS the phone layout (fluid tables, 24px
+  gutters, 17px copy, full-width tap target). The <style> block only adds a
+  desktop refinement &mdash; see 01-decode-delivery.html for why that direction.
+
+  No PDF link here, and no merge tags at all. See the block below.
+
+  ===========================================================================
+   NO GUIDE LANGUAGE. NO PDF LINK. NO NURTURE SEQUENCE AFTER THIS.
+  ===========================================================================
+  The build spec flags this as the thing that gets built wrong, because the two
+  delivery emails come first and the pattern gets copied:
+
+    "Check: WF-1c has no nurture. The builder will try to add one, because
+     that's the pattern in the two before it. Those emails say 'the guide you
+     downloaded'."
+
+  A newsletter subscriber downloaded nothing. There is no PDF to link, no
+  "your guide" to reference, and no Day 1/3/5 sequence &mdash; this single email is
+  the whole workflow. If you find yourself adding a download button here,
+  something has gone wrong.
+
+  They also stay OUT of the subscriber-value pipeline: no guide, no offer, so
+  every stage past the first is meaningless for them and they'd quietly corrupt
+  every conversion rate on the board.
+
+  DO NOT add the Library offer to this email either. This person has had
+  nothing from us yet &mdash; pitching in the first email is how a young domain earns
+  complaints.
+-->
+<style>
+  /* Progressive enhancement only &mdash; the base below is already the mobile view. */
+  @media screen and (min-width: 620px) {
+    .gutter { padding-left: 32px !important; padding-right: 32px !important; }
+    .h1 { font-size: 28px !important; }
+    .btn-cell { width: auto !important; }
+    .btn { display: inline-block !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .card { background-color: #ffffff !important; }
+  }
+</style>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fdf9f5;margin:0;padding:16px 0;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <tr>
+    <td align="center" style="padding:0 10px;">
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" style="width:100%;max-width:600px;background-color:#ffffff;border:2px solid #211c1a;border-radius:16px;">
+
+        <tr>
+          <td align="center" class="gutter" style="padding:24px 24px 6px 24px;">
+            <img src="https://assets.cdn.filesafe.space/xqC9nSOeygEkT3p5nUi3/media/6aa037ee641597c752b0cde5.png"
+                 alt="Cool Stuff with Coco"
+                 width="128"
+                 style="width:128px;max-width:60%;height:auto;display:block;border:0;" />
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter h1" style="padding:8px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#211c1a;">
+            You&rsquo;re on the list.
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter" style="padding:14px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;color:#211c1a;">
+            That&rsquo;s it &mdash; nothing to click, nothing to confirm. A couple of
+            times a month I&rsquo;ll send you one dog thing we worked out,
+            explained properly. The stuff that turned out to be simple once
+            someone translated it.
+          </td>
+        </tr>
+
+        <!-- Sets expectations concretely. The cheapest complaint prevention there is. -->
+        <tr>
+          <td class="gutter" style="padding:22px 24px 0 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#d0f4e0;border-radius:12px;">
+              <tr>
+                <td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#211c1a;">
+                  <strong>What you&rsquo;ve actually signed up for:</strong><br />
+                  Two or three emails a month, never daily.<br />
+                  No pitching in the first one.<br />
+                  An unsubscribe link in every single email.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter" style="padding:22px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;color:#211c1a;">
+            One small favour, and it genuinely helps: drag this email out of
+            Promotions and into your main inbox. Coco is new here and inboxes
+            are suspicious of new &mdash; that one action is what stops the next one
+            going missing.
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter" style="padding:22px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;color:#211c1a;">
+            She&rsquo;s mostly on Instagram in the meantime, being a French
+            Bulldog about it.
+          </td>
+        </tr>
+
+        <tr>
+          <td align="left" class="gutter" style="padding:20px 24px 0 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td class="btn-cell" align="center" bgcolor="#f4837e" style="width:100%;border:2px solid #211c1a;border-radius:999px;">
+                  <a class="btn" href="https://instagram.com/coolstuffwithcoco"
+                     style="display:block;padding:16px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;font-weight:700;line-height:1.1;color:#211c1a;text-decoration:none;text-align:center;">
+                    Say hello to Coco
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter" style="padding:24px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;color:#211c1a;">
+            &mdash; Coco&rsquo;s human<br />
+            <a href="https://instagram.com/coolstuffwithcoco" style="color:#211c1a;text-decoration:underline;">@coolstuffwithcoco</a>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter" style="padding:22px 24px 24px 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="border-top:1px solid #e4ded8;padding-top:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#7a716c;">
+                  General guidance for dog owners &mdash; not veterinary advice. If
+                  you&rsquo;re worried about your dog, ring your vet.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
+        <tr>
+          <td align="center" style="padding:18px 24px 8px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#7a716c;">
+            You&rsquo;re getting this because you signed up at
+            coolstuffwithcoco.com.<br />
+            <a href="{{unsubscribe_link}}" style="color:#7a716c;text-decoration:underline;">Unsubscribe</a>
+            &nbsp;&middot;&nbsp;
+            <a href="https://coolstuffwithcoco.com/privacy" style="color:#7a716c;text-decoration:underline;">Privacy</a>
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+<!--
+PLAIN-TEXT ALTERNATIVE &mdash; paste into GHL's plain-text field.
+
+You're on the list.
+
+That's it - nothing to click, nothing to confirm. A couple of times a month
+I'll send you one dog thing we worked out, explained properly. The stuff that
+turned out to be simple once someone translated it.
+
+What you've actually signed up for:
+- Two or three emails a month, never daily.
+- No pitching in the first one.
+- An unsubscribe link in every single email.
+
+One small favour, and it genuinely helps: drag this email out of Promotions and
+into your main inbox. Coco is new here and inboxes are suspicious of new - that
+one action is what stops the next one going missing.
+
+She's mostly on Instagram in the meantime, being a French Bulldog about it:
+https://instagram.com/coolstuffwithcoco
+
+- Coco's human
+@coolstuffwithcoco
+
+General guidance for dog owners - not veterinary advice. If you're worried
+about your dog, ring your vet.
+
+You're getting this because you signed up at coolstuffwithcoco.com.
+Unsubscribe: {{unsubscribe_link}}
+-->
