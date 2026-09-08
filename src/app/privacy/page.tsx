@@ -20,6 +20,8 @@ const UPDATED = "2026-09-08";
  *   consent gate    src/lib/consent.ts        (localStorage coco_consent_v1)
  *   CRM writes      src/lib/crm/ghl.ts
  *   Meta CAPI       src/lib/meta/capi.ts      (SHA-256 email, IP, UA, fbclid)
+ *   GA4 + GTM       src/components/analytics/Tags.tsx
+ *   consent mode    src/lib/analytics/consentMode.ts
  *   rate limiting   src/lib/rateLimit.ts      (IP in Upstash Redis)
  *
  * If any of those change, this page is wrong until it's updated. That's the
@@ -124,6 +126,14 @@ export default function Privacy() {
           are also included.
         </li>
         <li>
+          <strong>Google</strong> — Analytics and Tag Manager. This tells
+          Google which pages you looked at, roughly where you are (from your
+          IP address, which Google truncates), and what device and browser
+          you&apos;re using. It&apos;s how we know whether the guides are
+          worth writing. We don&apos;t send Google your name, email or phone
+          number.
+        </li>
+        <li>
           <strong>Vercel</strong> — hosting. Standard server logs.
         </li>
         <li>
@@ -151,6 +161,14 @@ export default function Privacy() {
         <li>
           <strong>Meta Pixel cookies</strong> (including <code>_fbp</code>) —
           only set when the Pixel loads.
+        </li>
+        <li>
+          <strong>Google Analytics cookies</strong> (<code>_ga</code> and
+          similar) — used to tell one visit apart from the next so a returning
+          visitor isn&apos;t counted as a new person. Your{" "}
+          <code>coco_consent_v1</code> preference above is passed to Google
+          before its tag starts, and if you&apos;ve turned tracking off it
+          stops setting these.
         </li>
       </ul>
       <p>

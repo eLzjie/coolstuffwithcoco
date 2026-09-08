@@ -132,11 +132,12 @@ processors it names, and the file that proves each:
 | Processor | Purpose | Code |
 |---|---|---|
 | GoHighLevel | CRM, email delivery | `src/lib/crm/ghl.ts` |
-| Meta | Pixel + Conversions API (email hashed) | `src/lib/analytics/capi.ts` |
+| Meta | Pixel + Conversions API (email hashed) | `src/lib/meta/capi.ts` |
+| Google | GA4 + Tag Manager (behavioural, IP) | `src/components/analytics/Tags.tsx` |
 | Vercel | Hosting, server logs | — |
 | Upstash Redis | Rate limiting (IP, short TTL) | `src/lib/rateLimit.ts` |
 
-All four are named on the page, so the list is complete as far as the code
+All five are named on the page, so the list is complete as far as the code
 goes. One thing for counsel:
 
 - Whether a **Data Processing Agreement** is needed with each. Note the Upstash
@@ -146,6 +147,21 @@ goes. One thing for counsel:
 
 Re-check this table if the host ever changes, since Vercel is named explicitly
 rather than described generically.
+
+**Google was added 2026-09-08** alongside GA4 and Tag Manager. Two points for
+counsel specifically:
+
+- **Google Consent Mode v2 is wired but every signal defaults to granted**,
+  matching the site's existing US-only posture
+  (`src/lib/analytics/consentMode.ts`). The mechanism is in place, so honouring
+  a denial is a one-line change — but until a banner exists and the region is
+  read from the CDN header, an EEA/UK visitor would be tracked by default. That
+  is the same targeting-discipline caveat already recorded for the Meta Pixel,
+  and it now applies to Google too.
+- **No Google Signals / ads data-sharing** has been enabled, and no Google Ads
+  account is linked. If either changes, this section needs revisiting — it
+  moves the processing from analytics into advertising, which is what
+  `ad_user_data` and `ad_personalization` govern.
 
 ### 8. Email address in the disclosures
 

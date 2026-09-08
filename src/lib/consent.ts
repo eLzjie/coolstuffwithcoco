@@ -34,10 +34,21 @@
  * discipline, not a technical control — and it needs to stay written down.
  */
 
+import {
+  CONSENT_STORAGE_KEY,
+  updateGoogleConsent,
+} from "@/lib/analytics/consentMode";
+
 export type ConsentCategory = "analytics" | "marketing";
 export type ConsentState = Record<ConsentCategory, boolean>;
 
-const STORAGE_KEY = "coco_consent_v1";
+/*
+  The key lives in analytics/consentMode.ts, not here, purely because a SERVER
+  component has to read it to inline the Consent Mode default before any tag
+  loads — and this module is "use client". See the note there. One definition,
+  imported in the direction that is safe.
+*/
+const STORAGE_KEY = CONSENT_STORAGE_KEY;
 
 /** Default granted — see LAUNCH POSTURE above. */
 const DEFAULT: ConsentState = { analytics: true, marketing: true };
@@ -89,6 +100,18 @@ export function setConsent(next: Partial<ConsentState>) {
   } catch {
     // Non-fatal: the choice then applies for this page view only.
   }
+
+  /*
+    Google's tags are told directly, not through the listener loop.
+
+    Consent Mode is a property of the already-loaded tag rather than something
+    our own code checks, so it can't be expressed as a track() gate — a denied
+    visitor whose tag was never updated keeps writing cookies no matter what
+    track() does. Doing it here means a banner added later needs no analytics
+    work at all: it calls setConsent and Google follows.
+  */
+  updateGoogleConsent(state);
+
   listeners.forEach((fn) => fn());
 }
 

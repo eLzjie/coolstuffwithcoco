@@ -10,7 +10,8 @@
     "check:ghl": "node scripts/check-ghl-fields.mjs",
     "test:traffic": "node scripts/test-traffic-source.mjs",
     "test:api": "node scripts/test-api.mjs",
-    "test:crm": "node scripts/test-crm.mjs"
+    "test:crm": "node scripts/test-crm.mjs",
+    "check:tags": "node scripts/check-tags.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.4",
