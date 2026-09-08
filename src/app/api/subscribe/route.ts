@@ -1,11 +1,5 @@
 import type { NextRequest } from "next/server";
-import {
-  upsertContact,
-  fireDeliveryWebhook,
-  markDelivered,
-  deliveredTag,
-  type ContactFields,
-} from "@/lib/crm/ghl";
+import { upsertContact, type ContactFields } from "@/lib/crm/ghl";
 import { isLeadMagnet, type LeadMagnet } from "@/lib/leadMagnet";
 import { sendLeadEvent } from "@/lib/meta/capi";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
@@ -25,16 +19,44 @@ import { safePath } from "@/lib/safePath";
  * Email capture. The only write path into the CRM.
  *
  * Ordering is deliberate and load-bearing:
- *   rate limit -> validate -> spam -> upsert -> webhook -> CAPI -> respond
+ *   rate limit -> validate -> spam -> upsert -> CAPI -> respond
  *
- * The upsert and the webhook MUST both succeed — those are the lead and the
- * delivery. Everything after the webhook is best-effort: a lost analytics
- * event or a missing dedupe marker is recoverable, a lost lead is not.
+ * The upsert MUST succeed — that is the lead AND, now, the delivery trigger.
+ * Everything after it is best-effort: a lost analytics event is recoverable,
+ * a lost lead is not.
  *
- * The upsert and webhook are two calls and must not be collapsed. An API
- * upsert does not fire GHL's "form submitted" trigger, and "Contact Created"
- * won't fire for someone who already exists — so a returning subscriber
- * collecting the second guide would silently never receive it.
+ * ---------------------------------------------------------------------------
+ * DELIVERY IS TRIGGERED BY A TAG, NOT BY A WEBHOOK (changed 2026-09-09)
+ * ---------------------------------------------------------------------------
+ * This route used to fire a GHL Inbound Webhook after the upsert, because an
+ * API upsert does not fire GHL's "form submitted" trigger and "Contact
+ * Created" would not fire for a returning subscriber collecting a second
+ * guide.
+ *
+ * That worked, and then it didn't: an Inbound Webhook trigger does not attach
+ * a contact to the workflow run, so every contact-scoped action in the
+ * delivery workflow reported "Action skipped" and no guide was ever sent —
+ * with no error anywhere, because technically nothing failed.
+ *
+ * The delivery workflows now trigger on GHL's native "Contact Tag" instead,
+ * watching for `lead-magnet-<concept>`. `upsertContact` applies that tag
+ * through the API, so this route needs no delivery call at all. Better in
+ * three ways:
+ *
+ *   - A native tag trigger always carries contact context, so the
+ *     skipped-action failure cannot recur. There is no mapping to
+ *     misconfigure.
+ *   - It dedupes for free. GHL fires "Tag Added" only when the tag is NEW, so
+ *     a repeat submission of the same magnet cannot re-send. That is why the
+ *     `delivered-*` tag and the shouldDeliver branch are gone from this file:
+ *     idempotency moved from our code into a property of the trigger.
+ *   - A returning subscriber taking a DIFFERENT guide gets a genuinely new
+ *     tag, so that delivery still fires — the exact case the webhook existed
+ *     to solve.
+ *
+ * Consequence worth knowing: if someone removes a `lead-magnet-*` tag in the
+ * GHL UI and the contact resubmits, the guide sends again. That is correct
+ * behaviour, not a bug.
  */
 
 /** Under this and it's almost certainly automated. Measured from first touch. */
@@ -233,71 +255,18 @@ export async function POST(req: NextRequest) {
 
   const eventId = crypto.randomUUID();
 
-  // ---- 5. Upsert, then deliver. Both must succeed. ----
-  let contactId: string;
-  let shouldDeliver: boolean;
-
+  // ---- 5. Upsert. This is the lead AND the delivery trigger. ----
   try {
-    const result = await upsertContact(contact);
-    contactId = result.contactId;
-
     /*
-      Idempotency is scoped to the (email, leadMagnet) PAIR. The same pair
-      twice must not re-send; a different magnet must, which is how a
-      returning subscriber gets the second guide.
-
-      `existingTags === null` means the tag lookup failed, so we genuinely
-      don't know. Deliver in that case: a duplicate email is recoverable and
-      visible, a guide that never arrives after someone paid to acquire the
-      click is not.
-
-      KNOWN LIMIT: two CONCURRENT submissions of the same pair can both
-      deliver. One gets `new: true` and an empty tag set, the other reads the
-      tags before `markDelivered` has landed, so neither sees the marker.
-
-      This used to be attributed to the search index lagging. That cause is
-      gone — the tag read is now `GET /contacts/{id}`, which is strongly
-      consistent (see the ordering note in lib/crm/ghl.ts). Do not "fix" this
-      by going back to a search-based lookup; that reintroduces a much worse
-      bug. What remains is a genuine race between two in-flight requests.
-
-      Not defended further here on purpose. The form already blocks it
-      client-side (the button disables while submitting and the success state
-      refuses re-submit), so the realistic path is closed; the remaining case
-      is someone deliberately replaying the request, where a duplicate email
-      is a much smaller problem than the extra infrastructure a distributed
-      lock would need.
+      No delivery call follows this any more. Applying the
+      `lead-magnet-<concept>` tag IS the delivery trigger — see the note at
+      the top of this file. So this single call has to succeed, and a failure
+      here is a lost lead rather than a lost analytics event.
     */
-    shouldDeliver =
-      result.existingTags === null ||
-      !result.existingTags.includes(deliveredTag(magnet));
+    await upsertContact(contact);
   } catch (err) {
     console.error("[subscribe] contact upsert failed:", err);
     return fail("UPSTREAM_ERROR", 502);
-  }
-
-  if (shouldDeliver) {
-    try {
-      await fireDeliveryWebhook(contact, contactId);
-    } catch (err) {
-      console.error("[subscribe] delivery webhook failed:", err);
-      return fail("UPSTREAM_ERROR", 502);
-    }
-
-    /*
-      Marking is best-effort and must NOT fail the request. The guide is
-      already in flight by this point — returning an error here would tell the
-      visitor to retry, and because the marker is missing that retry would
-      deliver a second copy and re-run the workflow.
-    */
-    try {
-      await markDelivered(contactId, magnet);
-    } catch (err) {
-      console.error(
-        "[subscribe] delivered tag failed — guide WAS sent, dedupe marker missing:",
-        err,
-      );
-    }
   }
 
   // ---- 6. CAPI. Gated on the same consent the Pixel is gated on. ----

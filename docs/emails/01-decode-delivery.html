@@ -1,0 +1,199 @@
+<!--
+  WF-1a &mdash; Decode Your Dog delivery
+  Trigger: Contact Tag = lead-magnet-decode
+
+  Subject:  Your guide's here 🐾
+  Preview:  Decode Your Dog &mdash; no login, no app, just the PDF.
+
+  ===========================================================================
+   MOBILE FIRST, AND THAT SHAPES THE MARKUP
+  ===========================================================================
+  The base layout IS the phone layout: fluid tables, no fixed pixel widths,
+  24px gutters, 17px body copy, full-width tap targets. The <style> block only
+  ADDS a desktop refinement at 620px and up.
+
+  That direction is deliberate. GHL's editor and several clients strip <style>
+  entirely, and a desktop-first email that loses its media query collapses into
+  an unreadable 600px-wide page on a phone. Built this way, losing the style
+  block leaves the mobile view &mdash; which is the one that matters.
+
+  Everything else is inline on table cells, because Outlook's Word renderer
+  ignores most modern CSS and Gmail strips head styles in some contexts.
+
+  ===========================================================================
+   THE LINK IS HARDCODED ON PURPOSE
+  ===========================================================================
+  Earlier this email went out containing "[Read Decode Your Dog]({DECODE_PDF_URL})"
+  as literal visible text &mdash; a single-brace token that is not GHL merge syntax,
+  wrapped in markdown that email does not render. Every subscriber got dead
+  bracket-soup instead of their guide.
+
+  The real URL is now in the href directly. No merge tag means no unresolved
+  merge tag, which removes that failure mode rather than documenting around it.
+
+  If the PDF ever moves, it changes in TWO places: here, and
+  NEXT_PUBLIC_GUIDE_DECODE_URL (which the thank-you page download button uses).
+-->
+<style>
+  /* Progressive enhancement only &mdash; the base above is already the mobile view. */
+  @media screen and (min-width: 620px) {
+    .gutter { padding-left: 32px !important; padding-right: 32px !important; }
+    .h1 { font-size: 28px !important; }
+    .btn-cell { width: auto !important; }
+    .btn { display: inline-block !important; }
+  }
+  /* Dark mode: only nudge the card, never force text colours. Gmail's auto
+     invert plus a forced colour is how you get black-on-black. */
+  @media (prefers-color-scheme: dark) {
+    .card { background-color: #ffffff !important; }
+  }
+</style>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fdf9f5;margin:0;padding:16px 0;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <tr>
+    <td align="center" style="padding:0 10px;">
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" style="width:100%;max-width:600px;background-color:#ffffff;border:2px solid #211c1a;border-radius:16px;">
+
+        <!-- Logo. alt carries the brand when images are blocked, which is the default for a large share of recipients. -->
+        <tr>
+          <td align="center" class="gutter" style="padding:24px 24px 6px 24px;">
+            <img src="https://assets.cdn.filesafe.space/xqC9nSOeygEkT3p5nUi3/media/6aa037ee641597c752b0cde5.png"
+                 alt="Cool Stuff with Coco"
+                 width="128"
+                 style="width:128px;max-width:60%;height:auto;display:block;border:0;" />
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter h1" style="padding:8px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#211c1a;">
+            Here it is &mdash; Decode Your Dog.
+          </td>
+        </tr>
+
+        <!-- 17px, not 15. Anything under 16px gets auto-zoomed by iOS Mail, which reflows the layout you just tested. -->
+        <tr>
+          <td class="gutter" style="padding:14px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;color:#211c1a;">
+            You asked for it a minute ago, so here it is. Twelve pages on what
+            your dog is actually telling you &mdash; faces, tails, the weird stuff,
+            and how to spot stress before it turns into something.
+          </td>
+        </tr>
+
+        <!-- Full-width tap target on mobile; shrinks to inline on desktop via the media query. 50px tall clears the 44px minimum comfortably. -->
+        <tr>
+          <td class="gutter" style="padding:22px 24px 0 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td class="btn-cell" align="center" bgcolor="#f4837e" style="width:100%;border:2px solid #211c1a;border-radius:999px;">
+                  <a class="btn" href="https://assets.cdn.filesafe.space/xqC9nSOeygEkT3p5nUi3/media/6aa0201b360a619b9fc92cc3.pdf"
+                     style="display:block;padding:16px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;font-weight:700;line-height:1.1;color:#211c1a;text-decoration:none;text-align:center;">
+                    Read the guide
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Plain URL fallback, for forwarded copies and clients that mangle styled anchors. -->
+        <tr>
+          <td class="gutter" style="padding:14px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#5c5450;">
+            Button not working? Paste this into your browser:<br />
+            <a href="https://assets.cdn.filesafe.space/xqC9nSOeygEkT3p5nUi3/media/6aa0201b360a619b9fc92cc3.pdf" style="color:#5c5450;text-decoration:underline;word-break:break-all;">assets.cdn.filesafe.space/&hellip;/6aa0201b360a619b9fc92cc3.pdf</a>
+          </td>
+        </tr>
+
+        <!-- The most useful instruction in the email. Save-it-now beats any pitch here. -->
+        <tr>
+          <td class="gutter" style="padding:22px 24px 0 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fcf5bf;border-radius:12px;">
+              <tr>
+                <td style="padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#211c1a;">
+                  <strong>Save it to your phone now.</strong> Page 12 is a
+                  one-page cheat sheet &mdash; ears, tail, the weird stuff &mdash; and
+                  it&rsquo;s the bit people actually go back to. More use on
+                  your phone than in your inbox.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter" style="padding:22px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;color:#211c1a;">
+            I&rsquo;ll send you a useful dog thing every couple of weeks. If
+            that turns out not to be your sort of email, the unsubscribe link
+            is right at the bottom and I genuinely won&rsquo;t mind.
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter" style="padding:20px 24px 0 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;color:#211c1a;">
+            &mdash; Coco&rsquo;s human<br />
+            <a href="https://instagram.com/coolstuffwithcoco" style="color:#211c1a;text-decoration:underline;">@coolstuffwithcoco</a>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="gutter" style="padding:22px 24px 24px 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="border-top:1px solid #e4ded8;padding-top:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#7a716c;">
+                  General guidance for dog owners &mdash; not veterinary advice. If
+                  you&rsquo;re worried about your dog, ring your vet.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Unsubscribe OUTSIDE the card, where people look for it. Every email, always &mdash; it is also the cheapest deliverability protection there is, because someone who can't find it hits "report spam" instead. -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
+        <tr>
+          <td align="center" style="padding:16px 20px 8px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#7a716c;">
+            You&rsquo;re getting this because you asked for a free guide at
+            coolstuffwithcoco.com.<br />
+            <a href="{{unsubscribe_link}}" style="color:#7a716c;text-decoration:underline;">Unsubscribe</a>
+            &nbsp;&middot;&nbsp;
+            <a href="https://coolstuffwithcoco.com/privacy" style="color:#7a716c;text-decoration:underline;">Privacy</a>
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+<!--
+PLAIN-TEXT ALTERNATIVE &mdash; paste into GHL's plain-text field.
+Sending HTML with no text part hurts deliverability, which matters more than
+usual on a domain this new.
+
+Here it is - Decode Your Dog.
+
+You asked for it a minute ago, so here it is. Twelve pages on what your dog is
+actually telling you - faces, tails, the weird stuff, and how to spot stress
+before it turns into something.
+
+Read the guide:
+https://assets.cdn.filesafe.space/xqC9nSOeygEkT3p5nUi3/media/6aa0201b360a619b9fc92cc3.pdf
+
+Save it to your phone now. Page 12 is a one-page cheat sheet - ears, tail, the
+weird stuff - and it's the bit people actually go back to.
+
+I'll send you a useful dog thing every couple of weeks. If that turns out not to
+be your sort of email, the unsubscribe link is at the bottom and I genuinely
+won't mind.
+
+- Coco's human
+@coolstuffwithcoco
+https://instagram.com/coolstuffwithcoco
+
+General guidance for dog owners - not veterinary advice. If you're worried
+about your dog, ring your vet.
+
+You're getting this because you asked for a free guide at coolstuffwithcoco.com.
+Unsubscribe: {{unsubscribe_link}}
+-->

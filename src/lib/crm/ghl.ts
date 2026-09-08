@@ -182,16 +182,27 @@ const LEAD_MAGNET_FIELD: Record<LeadMagnet, string> = {
  *
  * `lead_magnet` records only the FIRST magnet, for attribution — someone who
  * takes Decode this week and Vet Bill next week would otherwise overwrite it.
- * The `lead-magnet-*` tags carry the full set, and the nurture workflows
- * trigger on those tags. Never read the field to decide what someone has.
+ * The `lead-magnet-*` tags carry the full set.
+ *
+ * ---------------------------------------------------------------------------
+ * `lead-magnet-<concept>` IS THE DELIVERY TRIGGER. DO NOT RENAME IT.
+ * ---------------------------------------------------------------------------
+ * As of 2026-09-09 the GHL delivery workflows trigger on Contact Tag matching
+ * these exact strings, replacing an Inbound Webhook that fired but left every
+ * workflow action skipped for want of a contact in context.
+ *
+ * So this function is no longer just record-keeping — it is the mechanism that
+ * sends someone their guide. A typo here does not produce an error; it
+ * produces a subscriber who never receives anything, silently. The nurture
+ * workflows trigger on the same tags.
+ *
+ * If you change a string here, change the trigger in GHL in the same breath.
  */
 export const tagsFor = (m: LeadMagnet) => [
   "audience-pets-dogs",
   `lead-magnet-${m}`,
 ];
 
-/** Per-concept delivery marker — the idempotency key. */
-export const deliveredTag = (m: LeadMagnet) => `delivered-${m}`;
 
 function env(name: string): string {
   const v = process.env[name];
@@ -250,15 +261,6 @@ async function fieldIds(): Promise<Map<string, string>> {
 
 export type UpsertResult = {
   contactId: string;
-  /**
-   * Tags the contact had BEFORE this upsert, or `null` when the read failed
-   * and we genuinely don't know.
-   *
-   * `null` is not the same as `[]` and callers must not conflate them: `[]`
-   * means "definitely no tags", `null` means "couldn't read". Treating a
-   * failed read as `[]` is how a delivery gets suppressed or re-sent wrongly.
-   */
-  existingTags: string[] | null;
 };
 
 /**
@@ -437,7 +439,7 @@ export async function upsertContact(c: ContactFields): Promise<UpsertResult> {
     console.error(`[ghl] tagging ${contactId} failed (delivery continues):`, err);
   }
 
-  return { contactId, existingTags };
+  return { contactId };
 }
 
 /**
@@ -523,107 +525,68 @@ async function addTags(contactId: string, tags: string[]) {
   }
 }
 
-/** Adds the delivered marker so a repeat submission won't re-send. */
-export async function markDelivered(contactId: string, m: LeadMagnet) {
-  await addTags(contactId, [deliveredTag(m)]);
-}
 
-const WEBHOOK_ENV: Record<LeadMagnet, string> = {
-  decode: "GHL_WEBHOOK_DECODE",
-  vetbill: "GHL_WEBHOOK_VETBILL",
-  newsletter: "GHL_WEBHOOK_NEWSLETTER",
-};
+
+
+/* -------------------------------------------------------------------------
+   Library waitlist — interest, not a purchase
+   ------------------------------------------------------------------------- */
 
 /**
- * Fires the concept's Inbound Webhook, which is what actually triggers the
- * delivery workflow.
+ * Adds someone to the Library waitlist.
  *
- * This is separate from the upsert on purpose and the two must not be
- * collapsed: an API upsert does NOT fire GHL's "form submitted" trigger, and
- * "Contact Created" won't fire for someone who already exists — so a returning
- * subscriber coming back for the second guide would never receive it.
+ * Deliberately the narrowest possible operation: ONE additive tag on a contact
+ * that already exists. It writes no custom fields, sets no buyer_state, and
+ * creates nothing — because joining a waitlist is not a purchase and must not
+ * look like one anywhere downstream.
  *
- * ---------------------------------------------------------------------------
- * THE PAYLOAD MUST IDENTIFY A CONTACT, OR EVERY WORKFLOW ACTION IS SKIPPED
- * ---------------------------------------------------------------------------
- * Observed live on 2026-09-08: the webhook fired, the workflow showed
- * "Entered", and then all four actions reported "Action skipped" before it
- * exited. No tag, no email, no pipeline entry — and no error anywhere.
+ * `buyer_state` in particular stays untouched. Its documented values are
+ * Bought bundle / Bought single / Declined and it is set by workflow only. A
+ * waitlist join is none of those, and writing one would corrupt the buyer
+ * split the pipeline exists to measure.
  *
- * The cause is that an Inbound Webhook trigger does NOT automatically attach a
- * contact to the workflow run. Every action in the delivery workflow is
- * contact-scoped (add tag, send email, add to opportunity), so with no contact
- * in context GHL skips each one in turn. The run looks successful.
+ * The upsert is by email, so a visitor who somehow reaches the thank-you page
+ * without having submitted gets created rather than erroring — the same
+ * behaviour as any other capture. It does NOT apply an `audience-*` or
+ * `lead-magnet-*` tag, so it cannot accidentally trigger a guide delivery.
  *
- * `contact_id` is therefore the most important field here. We already know the
- * id — the upsert immediately before this returned it — so the workflow can
- * resolve the exact record rather than fuzzy-matching an email. `first_name`
- * and `last_name` are included so a mapping keyed on email can still populate
- * a contact it has to create.
- *
- * GHL SIDE, and this cannot be done from code: the Inbound Webhook trigger
- * needs its Mapping Reference configured so a payload field identifies the
- * contact. Prefer `contact_id`.
- *
- * BETTER STILL, and worth doing: trigger the delivery workflow on
- * "Contact Tag" = `lead-magnet-<concept>` instead of an inbound webhook. That
- * tag is applied by upsertContact through the API, a native tag trigger always
- * carries contact context, and no mapping exists to be misconfigured — which
- * removes this entire failure mode. It also dedupes for free: a repeat
- * submission of the same magnet adds no new tag, so it can't re-fire.
+ * Returns nothing. The caller reports success on a 2xx and does not need the
+ * id for anything.
  */
-export async function fireDeliveryWebhook(
-  c: ContactFields,
-  /**
-   * The contact the upsert just created or updated.
-   *
-   * Optional only so existing callers keep compiling; always pass it. Without
-   * it the workflow has nothing reliable to resolve, which is the bug above.
-   */
-  contactId?: string,
-) {
-  const url = process.env[WEBHOOK_ENV[c.leadMagnet]];
-  if (!url) {
-    throw new Error(
-      `Missing ${WEBHOOK_ENV[c.leadMagnet]} — the delivery workflow cannot be triggered`,
-    );
-  }
+export async function joinLibraryWaitlist(email: string): Promise<void> {
+  const locationId = env("GHL_LOCATION_ID");
 
-  const res = await fetch(url, {
+  const res = await fetch(`${API}/contacts/upsert`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: headers(),
     cache: "no-store",
-    body: JSON.stringify({
-      /*
-        FIRST, because it's the field the workflow should map on. See the note
-        above: without a contact identifier every action is silently skipped.
-      */
-      contact_id: contactId ?? null,
-      email: c.email,
-      /*
-        So a mapping keyed on email can still fill in a contact it creates.
-        Null rather than "" — an empty string would blank a real name.
-      */
-      first_name: c.firstName ?? null,
-      last_name: c.lastName ?? null,
-      phone: c.phone ?? null,
-      lead_magnet: c.leadMagnet,
-      parent_audience: PARENT_AUDIENCE,
-      traffic_source: c.trafficSource,
-      campaign: c.campaign,
-      utm_source: c.utmSource,
-      utm_medium: c.utmMedium,
-      utm_campaign: c.utmCampaign,
-      utm_content: c.utmContent,
-      utm_term: c.utmTerm,
-      landing_page: c.landingPage,
-    }),
+    body: JSON.stringify({ locationId, email }),
   });
 
   if (!res.ok) {
-    throw new Error(`GHL webhook ${res.status}: ${await safeText(res)}`);
+    throw new Error(`GHL waitlist upsert ${res.status}: ${await safeText(res)}`);
   }
+
+  const body = (await res.json()) as { contact?: { id?: string } };
+  const contactId = body.contact?.id;
+  if (!contactId) throw new Error("GHL waitlist upsert returned no contact id");
+
+  /*
+    Additive endpoint, so it cannot clobber the lead-magnet or delivered tags
+    the delivery workflows depend on. GHL's upsert REPLACES the tag array,
+    which is why tags never go on an upsert body anywhere in this file.
+  */
+  await addTags(contactId, [WAITLIST_TAG]);
 }
+
+/**
+ * The tag the waitlist writes.
+ *
+ * Segment on this in GHL for the "tell them when it ships" send. Keep it
+ * distinct from any buyer tag: these people have paid nothing, and a campaign
+ * that treats them as customers is the fastest way to a complaint.
+ */
+export const WAITLIST_TAG = "library-waitlist";
 
 /* -------------------------------------------------------------------------
    Contact form — a question, not a lead

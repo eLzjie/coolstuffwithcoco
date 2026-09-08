@@ -16,6 +16,8 @@ import {
   isValidPhone,
 } from "@/lib/validation";
 import { TextField } from "@/components/forms/TextField";
+import { FormSuccess } from "@/components/forms/FormSuccess";
+import { rememberCapture } from "@/lib/recentCapture";
 
 /**
  * The one capture form, used in three places.
@@ -64,7 +66,18 @@ type Values = Record<Field, string>;
 type Errors = Partial<Record<Field, string>>;
 
 /** Long enough that the success state registers before the page changes. */
-const REDIRECT_DELAY_MS = 700;
+/*
+  Long enough to register the success state, short enough not to feel like a
+  stall. This was 700ms, which was right when success was one line of text
+  appended under the form — as a full panel with artwork it flashed and then
+  yanked the page away, which reads as a glitch.
+
+  Deliberately NOT longer. The thank-you page carries the actual download, and
+  the whole delivery strategy rests on getting the visitor there — the sending
+  domain is days old, so the page is the guide's real delivery mechanism. Every
+  extra millisecond here is delay on the thing they came for.
+*/
+const REDIRECT_DELAY_MS = 1200;
 
 /** A hung request must not strand the form. */
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -209,6 +222,12 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
     setStatus("submitting");
 
     const consented = consentForSubmit();
+    /*
+      Bound once. The request body and the sessionStorage stash must be the
+      same string — if they normalise differently, the waitlist would tag an
+      address that isn't the contact we just created.
+    */
+    const submittedEmail = values.email.trim().toLowerCase();
     const abort = new AbortController();
     const timeout = window.setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS);
 
@@ -218,7 +237,7 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
         headers: { "Content-Type": "application/json" },
         signal: abort.signal,
         body: JSON.stringify({
-          email: values.email.trim().toLowerCase(),
+          email: submittedEmail,
           // Omitted entirely for the newsletter rather than sent empty, so a
           // blank can't overwrite a name captured on an earlier submission.
           ...(isNewsletter
@@ -273,6 +292,17 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
         a dead end. It does concede slightly more to a honeypot bot than the
         old silent 200; misleading a real person is the worse failure.
       */
+      /*
+        Remember the address for the thank-you page's waitlist, so the very
+        next screen doesn't ask for something we were given four seconds ago.
+        sessionStorage, never the URL — see lib/recentCapture.ts.
+
+        Placed AFTER the discard check below would be wrong: we only want to
+        remember an address that actually landed. Placed here, it runs only on
+        a genuine success.
+      */
+      if (data.eventId) rememberCapture(submittedEmail);
+
       if (!data.eventId) {
         setFormError(SERVER_COPY.discarded);
         setStatus("error");
@@ -307,6 +337,30 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
 
   const formErrorId = `${uid}-form-error`;
   const locked = submitting || succeeded;
+
+  /*
+    The form is REPLACED on success, not annotated.
+
+    Newsletter submits never navigate, so this panel is the only feedback the
+    visitor ever gets. Guide submits do navigate, so theirs is compact — see
+    the note on REDIRECT_DELAY_MS.
+
+    Returning before the <form> also means the visitor's details stop sitting
+    on screen in editable fields after they have been accepted, which is what
+    made the old version read as "validated" rather than "done".
+  */
+  if (succeeded) {
+    return isNewsletter ? (
+      <FormSuccess className={className} heading="You're on the list.">
+        A couple of emails a month, starting with the next one. Every single
+        one has an unsubscribe link — no hard feelings if you use it.
+      </FormSuccess>
+    ) : (
+      <FormSuccess compact className={className} heading="Sent — check your inbox.">
+        Taking you to your download now.
+      </FormSuccess>
+    );
+  }
 
   return (
     <form onSubmit={onSubmit} className={className} noValidate>
@@ -431,13 +485,11 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
         aria-describedby={formError ? formErrorId : undefined}
         className="btn-coral mt-5 min-h-11 w-full justify-center sm:w-auto"
       >
-        {submitting
-          ? "Sending…"
-          : succeeded
-            ? "Sent"
-            : isNewsletter
-              ? "Sign me up"
-              : "Send me the guide"}
+        {/*
+          No "Sent" state — the button cannot be seen in that state any more,
+          because a successful submit replaces the entire form.
+        */}
+        {submitting ? "Sending…" : isNewsletter ? "Sign me up" : "Send me the guide"}
       </button>
 
       {/* Form-level failures (server, network, throttle) announced. */}
@@ -447,16 +499,12 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
         )}
       </div>
 
-      {/* Success announced for screen readers even when we redirect. */}
-      <div aria-live="polite">
-        {succeeded && (
-          <p className="t-small mt-3 font-semibold text-ink">
-            {isNewsletter
-              ? "You're on the list. Coco will be in touch."
-              : "Sent — check your inbox. Taking you to your download…"}
-          </p>
-        )}
-      </div>
+      {/*
+        The old inline success line lived here. It is gone because the whole
+        form is now replaced on success (see the early return above), and
+        FormSuccess carries its own status role so the outcome is still
+        announced to screen readers.
+      */}
 
       {/*
         Compliance copy. Visible before submit, never a tooltip, never
