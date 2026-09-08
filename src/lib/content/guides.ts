@@ -236,12 +236,76 @@ export const TRIAGE: TriageRow[] = [
  * numbers are invented to hold the layout, not researched. The vet-cost survey
  * figures you mentioned are better sourced but still need your approval.
  */
-export const COSTS = [
-  { label: "Out-of-hours consult, just to be seen", range: "TODO(Eli)" },
-  { label: "X-rays and bloods", range: "TODO(Eli)" },
-  { label: "Something swallowed that has to come out", range: "TODO(Eli)" },
-  { label: "A night on a drip", range: "TODO(Eli)" },
-  { label: "Emergency surgery", range: "TODO(Eli)" },
+export type CostRow = {
+  label: string;
+  range: string;
+  /** The bit that stops a number being read as a quote. */
+  note?: string;
+};
+
+/**
+ * US emergency ranges, researched 2026-09-08.
+ *
+ * These replace the earlier `TODO(Eli)` placeholders. They are RANGES from
+ * published pet-insurance and veterinary-cost aggregators, cross-checked
+ * across several sources for consistency — NOT a peer-reviewed survey, and
+ * not quotes. `COST_SOURCES` below lists what they came from, and the page
+ * says all of this in plain sight rather than presenting them as authoritative.
+ *
+ * They are US figures. If the site ever targets outside the US these are
+ * wrong and need replacing, not converting.
+ */
+export const COSTS: CostRow[] = [
+  {
+    label: "Walking in the door out of hours",
+    range: "$100 – $250",
+    note: "The exam and triage fee, before anything is done.",
+  },
+  {
+    label: "Bloods or an X-ray",
+    range: "$150 – $400 each",
+    note: "Most emergencies involve at least one of these.",
+  },
+  {
+    label: "A night in hospital",
+    range: "$200 – $600",
+    note: "Intensive care runs higher — $500 to $1,500 a night.",
+  },
+  {
+    label: "Something swallowed, removed",
+    range: "$2,000 – $3,500",
+    note: "Caught early enough for an endoscope, nearer $800 – $2,000. If the gut is damaged and has to be resected, $3,500 – $6,000.",
+  },
+  {
+    label: "Bloat surgery",
+    range: "$3,000 – $8,000",
+    note: "With the intensive care that follows it, total bills of $5,000 – $12,000 are common.",
+  },
+  {
+    label: "A typical emergency visit, all in",
+    range: "$800 – $3,000",
+    note: "The two things that move this most are whether there's surgery and how many nights they stay.",
+  },
+];
+
+/** Where the ranges above came from. Rendered on the page. */
+export const COST_SOURCES: Array<{ name: string; url: string }> = [
+  {
+    name: "CareCredit — intestinal blockage surgery cost",
+    url: "https://www.carecredit.com/well-u/pet-care/cat-and-dog-intestinal-blockage-surgery-cost-and-financing/",
+  },
+  {
+    name: "Pawlicy Advisor — what a vet visit costs",
+    url: "https://www.pawlicy.com/blog/vet-visit-cost/",
+  },
+  {
+    name: "Lemonade — intestinal blockage surgery",
+    url: "https://www.lemonade.com/pet/explained/intestinal-blockage-dog-surgery-cost/",
+  },
+  {
+    name: "MetLife Pet Insurance — bloat in dogs",
+    url: "https://www.metlifepetinsurance.com/blog/pet-health/bloat-in-dogs/",
+  },
 ];
 
 /* ==========================================================================
@@ -263,21 +327,50 @@ export const DISCLAIMER_LONG =
  * given — do not "helpfully update", reformat or substitute them, and do not
  * add numbers from any other source.
  *
+ * ---------------------------------------------------------------------------
+ * THE FEE IS NOT OPTIONAL COPY — never ship these numbers without it
+ * ---------------------------------------------------------------------------
+ * Both lines charge per incident. We present them to someone who is frightened
+ * and about to dial immediately, so omitting the charge sets them up for a
+ * surprise bill at the worst possible moment — and it makes us the reason they
+ * hit it. Whatever the legal position, that's not a thing to do to someone
+ * mid-emergency.
+ *
+ * Amounts verified against each operator's own current pages, September 2026:
+ *   - ASPCA APCC: $95 per incident (some case-dependent variation reported)
+ *   - Pet Poison Helpline: $89 per incident, follow-ups included
+ *
+ * These change. Re-check before a campaign push, and if a number can't be
+ * confirmed say "a per-incident fee applies" rather than printing a stale one —
+ * a wrong figure is worse than a vague true one. Both render the fee already
+ * (contact page and footer), so correcting it here is the whole change.
+ *
  * Both are US lines. TODO(Eli): if the site takes meaningful UK/EU traffic,
  * these need a regional equivalent alongside them.
  */
-export const HOTLINES: Array<{ name: string; number: string; note: string }> = [
+export const HOTLINES: Array<{
+  name: string;
+  number: string;
+  note: string;
+  /** Displayed on its own line. See the fee note above before editing. */
+  fee: string;
+}> = [
   {
     name: "ASPCA Animal Poison Control",
     number: "(888) 426-4435",
     note: "If she's eaten something she shouldn't have.",
+    fee: "$95 per incident",
   },
   {
     name: "Pet Poison Helpline",
     number: "(855) 764-7661",
     note: "Second line, if the first is busy.",
+    fee: "$89 per incident",
   },
 ];
+
+/** Where every legal page and the contact form point. */
+export const SUPPORT_EMAIL = "info@mail.coolstuffwithcoco.com";
 
 export const IG_HANDLE = "@coolstuffwithcoco";
 export const IG_URL = "https://instagram.com/coolstuffwithcoco";

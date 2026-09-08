@@ -121,8 +121,14 @@ export default function DecodePage() {
             <h2 id="get-heading" className="t-display-l text-ink">
               Send me the guide
             </h2>
+            {/*
+              This said "One email address" until the form grew to four fields
+              — copy promising less friction than the form actually asks for
+              reads as a bait once the reader looks down. Only the name and
+              email are required, so that's what it claims now.
+            */}
             <p className="t-lead mt-4 text-ink/80">
-              One email address. It arrives straight away.
+              Your name and email. It arrives straight away.
             </p>
             <div className="mt-8 rounded-2xl border-2 border-ink/20 bg-paper p-6 sm:p-8">
               <CaptureSlot magnet="decode" redirectTo="/decode/thank-you" />

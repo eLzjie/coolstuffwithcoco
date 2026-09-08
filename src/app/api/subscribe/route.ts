@@ -10,7 +10,16 @@ import { isLeadMagnet, type LeadMagnet } from "@/lib/leadMagnet";
 import { sendLeadEvent } from "@/lib/meta/capi";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 import { deriveTrafficSource } from "@/lib/trafficSource";
-import { EMAIL_MAX, EMAIL_RE } from "@/lib/validation";
+import {
+  ATTR_MAX,
+  EMAIL_MAX,
+  EMAIL_RE,
+  NAME_MAX,
+  PHONE_MAX,
+  isValidPhone,
+  normalisePhone,
+} from "@/lib/validation";
+import { safePath } from "@/lib/safePath";
 
 /**
  * Email capture. The only write path into the CRM.
@@ -33,8 +42,12 @@ const MIN_FILL_MS = 1200;
 
 type Body = {
   email?: unknown;
+  firstName?: unknown;
+  lastName?: unknown;
+  phone?: unknown;
   leadMagnet?: unknown;
   consent?: unknown;
+  consentVersion?: unknown;
   pagePath?: unknown;
   honeypot?: unknown;
   formTimestamp?: unknown;
@@ -59,6 +72,7 @@ type Body = {
  */
 type ErrorCode =
   | "INVALID_EMAIL"
+  | "INVALID_PHONE"
   | "BAD_REQUEST"
   | "RATE_LIMITED"
   | "UPSTREAM_ERROR";
@@ -87,10 +101,32 @@ function silentSuccess() {
 const str = (v: unknown): string | null =>
   typeof v === "string" && v.trim() ? v.trim() : null;
 
+/*
+  Attribution strings, capped.
+
+  These come off the URL and the referrer, never from a person typing, so
+  nothing legitimate approaches ATTR_MAX. Uncapped they were the only unbounded
+  path into the CRM — one unauthenticated POST could push a megabyte into a
+  custom field and forward the same payload to the delivery webhook.
+
+  Truncated rather than rejected on purpose: attribution is best-effort
+  telemetry, and refusing the submission would discard a real lead to protect a
+  UTM value.
+*/
+const attr = (v: unknown): string | null => str(v)?.slice(0, ATTR_MAX) ?? null;
+
+/*
+  safePath lives in lib/safePath.ts. It used to be inline here AND in
+  api/contact/route.ts, and the duplicate is how a bypass survived: the inline
+  version only inspected the input string, so `/..//evil.example` resolved to
+  the protocol-relative `//evil.example` and escaped the origin. The shared
+  version checks the RESOLVED pathname. See that file for the full case table.
+*/
+
 export async function POST(req: NextRequest) {
   // ---- 1. Rate limit. First, so abuse costs as little as possible. ----
   const ip = clientIp(req);
-  const limit = await checkRateLimit(ip);
+  const limit = await checkRateLimit(ip, "subscribe");
   if (!limit.ok) return fail("RATE_LIMITED", 429, limit.retryAfter);
 
   // ---- 2. Parse and validate ----
@@ -98,6 +134,16 @@ export async function POST(req: NextRequest) {
   try {
     body = (await req.json()) as Body;
   } catch {
+    return fail("BAD_REQUEST", 400);
+  }
+
+  /*
+    A literal `null` body PARSES successfully, so it slips past the catch above
+    and then throws on the first property read — a framework 500 instead of an
+    honest 400. Same for a bare string or array, which the `as Body` cast
+    happily pretends are objects.
+  */
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return fail("BAD_REQUEST", 400);
   }
 
@@ -124,31 +170,64 @@ export async function POST(req: NextRequest) {
     return silentSuccess();
   }
 
+  /*
+    Name and phone. Optional everywhere and absent entirely on the newsletter.
+
+    A blank must never be sent on to GHL as an empty string: the upsert would
+    overwrite a name captured on an earlier submission with nothing. `str()`
+    already collapses "" to null, and the adapter drops nulls.
+  */
+  const firstName = str(body.firstName)?.slice(0, NAME_MAX) ?? null;
+  const lastName = str(body.lastName)?.slice(0, NAME_MAX) ?? null;
+
+  const rawPhone = str(body.phone);
+  if (rawPhone && (rawPhone.length > PHONE_MAX || !isValidPhone(rawPhone))) {
+    return fail("INVALID_PHONE", 400);
+  }
+  const phone = rawPhone ? normalisePhone(rawPhone) : null;
+
   // ---- 4. Assemble ----
   const a = body.attribution ?? {};
-  const utmSource = str(a.utmSource);
-  const utmMedium = str(a.utmMedium);
-  const utmCampaign = str(a.utmCampaign);
+  const utmSource = attr(a.utmSource);
+  const utmMedium = attr(a.utmMedium);
+  const utmCampaign = attr(a.utmCampaign);
   const consent = body.consent === true;
-  const pagePath = str(body.pagePath);
+  const pagePath = safePath(attr(body.pagePath));
 
   const contact: ContactFields = {
     email,
+    firstName,
+    lastName,
+    phone,
+    /*
+      Which disclosure they agreed to. Recorded so a contact can be traced
+      back to the exact wording on screen at submit — that's the "retain
+      records" half of consent, and a bare boolean can't satisfy it.
+    */
+    consentVersion: str(body.consentVersion)?.slice(0, 60) ?? null,
     leadMagnet: magnet,
     trafficSource: deriveTrafficSource({
       utmSource,
       utmMedium,
-      fbclid: str(a.fbclid),
-      referrer: str(a.referrer),
+      fbclid: attr(a.fbclid),
+      referrer: attr(a.referrer),
       selfHost: req.nextUrl.hostname,
     }),
     campaign: utmCampaign,
     utmSource,
     utmMedium,
     utmCampaign,
-    utmContent: str(a.utmContent),
-    utmTerm: str(a.utmTerm),
-    landingPage: str(a.landingPage) ?? pagePath,
+    utmContent: attr(a.utmContent),
+    utmTerm: attr(a.utmTerm),
+    /*
+      The fallback has to be chosen BEFORE sanitising, not after.
+
+      This read `safePath(...) || pagePath`, which is dead: safePath never
+      returns a falsy value — every rejection returns "/". So the fallback
+      could never fire, and a submission with no attribution.landingPage
+      recorded "/" as the acquiring page instead of the page they were on.
+    */
+    landingPage: attr(a.landingPage) ? safePath(attr(a.landingPage)) : pagePath,
     consent,
   };
 
@@ -172,11 +251,15 @@ export async function POST(req: NextRequest) {
       visible, a guide that never arrives after someone paid to acquire the
       click is not.
 
-      KNOWN LIMIT, measured: GHL's contact search index is eventually
-      consistent. A tag written moments ago can be absent from the very next
-      read — observed taking a second or two to appear during testing. So two
-      submissions of the same pair within that window can both see "not
-      delivered" and both deliver.
+      KNOWN LIMIT: two CONCURRENT submissions of the same pair can both
+      deliver. One gets `new: true` and an empty tag set, the other reads the
+      tags before `markDelivered` has landed, so neither sees the marker.
+
+      This used to be attributed to the search index lagging. That cause is
+      gone — the tag read is now `GET /contacts/{id}`, which is strongly
+      consistent (see the ordering note in lib/crm/ghl.ts). Do not "fix" this
+      by going back to a search-based lookup; that reintroduces a much worse
+      bug. What remains is a genuine race between two in-flight requests.
 
       Not defended further here on purpose. The form already blocks it
       client-side (the button disables while submitting and the success state
@@ -224,7 +307,7 @@ export async function POST(req: NextRequest) {
       email,
       // The page the conversion happened on, not this endpoint. Sending the
       // API route degrades match quality and can trip Meta's domain checks.
-      eventSourceUrl: new URL(pagePath ?? "/", req.nextUrl.origin).href,
+      eventSourceUrl: new URL(pagePath, req.nextUrl.origin).href,
       clientIp: ip,
       userAgent: req.headers.get("user-agent") ?? "",
       fbclid: str(a.fbclid),

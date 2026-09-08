@@ -8,7 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/motion/Reveal";
 import { ViewContent } from "@/components/shared/ViewContent";
 import { BRAND } from "@/lib/brand/manifest";
-import { COSTS, VETBILL } from "@/lib/content/guides";
+import { COSTS, COST_SOURCES, VETBILL } from "@/lib/content/guides";
 
 export const metadata: Metadata = {
   title: VETBILL.title,
@@ -50,7 +50,7 @@ export default function VetBillPage() {
               <p className="t-hero-echo mt-3 max-w-[20ch] text-ink/80">
                 {VETBILL.subhook}
               </p>
-              <p className="t-lead mt-5 text-ink/75">{VETBILL.promise}</p>
+              <p className="t-lead mt-5 text-ink-muted">{VETBILL.promise}</p>
 
               <div className="mt-7 flex flex-wrap gap-3">
                 <a href="#get" className="btn-coral">
@@ -82,31 +82,62 @@ export default function VetBillPage() {
             <h2 id="cost-heading" className="reveal-heading t-display-l max-w-[22ch] text-ink">
               What these nights actually cost
             </h2>
-            <p className="t-lead mt-5 text-ink/75">
+            <p className="t-lead mt-5 text-ink-muted">
               Rough ranges, so the number at the counter isn&apos;t the first
               one you&apos;ve seen.
             </p>
 
             <dl className="mt-10 max-w-3xl divide-y-2 divide-ink/10 border-y-2 border-ink/20">
               {COSTS.map((c) => (
-                <div
-                  key={c.label}
-                  className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1 py-5"
-                >
-                  <dt className="t-h3 max-w-[38ch]">{c.label}</dt>
-                  <dd className="t-h3 text-ink/75">{c.range}</dd>
+                <div key={c.label} className="py-5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1">
+                    <dt className="t-h3 max-w-[34ch]">{c.label}</dt>
+                    <dd className="t-h3 whitespace-nowrap">{c.range}</dd>
+                  </div>
+                  {c.note && (
+                    <p className="t-small mt-1.5 max-w-[52ch] text-ink-muted">
+                      {c.note}
+                    </p>
+                  )}
                 </div>
               ))}
             </dl>
 
-            <p className="t-small mt-6 max-w-[60ch] rounded-lg border-2 border-dashed border-ink/40 p-4 text-ink/80">
-              <strong className="font-semibold">TODO(Eli): verify source</strong>{" "}
-              — every figure above is a placeholder, deliberately left as a TODO
-              rather than filled with a plausible-looking number. Costs vary
-              enormously by country, city and clinic, and an invented range here
-              would be worse than a blank. The vet-cost survey figures you
-              mentioned are better sourced but still need your sign-off.
-            </p>
+            {/*
+              The numbers are real and sourced, so the caveat has to be equally
+              plain: they're ranges to give a sense of scale, not quotes. A
+              visitor who turns up at a clinic quoting these at the counter has
+              been misled by us.
+            */}
+            <div className="mt-6 max-w-[62ch] rounded-xl border-2 border-ink/25 bg-paper-warm p-5">
+              <p className="t-small text-ink/85">
+                <strong className="font-semibold">
+                  These are ranges, not quotes.
+                </strong>{" "}
+                They&apos;re US figures gathered from published pet-insurance
+                and veterinary-cost sources to give you a sense of scale before
+                you&apos;re standing at a counter. Real prices swing hard by
+                state, city and clinic, and a specialty hospital costs more than
+                a general practice. Your own vet is the only place to get a
+                number that applies to your dog.
+              </p>
+              <p className="t-small mt-3 text-ink-muted">
+                Sources:{" "}
+                {COST_SOURCES.map((s, i) => (
+                  <span key={s.url}>
+                    {i > 0 && " · "}
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2"
+                    >
+                      {s.name}
+                    </a>
+                  </span>
+                ))}
+              </p>
+            </div>
           </div>
         </section>
 
@@ -125,7 +156,7 @@ export default function VetBillPage() {
                     <Cross aria-hidden className="mt-1 h-5 w-5 shrink-0 text-coral" />
                     {c.title}
                   </h3>
-                  <p className="t-body mt-2 pl-8 text-ink/75">{c.blurb}</p>
+                  <p className="t-body mt-2 pl-8 text-ink-muted">{c.blurb}</p>
                 </Reveal>
               ))}
             </ul>
@@ -171,8 +202,9 @@ export default function VetBillPage() {
             <h2 id="get-heading" className="t-display-l text-ink">
               Send me the guide
             </h2>
+            {/* Was "One email address" — the form asks for four fields now. */}
             <p className="t-lead mt-4 text-ink/80">
-              One email address. Then go and fill in the contacts page while
+              Your name and email. Then go and fill in the contacts page while
               nothing is wrong.
             </p>
             <div className="mt-8 rounded-2xl border-2 border-ink/20 bg-paper p-6 sm:p-8">

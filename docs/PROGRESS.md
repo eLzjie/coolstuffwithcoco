@@ -277,3 +277,308 @@ with `curl` + `ffprobe` while the browser kept rendering the old aspect ratio.
 - **`"Paid — Other"` em dash** must match the GHL dropdown byte-for-byte.
 - Vet sign-off on the call-now table; three OG images; Vercel deployment
   protection off.
+
+---
+
+# Session 3 — 2026-09-08 (branch `staging`)
+
+Legal pages, the contact form, better lead capture, and two CRM data-loss bugs
+found and fixed by reading GoHighLevel back rather than trusting a 200.
+
+## Built
+
+- **Real legal pages**, written against the actual data flows rather than from
+  a template — `/privacy` names all four processors (GoHighLevel, Meta, Vercel,
+  Upstash) and describes what each receives; `/terms` carries a hard
+  not-veterinary-advice callout; `/refund-policy` is **14 days**, 3 business
+  days to process. `.prose-legal` in `globals.css` styles all three.
+- **`/contact` with a working form** posting to a new `/api/contact`, plus the
+  emergency hotlines above it framed as "we are the wrong destination".
+  `info@mail.coolstuffwithcoco.com` is the single `SUPPORT_EMAIL` constant.
+- **Guide opt-ins expanded** to first name (required), last name and phone
+  (both optional), email — with a versioned consent disclosure underneath.
+  The **newsletter stays email-only**: it's a subscribe, not a delivery, so
+  there's nothing to personalise.
+- **`InboxPreview` rewritten.** The invented sample email is gone — it was a
+  promise about content that didn't exist, and it pushed the actual field below
+  the fold on a phone. Heading, three honest bullets, form.
+- **`src/lib/content/consent.ts`** — `CONSENT_VERSION` written to each contact
+  alongside `consent_at`, so any contact traces back to the exact wording that
+  was on screen. Documents the four TCPA points and that **SMS must never be
+  promised** (A2P 10DLC isn't filed).
+- **US vet costs researched and sourced**, replacing `TODO(Eli): verify source`
+  — `COSTS` plus `COST_SOURCES` (CareCredit, Pawlicy, Lemonade, MetLife).
+- **`docs/LEGAL-REVIEW.md`** — four source files pointed at a doc that didn't
+  exist. It now lists the three blockers before taking money (legal entity,
+  governing law/venue, refund mechanics vs the real checkout) and five items
+  that want a lawyer but don't block a soft launch.
+
+## Two silent data-loss bugs, both returning a clean 200
+
+Neither was visible from the HTTP boundary, which is why `npm run test:api`
+stayed green through both. Both are now covered by **`npm run test:crm`**,
+which reads GHL back and asserts on what actually landed.
+
+### 1. First-touch attribution was overwritten
+
+`lead_magnet` records which guide acquired someone. The "have they been here
+before?" check used GHL's `GET /contacts/?query=` — which is a **search index
+that lags writes**. So a second submission moments after the first looked
+brand new, and the attribution was overwritten. A decode-then-vetbill sequence
+ended up attributed to VetBill.
+
+Probed directly. Write a tag, then read it back two ways with no delay:
+
+| read path | result |
+|---|---|
+| `GET /contacts/{id}` | `["probe-immediate"]` — strongly consistent |
+| `GET /contacts/?query=` | 0 rows — index hasn't caught up |
+
+A zero-row search result is therefore **ambiguous**: "no such contact" and
+"created moments ago" are indistinguishable, and nothing in the response tells
+them apart.
+
+Fixed by never consulting the search index. The upsert response carries GHL's
+own `new` flag — `{"new": true}` on create, `{"new": false, "succeded": true,
+"succeeded": true}` on update (it ships both spellings), same `contact.id`
+either way. That comes from the write itself, so it can't lag. `lead_magnet` is
+now written **only** when `new` is true, by a targeted `PUT /contacts/{id}`
+rather than a second upsert — verified the PUT writes the one field and leaves
+tags, email and everything else untouched.
+
+Net effect: one fewer round trip than the search-first version.
+
+### 2. Phone number merged two subscribers into one
+
+**GHL deduplicates contacts on phone number.** Two emails sharing a household
+or work number collapsed into ONE record and the later email overwrote the
+earlier — so the first person silently stopped receiving anything.
+
+Worth recording that the first hypothesis was **wrong**: plus-addressing in the
+test suite looked like the obvious cause, and switching to hyphens changed
+nothing. The real cause came from a direct probe — four upserts, two sharing a
+phone, produced three contacts.
+
+Fixed by routing the number to a `phone_number` **custom field** and keeping
+GHL's native `phone` empty. Nothing is lost: no SMS can be sent anyway, so the
+native field bought dedupe risk and no capability. To go native later, send
+`phone` on the upsert body — and decide first what should happen when two
+subscribers share a number.
+
+## Hotline fees were not disclosed — fixed
+
+Both poison-control lines charge per incident and the site didn't say so. It
+presented them to someone frightened and about to dial, which set that person
+up for a surprise charge at the worst possible moment.
+
+Verified against each operator's own current pages (September 2026): ASPCA
+**$95 per incident**, Pet Poison Helpline **$89 per incident** with follow-ups
+included. The fee now renders on its own line on both the contact page and the
+footer, at full contrast rather than muted grey. Re-verify before any campaign
+push; prefer "a per-incident fee applies" to printing a stale figure.
+
+## Vet sign-off: resolved as not obtainable
+
+Confirmed 2026-09-08 that a vet review can't be had before launch, so
+`/vetbill` ships behind a hardened disclaimer instead. The butter panel in
+`CallNowTable` now states, **before any symptom is read**, that the content
+hasn't been reviewed by a veterinarian, isn't a diagnosis, and that an unsure
+reader should ring their vet.
+
+The visitor-facing `TODO(Eli)` that used to render there is gone — it read as
+an unfinished site and undercut the disclaimer directly above it. The
+reviewer-facing note moved into the file's block comment.
+
+A disclaimer reduces exposure; it does not remove it. **The spec's
+recommendation still stands: promote `/decode` first**, and let `/vetbill`
+follow once someone qualified has read the triage categories.
+
+## Test state
+
+| Suite | Result |
+|---|---|
+| `npm run test:api` | 35/35 |
+| `npm run test:crm` | 13/13 — **new**, reads GHL back |
+| `npm run test:traffic` | 19/19 |
+| `npm run check:ghl` | all capture fields exist |
+| `npx tsc --noEmit`, `npm run lint`, `npm run build` | clean |
+
+`test:crm` is slower by design: GHL's search index has to catch up before a
+contact can be found by email, so each discovery retries with a backoff. Reads
+of a known id don't need that.
+
+## Gotcha added to the list
+
+**A green API suite proves nothing about what reached the CRM.** Both bugs
+above returned 200 and wrote wrong data. Any assertion about CRM state has to
+read the CRM back — and read it **by id**, because the search endpoint lags.
+
+## Review fixes — independent code + security pass, all real
+
+Both reviews ran against the session diff (~1,900 lines). Every finding below
+was reproduced before it was fixed; nothing was taken on trust.
+
+### Security
+
+**`safePath()` could be walked out of the origin.** The guard checked the input
+string, but `new URL()` resolution can *manufacture* a protocol-relative path
+by collapsing `..` at the root. Reproduced:
+
+| input | old result | resolved |
+|---|---|---|
+| `/..//evil.example/phish?x=1` | `//evil.example/phish?x=1` | `https://evil.example/phish?x=1` |
+| `/x/..//evil.example` | `//evil.example` | `https://evil.example/` |
+| `/./..//evil.example` | `//evil.example` | `https://evil.example/` |
+
+One unauthenticated POST could therefore point Meta's `event_source_url` at a
+domain the attacker owns and write an off-site link into `landing_page` that
+staff later click.
+
+The guard now runs on the **resolved** `pathname`, which covers the whole `..`
+family instead of playing whack-a-mole with input spellings. It also moved to
+`src/lib/safePath.ts`: it had been copy-pasted into both routes, and a
+sanitiser with two copies is one that gets fixed once. Percent-encoded and
+control-character variants were checked and are not exploitable — the WHATWG
+parser handles them.
+
+Covered by four cases in `test:crm`, asserted against what actually reaches the
+CRM, since that's the only place the sanitised value is observable end to end.
+
+**Unbounded attribution fields.** UTMs, campaign, referrer and paths had no
+length cap while every human-entered field did. A single request could push a
+megabyte into a CRM custom field and forward the same payload to the delivery
+webhook, five times a minute, with no auth. Now capped at `ATTR_MAX` (200) and
+**truncated rather than rejected** — attribution is best-effort telemetry, and
+refusing the submission would discard a real lead to protect a UTM value.
+
+**A literal `null` body returned a 500.** `JSON.parse("null")` succeeds, so it
+escaped the `try/catch` and threw on the first property read. Now a 400 on both
+routes, with regression cases for `null` and a bare array.
+
+**Rate-limit buckets weren't scoped per route.** Contact-form enquiries
+consumed the same per-IP allowance as subscribing, so two unrelated actions
+throttled each other. The key now carries the endpoint.
+
+Confirmed clean: no secret behind `NEXT_PUBLIC_`, no webhook URL in any client
+bundle, no `dangerouslySetInnerHTML`, no header injection, no prototype
+pollution, and repeat submissions stay byte-identical so subscriber status
+can't be enumerated from a response body.
+
+### Correctness
+
+**`created` was too narrow a definition of first touch.** My `new`-flag fix
+traded one bug for a smaller one: `new: true` means "GHL created the record on
+this call", which is *not* the same as "this is their first magnet". Anyone who
+already existed for another reason — used the contact form, was imported, was
+added by hand — would have had `lead_magnet` left blank permanently, even
+though their first guide really was the acquiring magnet.
+
+The tag test is back, and it's safe now for a reason worth being precise about:
+what made the old version wrong was never the test, it was reading tags from
+the lagging `?query=` index. `readContactTags` reads by id. A failed read still
+skips the write, because an unset field is backfillable and an overwritten one
+isn't. Covered by a `test:crm` case that files an enquiry first, then a guide.
+
+**A tag blip could cost a delivery.** `addTags` ran inside `upsertContact` and
+threw, before the caller fired the delivery webhook — so a transient 429 on the
+tag endpoint failed the whole request *after* the contact was created. Acquired,
+never served. Now best-effort with a logged error: tags are reconstructible, a
+guide someone never received is not.
+
+**The contact form overwrote three fields on existing subscribers.** This is
+the same class of bug as the phone merge, and the reason it matters is that an
+enquiry almost always arrives from someone who is already a contact:
+
+- `landing_page` → replaced with `/contact`, destroying the acquisition page of
+  a lead that was paid for.
+- `firstName` → sent unconditionally as one string, so `Sam` / `Rivera` became
+  firstName `Sam Rivera`.
+- `consent_version` → replaced with the contact-form version while
+  `marketing_consent` stayed true, leaving an audit trail that claimed they
+  accepted wording reading "It doesn't sign you up to anything".
+
+The upsert now writes exactly one field, `contact_message`. Page path and
+disclosure version moved into the note, where they describe the enquiry rather
+than making a claim about the contact. `firstName` is written by a targeted PUT
+only when the record was actually created.
+
+**A discarded submission rendered as success.** Both spam paths return `200`
+with no `eventId` — deliberately, so a bot learns nothing. But the client only
+checked `ok`, so it announced "check your inbox" and redirected to the download
+page for a submission that created no contact and sent no guide. The timing
+check catches real people: browser autofill fills every field in one gesture,
+so tripping the 1200 ms threshold by accident is easy. Both forms now treat
+"ok with no `eventId`" (capture) and "ok with no `received`" (contact) as not
+sent, and say so — a retry does go through, so the advice is actionable. It
+concedes a little to a honeypot bot; misleading a real person is worse.
+
+**A dead fallback wrote `/` as the acquiring page.**
+`safePath(...) || pagePath` can never reach the fallback, because `safePath`
+never returns a falsy value. The choice now happens before sanitising.
+
+**`MESSAGE_MIN`/`MESSAGE_MAX` were duplicated** byte-for-byte across the client
+and the route — the precise failure `validation.ts` exists to prevent. Moved
+there. An over-long message also got `BAD_REQUEST`, which renders as "something
+went wrong on our end"; it now has its own `INVALID_MESSAGE` code so the error
+lands on the message field.
+
+**Stale comments, all corrected.** Four blocks described code that no longer
+existed — a lookup "above" the upsert that had been deleted, a "KNOWN LIMIT"
+blaming the search index for a race that is now purely concurrency, a claim
+that the contact route "writes no consent record" when it writes
+`consent_version`, and `test-crm.mjs` sending `ts` where the server reads
+`formTimestamp` (so the spam check was being *skipped*, not satisfied). In a
+codebase that leans this hard on explanatory comments, a stale one is a defect.
+
+Also removed `cleanName` (added this session, never called) and the unread
+`created` field, and added `contact_message` to `check:ghl`'s blocking set —
+without it a missing field silently reduced the enquiry to a best-effort note.
+
+### Mobile pass
+
+No horizontal overflow or clipped text on any new page at 390px. Emergency
+phone links were 28px tall; now 44px, because those get tapped one-handed by
+someone frightened and 24px "technically passing" is the wrong standard there.
+
+Found by eye rather than by either review: both guide pages still said **"One
+email address"** above a form that now asks for four fields. Copy promising
+less friction than the form delivers reads as a bait the moment the reader
+looks down.
+
+### Test state after the fixes
+
+| Suite | Result |
+|---|---|
+| `npm run test:api` | 39/39 (was 35 — added null/array body, message codes) |
+| `npm run test:crm` | 19/19 (was 13 — added pre-existing contact, path sanitising) |
+| `npm run test:traffic` | 19/19 |
+| `npm run check:ghl` | passing, now gating `contact_message` too |
+| `tsc`, `lint`, `build` | clean |
+
+### Left deliberately
+
+- **`x-forwarded-for` is trusted for the rate-limit key.** Correct on Vercel,
+  which overwrites the header. It would be forgeable on a self-hosted
+  deployment behind a pass-through proxy — noted in `rateLimit.ts`.
+- **The limiter fails open.** A lead is worth more than a throttle, and the
+  honeypot plus timing check remain.
+- **A repeat submission is measurably faster** than a first one (it skips two
+  upstream calls), which is a weak timing signal for subscriber enumeration.
+  Not worth restructuring the response path for.
+- **IPs and upstream response bodies are logged server-side** for abuse
+  diagnosis. Flagged for the privacy review rather than changed.
+
+## Still open
+
+Carried forward, plus new:
+
+- **`docs/LEGAL-REVIEW.md` blockers** — legal entity name and governing
+  law/venue are blank on purpose. Guessing is worse than blank. Nothing can be
+  sold until a lawyer fills them.
+- **Refund mechanics unverified against a checkout** that doesn't exist yet.
+  The 14-day window and 3-business-day response are promises no processor has
+  confirmed. Change `REFUND_DAYS` if it can't be honoured.
+- **`firstName` casing** — GHL lowercases it while `firstNameRaw` preserves the
+  original. Check this before relying on a name merge field in an email.
+- Visual/mobile pass and a Lighthouse re-run on the new legal, contact and
+  newsletter sections.

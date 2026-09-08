@@ -1,75 +1,67 @@
-"use client";
-
-import { BrandImage } from "@/components/brand/BrandImage";
 import { CaptureSlot } from "@/components/forms/CaptureSlot";
+import { Ambient } from "@/components/motion/Ambient";
+import { Speech } from "@/components/brand/Icons";
 
 /**
- * PROPOSED ADDITION (§4.1) — "What lands in your inbox".
+ * Newsletter capture, low friction.
  *
- * Rationale: the entire business model is email, and the unspoken objection at
- * the capture point is always "what are you going to send me?". Compliance rule
- * 8 requires an honest statement of what someone is signing up for — this makes
- * that concrete instead of legal. It sits immediately above the low-friction
- * capture, which is exactly where the objection fires.
+ * ---------------------------------------------------------------------------
+ * The mock email preview that used to live here is gone
+ * ---------------------------------------------------------------------------
+ * It rendered a fake inbox card with an invented subject line and body, and it
+ * was the weakest thing on the page for two reasons:
  *
- * The preview is a real example of the format, not a screenshot of a real
- * campaign. TODO(Eli): replace the sample email body with an actual send once
- * the nurture sequence is written.
+ *  1. It was made up. A sample email nobody has actually sent is a promise
+ *     about content that doesn't exist yet, and it carried a visible
+ *     "TODO: swap in a real send" to prove it.
+ *  2. It competed with the form. The section's only job is to capture an
+ *     email, and a large decorative card above the field pushed the field
+ *     itself below the fold on a phone.
+ *
+ * What replaced it is a short honest description of what turns up and how
+ * often, and then the form. If real sends are worth showing later, screenshots
+ * of actual emails would earn their place — an invented one never did.
+ *
+ * Email only here, deliberately: this is a subscribe, not a delivery, so
+ * there's no guide to personalise and no reason to ask for a name.
+ *
+ * Server component — the only interactive part is CaptureSlot.
  */
 export function InboxPreview() {
   return (
-    <section className="section-pad bg-paper" aria-labelledby="inbox-heading">
-      <div className="shell grid items-start gap-14 lg:grid-cols-[1fr_0.85fr]">
-        <div>
-          <h2 id="inbox-heading" className="reveal-heading t-display-l max-w-[22ch] text-ink">
-            Here&apos;s what actually turns up.
+    <section
+      id="newsletter"
+      className="section-pad relative isolate scroll-mt-8 overflow-hidden bg-paper"
+      aria-labelledby="newsletter-heading"
+    >
+      <Ambient variant="paws" />
+
+      <div className="shell">
+        <div className="mx-auto max-w-2xl text-center">
+          <Speech aria-hidden className="mx-auto mb-6 h-9 w-9 text-ink" />
+
+          <h2
+            id="newsletter-heading"
+            className="reveal-heading t-display-l text-ink"
+          >
+            Get Coco&apos;s emails
           </h2>
-          <p className="t-lead mt-5 text-ink/75">
-            No guessing. This is the format, a couple of times a month, from
-            Coco.
+
+          <p className="t-lead mx-auto mt-5 text-ink/80">
+            A couple of times a month. One dog thing we worked out, explained
+            properly — the stuff that turned out to be simple once someone
+            translated it.
           </p>
 
-          {/* Sample email — styled as a mail client, clearly a sample */}
-          <div className="mt-8 overflow-hidden rounded-2xl border-2 border-ink/20 bg-paper-warm">
-            <div className="flex items-center gap-3 border-b-2 border-ink/15 px-5 py-4">
-              <BrandImage slot="cocoAvatar" className="h-10 w-10 rounded-full" sizes="40px" />
-              <div className="min-w-0">
-                <p className="t-h3 truncate">Coco</p>
-                <p className="t-small truncate text-ink-muted">
-                  The one where she wouldn&apos;t go through the door
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3 px-5 py-5 text-ink/80">
-              <p>
-                For about a week Coco refused to walk through the kitchen
-                doorway. Not scared of the kitchen. Not scared of me. Just —
-                not going through that gap.
-              </p>
-              <p>
-                Turned out the bin had moved six inches and it now touched her
-                whiskers on the way past. That was it. That was the whole
-                mystery.
-              </p>
-              <p className="text-ink-muted">
-                Three things this reminded me about how dogs map a room →
-              </p>
-            </div>
-          </div>
-          <p className="t-small mt-3 text-ink-muted">
-            A sample, so you know the format. TODO(Eli): swap in a real send.
-          </p>
+          <ul className="t-body mt-6 inline-flex flex-col gap-1 text-left text-ink/80">
+            <li>Two or three a month, never daily.</li>
+            <li>No pitching in the first one.</li>
+            <li>Unsubscribe link in every single email.</li>
+          </ul>
         </div>
 
-        {/* Low-friction capture for people who don't want a guide yet */}
-        <div className="rounded-2xl border-2 border-ink/20 bg-mint p-6 sm:p-8">
-          <h3 className="t-h2 max-w-[18ch]">Just the emails, then.</h3>
-          <p className="t-body mt-3 text-ink/80">
-            Not ready for a guide? Get the emails and decide later.
-          </p>
-          <div className="mt-6">
-            <CaptureSlot magnet="newsletter" />
-          </div>
+        <div className="mx-auto mt-10 max-w-xl rounded-2xl border-2 border-ink/20 bg-mint p-6 sm:p-8">
+          <CaptureSlot magnet="newsletter" />
         </div>
       </div>
     </section>

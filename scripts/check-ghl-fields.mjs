@@ -35,9 +35,20 @@ const SPEC = [
   ["landing_page", "Text", "which page captured them"],
   ["marketing_consent", "Checkbox", "permission record, written at capture"],
   ["consent_at", "Date", "optional — timestamp of the consent record"],
+  ["consent_version", "Text", "WHICH disclosure was accepted"],
+  ["phone_number", "Text", "phone lives HERE, not native — GHL dedupes on native phone"],
+  ["contact_message", "Large text", "contact-form message, mirrored to a note"],
 ];
 
-/** Written by the capture handler — these are the ones that block launch. */
+/**
+ * Written by a live request handler — these are the ones that block launch.
+ *
+ * `contact_message` is in here despite not being a capture field. If it's
+ * missing, submitContactMessage silently sends no custom fields at all and the
+ * enquiry survives only as a best-effort note — so a note failure on top would
+ * lose the message entirely, with nothing but a console.error to show for it.
+ * That's exactly the class of silent loss this script exists to catch.
+ */
 const WRITTEN_AT_CAPTURE = new Set([
   "parent_audience",
   "lead_magnet",
@@ -50,6 +61,9 @@ const WRITTEN_AT_CAPTURE = new Set([
   "utm_term",
   "landing_page",
   "marketing_consent",
+  "consent_version",
+  "phone_number",
+  "contact_message",
 ]);
 
 function loadEnv() {

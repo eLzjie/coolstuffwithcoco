@@ -60,14 +60,25 @@ export type RateLimitResult = {
  * two round-trips instead of a sorted-set implementation — this is abuse
  * dampening, not a security control.
  */
-export async function checkRateLimit(ip: string): Promise<RateLimitResult> {
+export async function checkRateLimit(
+  ip: string,
+  /**
+   * Which endpoint is being counted.
+   *
+   * Without this every route shared one bucket per IP, so someone sending a
+   * few contact-form enquiries used up their own allowance to actually
+   * subscribe — two unrelated actions throttling each other. Defaulted rather
+   * than required so an unscoped caller still gets limited, just coarsely.
+   */
+  scope = "all",
+): Promise<RateLimitResult> {
   const r = redis();
   if (!r) return { ok: true };
 
   try {
     const results = await Promise.all(
       WINDOWS.map(async (w) => {
-        const key = `${PREFIX}${w.name}:${ip}`;
+        const key = `${PREFIX}${scope}:${w.name}:${ip}`;
         const count = await r.incr(key);
         // Only set the TTL on the first hit, so the window doesn't slide
         // forward with every request and trap someone indefinitely.
@@ -79,7 +90,7 @@ export async function checkRateLimit(ip: string): Promise<RateLimitResult> {
     const over = results.find(({ w, count }) => count > w.limit);
     if (!over) return { ok: true };
 
-    const ttl = await r.ttl(`${PREFIX}${over.w.name}:${ip}`);
+    const ttl = await r.ttl(`${PREFIX}${scope}:${over.w.name}:${ip}`);
     return { ok: false, retryAfter: ttl > 0 ? ttl : over.w.seconds };
   } catch (err) {
     console.error("[rateLimit] Redis unreachable, failing open:", err);

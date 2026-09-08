@@ -203,6 +203,85 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   Long-form prose, for the legal pages.
+
+   Set a little looser and narrower than body copy: these are read carefully
+   rather than skimmed, and a 68ch measure with generous leading is what makes
+   a policy actually readable instead of a wall.
+   -------------------------------------------------------------------------- */
+
+.prose-legal {
+  max-width: 68ch;
+}
+
+.prose-legal h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin-block: 2.5rem 0.75rem;
+}
+
+.prose-legal h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.2;
+  margin-block: 1.75rem 0.5rem;
+}
+
+.prose-legal p,
+.prose-legal ul,
+.prose-legal ol {
+  margin-block: 0.85rem;
+  line-height: 1.65;
+}
+
+.prose-legal ul,
+.prose-legal ol {
+  padding-inline-start: 1.35rem;
+}
+
+.prose-legal ul {
+  list-style: disc;
+}
+
+.prose-legal ol {
+  list-style: decimal;
+}
+
+.prose-legal li {
+  margin-block: 0.35rem;
+}
+
+.prose-legal a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-legal strong {
+  font-weight: 600;
+}
+
+/* Callout for the disclaimers that must not be skimmed past. */
+.prose-legal .callout {
+  margin-block: 1.5rem;
+  border: 2px solid color-mix(in oklab, var(--color-ink) 25%, transparent);
+  border-radius: 0.75rem;
+  background: var(--color-butter);
+  padding: 1.25rem;
+}
+
+.prose-legal .callout > :first-child {
+  margin-block-start: 0;
+}
+
+.prose-legal .callout > :last-child {
+  margin-block-end: 0;
+}
+
+/* --------------------------------------------------------------------------
    Layout
    -------------------------------------------------------------------------- */
 
