@@ -191,3 +191,89 @@ d1ccdb5  Set up Next.js shell with locked brand tokens
 6. Three OG images, two quiz signal photos
 7. Confirm `parent_audience` doesn't break existing workflows
 8. Re-run Lighthouse after the asset swaps — LCP moves when real images land
+
+---
+
+# Session 2 — 2026-09-08 (branch `staging`)
+
+**Branch:** `staging` at `03a4830`. **`main` is untouched at `7aaaf36`** — nothing
+from this session is on main, by request.
+
+## Built
+
+Capture forms and `/api/subscribe`, per the GHL build spec (path B). One form
+component in three places, upsert + Inbound Webhook + Meta CAPI, Pixel firing
+client-side on a shared `eventId`. The GHL embed remains the escape hatch behind
+`NEXT_PUBLIC_CAPTURE_MODE=embed`.
+
+Also: all three quiz signal images wired, favicon generated from Coco's face in
+the logo, and the two new signal JPEGs re-encoded (4.4MB to 359KB).
+
+## Verified against the live sub-account, not assumed
+
+Reading the GHL API with the supplied token changed two decisions:
+
+1. **The token is a `pit-` Private Integration Token**, so v2 with a Bearer
+   header is right. Scopes present: contacts read/write, custom fields read.
+   `locations.readonly` is **not** granted — don't add calls needing it.
+2. **Only 5 of the 12 spec'd custom fields exist.** GHL accepts a write to a
+   field key that doesn't exist and silently drops it, so seven writes would
+   have vanished. Custom fields are now addressed by runtime-resolved **id**,
+   and anything missing is named in a warning.
+
+**Run `npm run check:ghl`** for the current gap. It exits non-zero so it can
+gate a deploy. Missing at time of writing: `parent_audience`, `lead_magnet`,
+`traffic_source`, `campaign`, `utm_term`, `landing_page`. This is the build
+spec's sequence step 1, and nothing downstream works without it.
+
+## The three open questions, closed
+
+- **Idempotency** is scoped to the `(email, leadMagnet)` pair, enforced in the
+  handler with a `delivered-<magnet>` tag rather than a workflow branch.
+- **Consent** travels in the request body and gates Pixel and CAPI *together*.
+  Recorded on the contact via `marketing_consent` (which already existed) —
+  not a separate database, because the permission record belongs on the record
+  the marketing is sent from. The per-browser gate stays in `localStorage`: it
+  must be readable before any tag loads and must exist for visitors who never
+  submit.
+- **`traffic_source`** gains `Paid — Other` and `Referral`. Paid is matched
+  *before* the fall-through to Organic. `npm run test:traffic` covers 19 cases.
+
+## Review fixes — found by an independent pass, all real
+
+The worst: **the upsert used to send a merged tag array, and GHL replaces
+rather than merges.** A failed lookup, a fuzzy-search miss, or two concurrent
+submits could overwrite a contact's real tags with just two — destroying
+`delivered-*` markers and every tag the workflows own. Tags now go through the
+additive endpoint and the lookup is read-only.
+
+Others: `markDelivered` failure no longer 502s after the guide was sent (which
+would have caused duplicate delivery on retry); Pixel/CAPI consent booleans
+unified; conversion events never queued for replay; `event_source_url` is the
+page not the API route; the discard path returns no `eventId`; the timing check
+measures from first interaction not mount; a request timeout so a hung fetch
+can't strand the form; server errors clear on keystroke; `LeadMagnet` and the
+email regex deduplicated (analytics was missing `newsletter`).
+
+**Security review: no exploitable findings.**
+
+## Gotcha added to the list
+
+`.next/cache/images` serves a **stale optimized image when a file changes but
+its filename doesn't** — Next keys the cache on the URL. Verified server-side
+with `curl` + `ffprobe` while the browser kept rendering the old aspect ratio.
+
+## Still open
+
+- **Custom fields** (6 missing, blocks accurate reporting) — `npm run check:ghl`
+- **`GHL_WEBHOOK_*` URLs** — these only exist after each workflow's Inbound
+  Webhook trigger is created and saved. Delivery cannot fire without them.
+- **`META_CAPI_ACCESS_TOKEN`** and `NEXT_PUBLIC_META_PIXEL_ID` — CAPI is a
+  no-op until both are set.
+- **Hosted guide PDF URLs** — the thank-you download is disabled without them,
+  and the spec's de-risking move depends on that download existing.
+- **End-to-end test on both concepts, before spend.** This is the exact thing
+  that surfaced post-launch on the previous project.
+- **`"Paid — Other"` em dash** must match the GHL dropdown byte-for-byte.
+- Vet sign-off on the call-now table; three OG images; Vercel deployment
+  protection off.
