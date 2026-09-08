@@ -15,7 +15,18 @@
  *
  * Pass --dry to run only the cases that never reach the CRM (validation and
  * spam), which is safe to run anywhere.
- */
+
+ * ---------------------------------------------------------------------------
+ * CLEAN UP AFTER YOURSELF
+ * ---------------------------------------------------------------------------
+ * This writes real contacts to the live sub-account. When you are done:
+ *
+ *   npm run cleanup:qa              # dry run, lists what it would remove
+ *   npm run cleanup:qa -- --delete
+ *
+ * 155 QA contacts had accumulated before that script existed, against one real
+ * one. A CRM full of test rows makes a genuine problem easy to miss.
+ * */
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const DRY = process.argv.includes("--dry");

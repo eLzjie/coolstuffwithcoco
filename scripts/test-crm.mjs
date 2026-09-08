@@ -40,7 +40,18 @@
  *
  * Slower than test:api by design: GHL's search index has to catch up before
  * the contact can be found by email, so each lookup retries with a backoff.
- */
+
+ * ---------------------------------------------------------------------------
+ * CLEAN UP AFTER YOURSELF
+ * ---------------------------------------------------------------------------
+ * This writes real contacts to the live sub-account. When you are done:
+ *
+ *   npm run cleanup:qa              # dry run, lists what it would remove
+ *   npm run cleanup:qa -- --delete
+ *
+ * 155 QA contacts had accumulated before that script existed, against one real
+ * one. A CRM full of test rows makes a genuine problem easy to miss.
+ * */
 import { readFileSync } from "node:fs";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";

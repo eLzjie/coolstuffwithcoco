@@ -164,7 +164,11 @@ That's it. No code changes.
 
 | Key | Example | Notes |
 |---|---|---|
+| `contact_id` | `lIN66MntYGQWt75f9x6G` | **map on this** — the record the upsert just wrote |
 | `email` | `someone@example.com` | trimmed, lowercased |
+| `first_name` | `Sam` | may be `null` (newsletter collects none) |
+| `last_name` | `Rivera` | may be `null` — optional on the forms |
+| `phone` | `5551234567` | may be `null`; digits only |
 | `lead_magnet` | `decode` | `decode` / `vetbill` / `newsletter` |
 | `parent_audience` | `Pets > Dogs` | constant |
 | `traffic_source` | `Meta` | one of the six enum values |
@@ -200,6 +204,72 @@ npm run dev
 6. **Then submit that same address on `/vetbill`.** You *should* get a second email — a different magnet must deliver. If it doesn't, the idempotency is scoped too broadly.
 
 Step 6 is the one worth being fussy about. It's the case that "Contact Created" would get wrong, and it's invisible until a returning subscriber quietly never receives the second guide.
+
+---
+
+## THE FAILURE THAT ACTUALLY HAPPENED — read this first
+
+**Symptom:** the workflow shows **Entered**, then every action shows
+**"Action skipped"**, then **Exited**. No tag, no email, no pipeline entry, and
+no error anywhere. The webhook Stats show a successful delivery. The subscriber
+gets no PDF.
+
+Observed live on 2026-09-08.
+
+**Cause:** an Inbound Webhook trigger does **not** attach a contact to the
+workflow run. Every action in the delivery workflow is contact-scoped — add
+tag, send email, add to opportunity — so with no contact in context GHL skips
+each one and exits. The run reports as successful because, technically, nothing
+failed.
+
+This is also what the "Mapping Reference is required" error is pointing at.
+
+**It is not a problem with this codebase.** Verified against production the
+same day: the API creates the contact and tags it
+(`audience-pets-dogs`, `lead-magnet-decode`, `delivered-decode`) before the
+webhook is ever called. The contact exists. The workflow just isn't looking at
+it.
+
+### Fix A — switch the trigger to a tag. Recommended.
+
+Instead of an Inbound Webhook, trigger the delivery workflow on:
+
+> **Contact Tag** — tag is `lead-magnet-decode` (and `lead-magnet-vetbill` in
+> the other workflow)
+
+Why this is better, not just easier:
+
+- **`upsertContact` already applies that tag via the API**, so there's nothing
+  new to build on our side.
+- A native tag trigger **always** carries contact context, so the skipped-action
+  failure cannot happen. There is no mapping to misconfigure.
+- **It dedupes for free.** A repeat submission of the same magnet adds no *new*
+  tag, so the workflow can't re-fire and send a second copy.
+- A returning subscriber taking the *second* guide gets a genuinely new tag, so
+  that delivery still fires — which is the case the webhook existed to solve in
+  the first place.
+
+If you take this route, the `GHL_WEBHOOK_*` env vars and the webhook call
+become dead weight. Leave them set until the tag trigger is confirmed working,
+then remove them in one change.
+
+### Fix B — keep the webhook, and map the contact
+
+In the Inbound Webhook trigger's **Mapping Reference**, map a payload field to
+the contact identifier. Prefer **`contact_id`** — the payload now carries it
+(added 2026-09-08), taken from the upsert immediately before the webhook fires,
+so the workflow resolves the exact record rather than fuzzy-matching an email.
+
+`email`, `first_name`, `last_name` and `phone` are also in the payload so a
+mapping keyed on email can populate a contact it has to create.
+
+After changing the mapping you **must re-publish** the workflow.
+
+### How to tell it's fixed
+
+The action list stops saying "Action skipped". Check the workflow's execution
+history rather than trusting the webhook's Stats — Stats only proves GHL
+*received* the POST, which was already true while nothing was being delivered.
 
 ---
 
