@@ -278,7 +278,7 @@ export async function POST(req: NextRequest) {
 
   if (shouldDeliver) {
     try {
-      await fireDeliveryWebhook(contact);
+      await fireDeliveryWebhook(contact, contactId);
     } catch (err) {
       console.error("[subscribe] delivery webhook failed:", err);
       return fail("UPSTREAM_ERROR", 502);

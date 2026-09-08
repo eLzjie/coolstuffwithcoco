@@ -542,8 +542,46 @@ const WEBHOOK_ENV: Record<LeadMagnet, string> = {
  * collapsed: an API upsert does NOT fire GHL's "form submitted" trigger, and
  * "Contact Created" won't fire for someone who already exists — so a returning
  * subscriber coming back for the second guide would never receive it.
+ *
+ * ---------------------------------------------------------------------------
+ * THE PAYLOAD MUST IDENTIFY A CONTACT, OR EVERY WORKFLOW ACTION IS SKIPPED
+ * ---------------------------------------------------------------------------
+ * Observed live on 2026-09-08: the webhook fired, the workflow showed
+ * "Entered", and then all four actions reported "Action skipped" before it
+ * exited. No tag, no email, no pipeline entry — and no error anywhere.
+ *
+ * The cause is that an Inbound Webhook trigger does NOT automatically attach a
+ * contact to the workflow run. Every action in the delivery workflow is
+ * contact-scoped (add tag, send email, add to opportunity), so with no contact
+ * in context GHL skips each one in turn. The run looks successful.
+ *
+ * `contact_id` is therefore the most important field here. We already know the
+ * id — the upsert immediately before this returned it — so the workflow can
+ * resolve the exact record rather than fuzzy-matching an email. `first_name`
+ * and `last_name` are included so a mapping keyed on email can still populate
+ * a contact it has to create.
+ *
+ * GHL SIDE, and this cannot be done from code: the Inbound Webhook trigger
+ * needs its Mapping Reference configured so a payload field identifies the
+ * contact. Prefer `contact_id`.
+ *
+ * BETTER STILL, and worth doing: trigger the delivery workflow on
+ * "Contact Tag" = `lead-magnet-<concept>` instead of an inbound webhook. That
+ * tag is applied by upsertContact through the API, a native tag trigger always
+ * carries contact context, and no mapping exists to be misconfigured — which
+ * removes this entire failure mode. It also dedupes for free: a repeat
+ * submission of the same magnet adds no new tag, so it can't re-fire.
  */
-export async function fireDeliveryWebhook(c: ContactFields) {
+export async function fireDeliveryWebhook(
+  c: ContactFields,
+  /**
+   * The contact the upsert just created or updated.
+   *
+   * Optional only so existing callers keep compiling; always pass it. Without
+   * it the workflow has nothing reliable to resolve, which is the bug above.
+   */
+  contactId?: string,
+) {
   const url = process.env[WEBHOOK_ENV[c.leadMagnet]];
   if (!url) {
     throw new Error(
@@ -556,7 +594,19 @@ export async function fireDeliveryWebhook(c: ContactFields) {
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
     body: JSON.stringify({
+      /*
+        FIRST, because it's the field the workflow should map on. See the note
+        above: without a contact identifier every action is silently skipped.
+      */
+      contact_id: contactId ?? null,
       email: c.email,
+      /*
+        So a mapping keyed on email can still fill in a contact it creates.
+        Null rather than "" — an empty string would blank a real name.
+      */
+      first_name: c.firstName ?? null,
+      last_name: c.lastName ?? null,
+      phone: c.phone ?? null,
       lead_magnet: c.leadMagnet,
       parent_audience: PARENT_AUDIENCE,
       traffic_source: c.trafficSource,
