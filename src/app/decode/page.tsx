@@ -3,12 +3,14 @@ import { BrandImage } from "@/components/brand/BrandImage";
 import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Paw } from "@/components/brand/Icons";
 import { GuessTheSignal } from "@/components/decode/GuessTheSignal";
-import { GhlFormEmbed } from "@/components/shared/GhlFormEmbed";
+import { CaptureSlot } from "@/components/forms/CaptureSlot";
 import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/motion/Reveal";
 import { ViewContent } from "@/components/shared/ViewContent";
-import { BRAND } from "@/lib/brand/manifest";
+import { Faq } from "@/components/shared/Faq";
+import { ReadMethod } from "@/components/decode/ReadMethod";
 import { DECODE } from "@/lib/content/guides";
+import { DECODE_FAQ } from "@/lib/content/faq";
 
 export const metadata: Metadata = {
   title: DECODE.title,
@@ -18,7 +20,6 @@ export const metadata: Metadata = {
     title: DECODE.title,
     description: DECODE.promise,
     url: "/decode",
-    images: BRAND.ogDecode.ready ? [`/brand/${BRAND.ogDecode.file}`] : undefined,
   },
 };
 
@@ -96,6 +97,22 @@ export default function DecodePage() {
           </div>
         </section>
 
+        {/* ---- The R.E.A.D. method: a named, quotable framework ---- */}
+        <ReadMethod />
+
+        {/*
+          ---- Q&A ----
+          Sits BEFORE the capture section on purpose. These are the questions
+          people arrive already asking, so answering them earns the email
+          rather than withholding until the form. The form is right below.
+        */}
+        <Faq
+          items={DECODE_FAQ}
+          heading="The questions everyone actually asks"
+          intro="Straight answers, taken from the guide. No preamble."
+          className="bg-paper-warm"
+        />
+
         {/* ---- Who it's for ---- */}
         <section className="section-pad bg-butter" aria-labelledby="who-heading">
           <div className="shell">
@@ -121,11 +138,17 @@ export default function DecodePage() {
             <h2 id="get-heading" className="t-display-l text-ink">
               Send me the guide
             </h2>
+            {/*
+              This said "One email address" until the form grew to four fields
+              — copy promising less friction than the form actually asks for
+              reads as a bait once the reader looks down. Only the name and
+              email are required, so that's what it claims now.
+            */}
             <p className="t-lead mt-4 text-ink/80">
-              One email address. It arrives straight away.
+              Your name and email. It arrives straight away.
             </p>
             <div className="mt-8 rounded-2xl border-2 border-ink/20 bg-paper p-6 sm:p-8">
-              <GhlFormEmbed magnet="decode" height={300} />
+              <CaptureSlot magnet="decode" redirectTo="/decode/thank-you" />
             </div>
           </div>
         </section>

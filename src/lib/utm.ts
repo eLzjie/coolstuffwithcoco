@@ -1,101 +1,107 @@
 /**
- * Campaign attribution capture.
+ * Campaign attribution capture — FIRST TOUCH.
  *
- * Captured once on landing and persisted for the session, so a visitor who
- * lands on /decode from an ad and later submits still carries the campaign
- * that brought them. Read by the analytics wrapper on every event.
+ * Captured once on landing and persisted for the session. First touch wins:
+ * an existing stored value is never overwritten by a later page, so someone
+ * who lands on a Meta ad and then browses to the home page still carries the
+ * ad that brought them.
  *
- * NOTE: with the GHL iframe embed in place these values are NOT reaching the
- * contact record — the iframe can't see them. They are captured and available
- * here so that the moment the form moves in-page, passing them through is a
- * one-line change. See GhlFormEmbed for the full picture.
+ * (This reverses the earlier last-touch behaviour. The capture spec is explicit
+ * about it, and last-touch would credit an internal navigation over the ad.)
+ *
+ * The request body uses camelCase; the GHL contact fields are snake_case. The
+ * mapping lives in lib/crm/ghl.ts, so this file only deals in camelCase.
+ *
+ * Everything here degrades to an in-memory value when sessionStorage is
+ * unavailable (private mode, blocked storage). It never throws.
  */
 
-const STORAGE_KEY = "coco.attribution.v1";
+const STORAGE_KEY = "coco_attribution";
 
-const UTM_KEYS = [
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_content",
-  "utm_term",
+const UTM_PARAMS = [
+  ["utm_source", "utmSource"],
+  ["utm_medium", "utmMedium"],
+  ["utm_campaign", "utmCampaign"],
+  ["utm_content", "utmContent"],
+  ["utm_term", "utmTerm"],
 ] as const;
 
 export type Attribution = {
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-  utm_content?: string;
-  utm_term?: string;
-  /** Meta's click id — the strongest signal we get for matching. */
-  fbclid?: string;
-  traffic_source?: string;
-  campaign?: string;
-  page_path?: string;
-  landing_variant?: string;
-  /** Never merges with the Homeowners tree. */
-  parent_audience: "pets-dogs";
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  utmContent: string | null;
+  utmTerm: string | null;
+  /** Meta's click id — the strongest signal we get for match quality. */
+  fbclid: string | null;
+  /** document.referrer at first touch, for traffic_source derivation. */
+  referrer: string | null;
+  /** Which page captured them. */
+  landingPage: string | null;
 };
 
-/** Constant across every capture. The Homeowners tree must stay separate. */
-export const PARENT_AUDIENCE = "pets-dogs" as const;
+const EMPTY: Attribution = {
+  utmSource: null,
+  utmMedium: null,
+  utmCampaign: null,
+  utmContent: null,
+  utmTerm: null,
+  fbclid: null,
+  referrer: null,
+  landingPage: null,
+};
 
+/** Survives a blocked sessionStorage for the life of the page. */
+let memory: Attribution | null = null;
+
+/**
+ * Call once on landing. Safe to call on every navigation — it only writes the
+ * first time, which is what makes attribution first-touch.
+ */
 export function captureAttribution(): Attribution {
-  const base: Attribution = { parent_audience: PARENT_AUDIENCE };
+  if (typeof window === "undefined") return EMPTY;
 
-  if (typeof window === "undefined") return base;
+  const stored = read();
+  if (stored) return stored;
 
-  const existing = readStored();
   const params = new URLSearchParams(window.location.search);
+  const fresh: Attribution = { ...EMPTY };
 
-  const fresh: Attribution = { ...base };
-  for (const key of UTM_KEYS) {
-    const v = params.get(key);
-    if (v) fresh[key] = v;
+  for (const [param, key] of UTM_PARAMS) {
+    fresh[key] = params.get(param) || null;
   }
+  fresh.fbclid = params.get("fbclid") || null;
+  fresh.referrer = document.referrer || null;
+  fresh.landingPage = window.location.pathname;
 
-  const fbclid = params.get("fbclid");
-  if (fbclid) fresh.fbclid = fbclid;
-
-  // Only overwrite stored attribution when this landing actually carries
-  // campaign params. Otherwise an internal navigation would blank it out.
-  const carriesCampaign = Object.keys(fresh).length > 1;
-  const merged: Attribution = carriesCampaign ? fresh : { ...fresh, ...existing };
-
-  merged.traffic_source = merged.utm_source ?? (merged.fbclid ? "meta" : referrerSource());
-  merged.campaign = merged.utm_campaign;
-  merged.page_path = window.location.pathname;
-  merged.landing_variant = params.get("v") ?? "default";
-
-  try {
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-  } catch {
-    // Private mode — attribution then lives for this page view only.
-  }
-
-  return merged;
-}
-
-function referrerSource() {
-  if (!document.referrer) return "direct";
-  try {
-    const host = new URL(document.referrer).hostname.replace(/^www\./, "");
-    return host === window.location.hostname ? "internal" : host;
-  } catch {
-    return "unknown";
-  }
-}
-
-function readStored(): Partial<Attribution> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.sessionStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Partial<Attribution>) : {};
-  } catch {
-    return {};
-  }
+  write(fresh);
+  return fresh;
 }
 
 export function getAttribution(): Attribution {
-  return { parent_audience: PARENT_AUDIENCE, ...readStored() };
+  if (typeof window === "undefined") return EMPTY;
+  return read() ?? captureAttribution();
+}
+
+function read(): Attribution | null {
+  if (memory) return memory;
+  try {
+    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<Attribution>;
+    memory = { ...EMPTY, ...parsed };
+    return memory;
+  } catch {
+    // Blocked storage or malformed JSON — treat as "nothing stored yet".
+    return null;
+  }
+}
+
+function write(value: Attribution) {
+  memory = value;
+  try {
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+  } catch {
+    // Non-fatal: `memory` still carries it for this page view.
+  }
 }

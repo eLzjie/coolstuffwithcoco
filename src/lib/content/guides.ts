@@ -4,14 +4,25 @@
  * Written in Coco's voice: warm, plain-spoken, first person from Coco's human.
  * Sentence case, plain verbs, no clinical register.
  *
- * IMPORTANT — every factual claim in here is marked `verify: true` and carries
- * a TODO(Eli) note. Nothing marked `verify: true` should go live without
- * sign-off. Chapter lists are paraphrased from the brief's summary table, NOT
- * from the actual guide PDFs (which weren't in the repo) — so they need a pass
- * against the real documents.
+ * ---------------------------------------------------------------------------
+ * CHECKED AGAINST THE REAL GUIDES — 2026-09-08
+ * ---------------------------------------------------------------------------
+ * The v5 PDFs are now in docs/specs/ (`CTWCDecode YourDog V5.pdf`,
+ * `CTWC VetBill v5.pdf`), so the chapter lists, the body-language claims and
+ * the cost table below are no longer paraphrased from the brief's summary —
+ * they're taken from the delivered documents. What that pass turned up:
  *
- * TODO(Eli): the guide PDFs weren't available. Confirm every chapter title and
- * description below against the real files.
+ *  - The cost table DISAGREED with the guide. See the note above COSTS.
+ *  - Both chapter lists were missing a section that's in the guide.
+ *  - The hazard audit was described as twenty minutes; the guide says ten.
+ *  - All three SIGNALS claims checked out and are no longer flagged.
+ *
+ * THE GUIDE IS THE SOURCE OF TRUTH for anything a reader can compare. A number
+ * on the landing page that differs from the same number in the PDF they just
+ * downloaded costs more trust than a slightly stale figure would.
+ *
+ * So: if the guides are revised, re-read them and update this file. Anything
+ * still marked `verify: true` has NOT been confirmed.
  */
 
 export type Chapter = {
@@ -61,6 +72,11 @@ export const DECODE = {
         "Some signals aren't personality — they're discomfort. What to notice, and when to ring your vet instead of a trainer.",
     },
     {
+      title: "Coco's 7-day body language challenge",
+      blurb:
+        "One small observation a day for a week. Five minutes on the face, a day watching the tail, one calming signal to spot. By day seven you're reading the whole dog.",
+    },
+    {
       title: "The quick-reference card",
       blurb: "One page. Stick it on the fridge. Everyone in the house learns the same language.",
     },
@@ -76,8 +92,18 @@ export const DECODE = {
 /**
  * The three signals in "Guess the signal" on /decode.
  *
- * These are body-language claims, not medical ones — but they're still claims.
- * TODO(Eli): verify all three against the guide text before launch.
+ * CHECKED against `CTWCDecode YourDog V5.pdf` on 2026-09-08. All three match
+ * the guide, so the `verify` flags are cleared:
+ *
+ *   whale eye  — guide: "Whites of the eyes showing / Step back. Do not push
+ *                the interaction", cheat sheet: "Whale eye = stressed"
+ *   yawn       — guide: "Not tired. Stress, or calming a tense moment. At the
+ *                vet, in the car, around strangers"
+ *   stiff wag  — guide: "A stiff, high, fast wag often signals arousal or
+ *                tension, not joy. Read the whole body."
+ *
+ * These are body-language claims, not medical ones, and they are the guide's
+ * own framing rather than ours. If the guide is revised, re-check them.
  */
 export const SIGNALS = [
   {
@@ -90,7 +116,7 @@ export const SIGNALS = [
     ],
     reveal:
       "That crescent of white is usually discomfort, not guilt. She's tracking something she's wary of while trying to look away from it. Give her room and the tension drops.",
-    verify: true,
+    verify: false,
   },
   {
     id: "yawn",
@@ -102,7 +128,7 @@ export const SIGNALS = [
     ],
     reveal:
       "A yawn away from bedtime is often a dog taking the edge off a moment. Vet waiting rooms are full of yawning dogs who slept all morning.",
-    verify: true,
+    verify: false,
   },
   {
     id: "tail",
@@ -114,7 +140,7 @@ export const SIGNALS = [
     ],
     reveal:
       "A wag means the dog is feeling something strongly, not that the something is good. High and stiff with a fast, tight beat is arousal. Look at the rest of her before you let anyone reach in.",
-    verify: true,
+    verify: false,
   },
 ] as const;
 
@@ -139,6 +165,11 @@ export const VETBILL = {
         "Plain ranges by type, so the number at the counter isn't the first number you've seen.",
     },
     {
+      title: "Five mistakes that make emergencies cost more",
+      blurb:
+        "None of them are about being a bad owner. Waiting to see if it settles, not knowing where the 24-hour clinic is, assuming the first quote is the whole bill.",
+    },
+    {
       title: "Call now, or wait until morning",
       blurb:
         "The symptom-by-symptom table. General categories, not a diagnosis — but enough to stop you guessing.",
@@ -151,7 +182,7 @@ export const VETBILL = {
     {
       title: "Walk your house once",
       blurb:
-        "A room-by-room hazard check. Takes twenty minutes and it's the cheapest thing in this guide.",
+        "A room-by-room hazard check. Takes about ten minutes and it's the cheapest thing in this guide.",
     },
     {
       title: "Your emergency contacts page",
@@ -185,8 +216,22 @@ export const VETBILL = {
    - Every "wait" row still points at a phone call.
    - The disclaimer renders INSIDE the component, not just in the footer.
 
-   TODO(Eli): this table needs review and sign-off by a vet before launch.
-   Do not publish it on my say-so.
+   PROVENANCE, updated 2026-09-08: these rows are now taken from Section 2 of
+   `CTWC VetBill v5.pdf` ("Call Now, or Safe to Watch") rather than written
+   here. That matters — the page was previously asserting its own triage
+   categories, and quoting the delivered guide is both better provenance and
+   guarantees the page and the PDF can't drift apart.
+
+   ONE DELIBERATE DIFFERENCE: the guide's second column is headed "Safe to
+   monitor". This site's second tier is "Ring your vet today", and it stays
+   stricter on purpose. A landing page is read by people who have not yet read
+   the surrounding context, caveats and cheat sheet that a guide reader has, so
+   it should not hand out permission to wait. Do not "align" this away.
+
+   TODO(Eli): still needs sign-off by a vet. Note the GUIDE has no vet sign-off
+   either (confirmed 2026-09-08 as not obtainable before launch), so matching
+   it improves consistency, not clinical authority. The disclaimer in
+   CallNowTable is doing the real work here.
    -------------------------------------------------------------------------- */
 
 export type TriageRow = {
@@ -198,34 +243,44 @@ export type TriageRow = {
 
 export const TRIAGE: TriageRow[] = [
   {
-    sign: "Struggling to breathe, or gums looking pale or blue",
+    sign: "Struggling to breathe, or gasping",
     tier: "now",
-    note: "Breathing trouble doesn't get a wait-and-see. Go.",
+    note: "Breathing trouble never gets a wait-and-see. Flat-faced breeds least of all.",
   },
   {
-    sign: "Swallowed something toxic — or you think they might have",
+    sign: "Gums gone pale, white, blue or grey",
     tier: "now",
-    note: "Ring on your way, and take the packaging with you.",
+    note: "Check them now so you know what normal looks like on your dog.",
   },
   {
-    sign: "Hard, swollen belly with retching but nothing coming up",
+    sign: "Unproductive retching with a hard, swollen belly",
     tier: "now",
-    note: "This one moves fast. Treat it as an emergency.",
+    note: "The classic picture of bloat. This one moves in hours.",
   },
   {
-    sign: "Straining to urinate and producing little or nothing",
+    sign: "Collapse, or can't stand up",
     tier: "now",
-    note: "Hours matter here, especially with male dogs.",
+    note: "Don't offer food or water if they're down. Ring and go.",
   },
   {
-    sign: "One vomit, then back to normal and drinking fine",
+    sign: "Known or suspected poisoning",
+    tier: "now",
+    note: "Ring on the way and take the packaging with you. Don't induce vomiting unless you're told to.",
+  },
+  {
+    sign: "Vomited once, then bright and drinking normally",
     tier: "call",
-    note: "Still ring your vet and describe it. They decide, not you.",
+    note: "The reassuring part is the bright and eating. Still describe it to your vet — they decide, not you.",
   },
   {
-    sign: "Mild limp that's easing, no yelping when touched",
+    sign: "Mild limp, still putting weight on it",
     tier: "call",
-    note: "Book it in. Rest it meanwhile and stop if it worsens.",
+    note: "Book it in. Rest it meanwhile, and stop waiting if it worsens.",
+  },
+  {
+    sign: "Skipped one meal, otherwise completely normal",
+    tier: "call",
+    note: "Worth a mention rather than a drive. Any second change alongside it moves this up.",
   },
 ];
 
@@ -236,12 +291,158 @@ export const TRIAGE: TriageRow[] = [
  * numbers are invented to hold the layout, not researched. The vet-cost survey
  * figures you mentioned are better sourced but still need your approval.
  */
-export const COSTS = [
-  { label: "Out-of-hours consult, just to be seen", range: "TODO(Eli)" },
-  { label: "X-rays and bloods", range: "TODO(Eli)" },
-  { label: "Something swallowed that has to come out", range: "TODO(Eli)" },
-  { label: "A night on a drip", range: "TODO(Eli)" },
-  { label: "Emergency surgery", range: "TODO(Eli)" },
+export type CostRow = {
+  label: string;
+  range: string;
+  /** The bit that stops a number being read as a quote. */
+  note?: string;
+};
+
+/**
+ * US emergency ranges — TAKEN FROM THE GUIDE'S OWN TABLE, 2026-09-08.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THESE CHANGED
+ * ---------------------------------------------------------------------------
+ * An earlier version researched these independently from pet-insurance
+ * aggregators, and the result quietly contradicted the guide it advertises:
+ *
+ *   bloat surgery        page said $3,000–8,000   guide says $2,000–7,500
+ *   swallowed object     page said $2,000–3,500   guide says $1,500–5,000
+ *   emergency exam       page said $100–250       guide says $150–500
+ *
+ * A reader takes the page's number, downloads the PDF, and finds a different
+ * one for the same thing. That undermines the exact document being offered as
+ * the authoritative version — and it's the page that should yield, because the
+ * guide is what they keep.
+ *
+ * So these now mirror Section 1 of `CTWC VetBill v5.pdf` exactly. If the guide
+ * is revised, change these to match; do not re-research them separately.
+ *
+ * They remain RANGES, not quotes, and the page says so in plain sight — cost
+ * varies enormously by city, clinic and severity. They are US figures; if the
+ * site ever targets outside the US they need replacing, not converting.
+ */
+export const COSTS: CostRow[] = [
+  {
+    label: "Emergency exam and diagnostics",
+    range: "$150 – $500",
+    note: "Just walking in and finding out what's wrong, before any treatment.",
+  },
+  {
+    label: "Toxin ingestion or poisoning",
+    range: "$300 – $3,000+",
+    note: "The range is this wide because it depends entirely on what they ate and how long ago.",
+  },
+  {
+    label: "Foreign object removal surgery",
+    range: "$1,500 – $5,000",
+    note: "Socks, corn cobs, string, small toys. The usual culprits are all things lying around a normal house.",
+  },
+  {
+    label: "Bloat (GDV) surgery",
+    range: "$2,000 – $7,500",
+    note: "Life threatening, and it moves in hours rather than days.",
+  },
+  {
+    label: "Breathing emergency",
+    range: "$500 – $3,000",
+    note: "Flat-faced breeds are over-represented here. Coco included.",
+  },
+  {
+    label: "Broken bone or fracture",
+    range: "$1,000 – $5,000",
+  },
+  {
+    label: "Seizure treatment",
+    range: "$500 – $2,000",
+  },
+  {
+    label: "Heat stroke",
+    range: "$500 – $2,500",
+    note: "Can develop in minutes, not hours.",
+  },
+];
+
+/** Where the ranges above came from. Rendered on the page. */
+export const COST_SOURCES: Array<{ name: string; url: string }> = [
+  {
+    name: "Rover — 2026 Cost of Dog Parenthood Report",
+    url: "https://www.rover.com/blog/cost-of-dog-parenthood/",
+  },
+  {
+    name: "Forbes — pet owner emergency cost survey",
+    url: "https://www.forbes.com/advisor/pet-insurance/pet-care-costs/",
+  },
+  {
+    name: "ASPCA Animal Poison Control — annual case data",
+    url: "https://www.aspca.org/pet-care/animal-poison-control",
+  },
+  {
+    name: "Royal Veterinary College — brachycephalic heat-related illness",
+    url: "https://www.rvc.ac.uk/vetcompass",
+  },
+];
+
+/**
+ * The three numbers the guide opens with.
+ *
+ * These are the page's strongest hook and they are lifted from the guide's own
+ * cover, deliberately, so the landing page and the deliverable state the same
+ * figures. See the note above COSTS about why that matters.
+ *
+ * Each one is a statement about OWNERS, not about a dog — which is the whole
+ * point. Nobody thinks the emergency will be theirs; the useful fact is how
+ * many people were equally sure and then had minutes to decide.
+ */
+export const VETBILL_STATS: Array<{ figure: string; label: string }> = [
+  { figure: "$1,035", label: "average dog emergency" },
+  { figure: "8 in 10", label: "owners aren't financially ready for one" },
+  { figure: "39%", label: "had only minutes to decide" },
+];
+
+/**
+ * The five expensive emergencies that are largely preventable.
+ *
+ * Section 3 of the guide, condensed. Kept because it's the most actionable
+ * thing on either page: four of the five cost very little to prevent and a
+ * great deal to treat, and that gap is the reason the guide exists.
+ */
+export const PREVENTABLE: Array<{
+  title: string;
+  stat: string;
+  action: string;
+}> = [
+  {
+    title: "Toxin ingestion",
+    stat: "ASPCA handled over 376,000 exposure cases in 2025",
+    action:
+      "Medication is the single largest category. Keep pills, grapes, raisins, xylitol, chocolate and onions genuinely out of reach — not just off the counter.",
+  },
+  {
+    title: "Swallowed objects",
+    stat: "Surgery commonly runs $1,500 – $5,000",
+    action:
+      "Socks, string and small toys, unsupervised. Frenchies and terriers are particularly determined about it.",
+  },
+  {
+    title: "Dental disease",
+    stat: "Affects 80–90% of dogs over three",
+    action:
+      "The most common disease in dogs, and most owners don't notice until it's advanced because dogs hide dental pain well. Brushing three times a week is the minimum that helps.",
+  },
+  {
+    title: "Weight-related illness",
+    stat: "Around 65% of dogs are overweight",
+    action:
+      "Measure meals instead of eyeballing them. One study found roughly a third of owners judged an overweight dog to be a normal weight.",
+  },
+  {
+    title: "Heat injury",
+    stat: "Flat-faced breeds are around 4× more at risk",
+    action:
+      "No walks on hot pavement — test it with the back of your hand. Never a parked car, even briefly. This is the one Coco's human watches hardest.",
+  },
 ];
 
 /* ==========================================================================
@@ -263,21 +464,50 @@ export const DISCLAIMER_LONG =
  * given — do not "helpfully update", reformat or substitute them, and do not
  * add numbers from any other source.
  *
+ * ---------------------------------------------------------------------------
+ * THE FEE IS NOT OPTIONAL COPY — never ship these numbers without it
+ * ---------------------------------------------------------------------------
+ * Both lines charge per incident. We present them to someone who is frightened
+ * and about to dial immediately, so omitting the charge sets them up for a
+ * surprise bill at the worst possible moment — and it makes us the reason they
+ * hit it. Whatever the legal position, that's not a thing to do to someone
+ * mid-emergency.
+ *
+ * Amounts verified against each operator's own current pages, September 2026:
+ *   - ASPCA APCC: $95 per incident (some case-dependent variation reported)
+ *   - Pet Poison Helpline: $89 per incident, follow-ups included
+ *
+ * These change. Re-check before a campaign push, and if a number can't be
+ * confirmed say "a per-incident fee applies" rather than printing a stale one —
+ * a wrong figure is worse than a vague true one. Both render the fee already
+ * (contact page and footer), so correcting it here is the whole change.
+ *
  * Both are US lines. TODO(Eli): if the site takes meaningful UK/EU traffic,
  * these need a regional equivalent alongside them.
  */
-export const HOTLINES: Array<{ name: string; number: string; note: string }> = [
+export const HOTLINES: Array<{
+  name: string;
+  number: string;
+  note: string;
+  /** Displayed on its own line. See the fee note above before editing. */
+  fee: string;
+}> = [
   {
     name: "ASPCA Animal Poison Control",
     number: "(888) 426-4435",
     note: "If she's eaten something she shouldn't have.",
+    fee: "$95 per incident",
   },
   {
     name: "Pet Poison Helpline",
     number: "(855) 764-7661",
     note: "Second line, if the first is busy.",
+    fee: "$89 per incident",
   },
 ];
+
+/** Where every legal page and the contact form point. */
+export const SUPPORT_EMAIL = "info@mail.coolstuffwithcoco.com";
 
 export const IG_HANDLE = "@coolstuffwithcoco";
 export const IG_URL = "https://instagram.com/coolstuffwithcoco";

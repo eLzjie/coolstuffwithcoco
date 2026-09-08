@@ -2,25 +2,33 @@ import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Footer } from "@/components/layout/Footer";
 
 /**
- * Shared shell for the four legal routes.
+ * Shared shell for the legal routes.
  *
- * These are SCAFFOLDS. No legal text is drafted here — the brief is explicit
- * that drafting it isn't my job, and a plausible-looking privacy policy is
- * worse than an obvious placeholder because it looks finished.
+ * ---------------------------------------------------------------------------
+ * NEEDS A LAWYER BEFORE YOU TAKE MONEY
+ * ---------------------------------------------------------------------------
+ * The policies these pages render are written to be accurate about what the
+ * site actually does — the data flows in them were read off the real code, not
+ * guessed from a template. That makes them honest, not vetted. See
+ * docs/LEGAL-REVIEW.md for the specific open items (business entity, governing
+ * law, and whether the refund terms match the eventual checkout).
  *
- * The refund policy in particular must be live before checkout goes live
- * (compliance rule 5). Checkout is in GHL, so this route exists to be linked
- * from there.
+ * The review flag lives in the repo rather than on the page on purpose: a
+ * visitor-facing "not reviewed by a lawyer" banner on a privacy policy
+ * undermines the document without helping anyone.
  */
 export function LegalPage({
   title,
-  intent,
+  intro,
+  updated,
   children,
 }: {
   title: string;
-  /** What this page needs to cover, for whoever writes it. */
-  intent: string;
-  children?: React.ReactNode;
+  /** One line under the h1, in plain language. */
+  intro?: string;
+  /** ISO date, rendered as the "last updated" line. */
+  updated: string;
+  children: React.ReactNode;
 }) {
   return (
     <>
@@ -29,20 +37,24 @@ export function LegalPage({
           <BrandLockup href="/" />
         </div>
 
-        <div className="shell pb-24 pt-8">
-          <h1 className="t-display-l max-w-[24ch] text-ink">{title}</h1>
+        <div className="shell pb-24 pt-6">
+          <h1 className="t-display-l max-w-[22ch] text-ink">{title}</h1>
 
-          <div className="mt-10 max-w-[68ch] rounded-2xl border-2 border-dashed border-ink/40 bg-paper-warm p-6 sm:p-8">
-            <p className="t-h3">TODO(Eli) — this page needs real copy</p>
-            <p className="t-body mt-3 text-ink/80">{intent}</p>
-            <p className="t-small mt-4 text-ink-muted">
-              Left as a scaffold on purpose. Drafting legal text isn&apos;t
-              something I should do, and a plausible-looking version is worse
-              than an obvious blank because it reads as finished.
-            </p>
-          </div>
+          {intro && <p className="t-lead mt-5 text-ink/80">{intro}</p>}
 
-          {children}
+          <p className="t-small mt-4 text-ink-muted">
+            Last updated{" "}
+            <time dateTime={updated}>
+              {new Date(`${updated}T00:00:00Z`).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                timeZone: "UTC",
+              })}
+            </time>
+          </p>
+
+          <div className="prose-legal mt-10 text-ink/85">{children}</div>
         </div>
       </main>
 

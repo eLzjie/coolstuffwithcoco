@@ -40,14 +40,17 @@ export function Footer({ bare = false }: { bare?: boolean }) {
           <ul className="grid gap-4 sm:grid-cols-2">
             {HOTLINES.map((h) => (
               <li key={h.name}>
+                {/* 44px tap target — see the note on the contact page. */}
                 <a
                   href={`tel:${h.number.replace(/[^+\d]/g, "")}`}
-                  className="t-h3 underline decoration-coral decoration-2 underline-offset-4"
+                  className="t-h3 inline-flex min-h-11 items-center underline decoration-coral decoration-2 underline-offset-4"
                 >
                   {h.number}
                 </a>
                 <span className="block font-semibold opacity-95">{h.name}</span>
                 <span className="t-small block opacity-75">{h.note}</span>
+                {/* Kept at full opacity — a fee shouldn't be the faintest thing here. */}
+                <span className="t-small block font-semibold">{h.fee}</span>
               </li>
             ))}
           </ul>

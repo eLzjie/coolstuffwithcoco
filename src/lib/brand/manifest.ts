@@ -107,19 +107,16 @@ export const BRAND = {
     note: "SIGNAL — the side-eye. Head turned away, eyes tracking the camera, whites of the eye visible.",
     ready: true,
   },
-  /*
-    Still to generate — prompts in docs/specs/decode-signal-image-prompts.md.
-    Both must land on the same Bubblegum ground as the side-eye above, because
-    the quiz steps through them one at a time and a background change between
-    taps reads as a glitch. Drop into /public/ad/ and flip `ready`.
-  */
+  /* All three signals generated from docs/specs/decode-signal-image-prompts.md
+     and sharing the same Bubblegum ground, so stepping through the quiz has no
+     background jump. */
   "signal-yawn": {
     file: "/ad/coco-french-bulldog-yawn-calming-signal.jpg",
     w: 1122,
     h: 1402,
     alt: "Coco mid-yawn, eyes squeezed shut and mouth wide open",
     note: "SIGNAL — the yawn. Mid-yawn, in daylight, clearly not sleepy.",
-    ready: false,
+    ready: true,
   },
   "signal-tail": {
     file: "/ad/coco-french-bulldog-stiff-high-tail-arousal.jpg",
@@ -127,7 +124,7 @@ export const BRAND = {
     h: 1402,
     alt: "Coco standing alert, weight forward, tail held high and stiff",
     note: "SIGNAL — the stiff high wag. Standing alert, weight forward, tail up. Hardest of the three.",
-    ready: false,
+    ready: true,
   },
 
   /* ---- Guide covers -----------------------------------------------------

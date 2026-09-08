@@ -1,73 +1,96 @@
+"use client";
+
 /**
- * Consent gate — interface only.
+ * Consent gate — the per-browser decision about whether tracking may fire.
  *
- * The site takes EU/UK traffic, so the Pixel and CAPI must not fire before
- * consent where it's required. Whether that's a lightweight banner or full CMP
- * tooling is Eli's decision, so this is deliberately a seam, not an
- * implementation: both plug in behind the same three functions.
+ * ---------------------------------------------------------------------------
+ * Two different things, often confused. This file is only the first.
+ * ---------------------------------------------------------------------------
+ *  1. The GATE (here). "May the Pixel fire in this browser?" Per-browser, must
+ *     be readable synchronously before any tag loads, and has to exist for
+ *     visitors who never submit anything. That's why it's localStorage and not
+ *     a database: a network round-trip can't gate a script that's already
+ *     loading, and there's no contact record to look up for a visitor who
+ *     hasn't given an email yet.
  *
- * TO WIRE UP A REAL CMP: replace the body of `hasConsent` with a read of the
- * CMP's state and call `notify()` from its change callback. Nothing else in the
- * codebase needs to know which CMP won.
+ *  2. The RECORD. "This person agreed to marketing email." Belongs on the GHL
+ *     contact — `marketing_consent`, written at capture. See lib/crm/ghl.ts.
+ *
+ * localStorage, not sessionStorage, deliberately: consent should outlive the
+ * tab. Re-asking on every visit is worse for the visitor and worse for
+ * conversion.
+ *
+ * ---------------------------------------------------------------------------
+ * LAUNCH POSTURE — default granted, US-only targeting
+ * ---------------------------------------------------------------------------
+ * Region detection is NOT wired: there's no reliable client-side signal, so it
+ * has to come from the CDN geo header (`x-vercel-ip-country`) passed down from
+ * a server component. Until that lands, the gate can't do its job, and the
+ * honest mitigation is a targeting constraint rather than pretending otherwise:
+ * do not send EU/UK traffic to these pages.
+ *
+ * TODO(Eli): decide banner vs CMP, wire the region in from the edge, then flip
+ * the default to denied for gated regions. Until then this is a targeting
+ * discipline, not a technical control — and it needs to stay written down.
  */
+
+import {
+  CONSENT_STORAGE_KEY,
+  updateGoogleConsent,
+} from "@/lib/analytics/consentMode";
 
 export type ConsentCategory = "analytics" | "marketing";
-
 export type ConsentState = Record<ConsentCategory, boolean>;
 
-const STORAGE_KEY = "coco.consent.v1";
+/*
+  The key lives in analytics/consentMode.ts, not here, purely because a SERVER
+  component has to read it to inline the Consent Mode default before any tag
+  loads — and this module is "use client". See the note there. One definition,
+  imported in the direction that is safe.
+*/
+const STORAGE_KEY = CONSENT_STORAGE_KEY;
 
-/**
- * Regions where we gate before firing. Everywhere else defaults to granted.
- *
- * TODO(Eli): confirm this list with whoever signs off on privacy. It is
- * currently EEA + UK + Switzerland and is not legal advice.
- */
-const GATED_REGIONS = /^(AT|BE|BG|HR|CY|CZ|DK|EE|FI|FR|DE|GR|HU|IE|IT|LV|LT|LU|MT|NL|PL|PT|RO|SK|SI|ES|SE|IS|LI|NO|GB|CH)$/;
+/** Default granted — see LAUNCH POSTURE above. */
+const DEFAULT: ConsentState = { analytics: true, marketing: true };
 
 let state: ConsentState | null = null;
 const listeners = new Set<() => void>();
 
-function notify() {
-  listeners.forEach((fn) => fn());
-}
-
-/**
- * Whether this visitor needs an explicit opt-in.
- *
- * Region detection is not implemented — there is no reliable client-side
- * signal for it. In production this should come from the CDN's geo header
- * (Vercel sets `x-vercel-ip-country`) passed down from a server component.
- *
- * TODO(Eli): decide banner vs CMP, then wire region in from the edge.
- */
-export function requiresGate(country?: string) {
-  if (!country) return false;
-  return GATED_REGIONS.test(country.toUpperCase());
-}
-
 function read(): ConsentState {
   if (state) return state;
-
-  // Default-granted outside gated regions. `requiresGate` flips this once
-  // region detection is wired in from the edge.
-  const fallback: ConsentState = { analytics: true, marketing: true };
-
-  if (typeof window === "undefined") return fallback;
+  if (typeof window === "undefined") return DEFAULT;
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    state = raw ? (JSON.parse(raw) as ConsentState) : fallback;
+    state = raw ? { ...DEFAULT, ...(JSON.parse(raw) as ConsentState) } : DEFAULT;
   } catch {
-    // Private mode, blocked storage — fail to the fallback rather than throwing.
-    state = fallback;
+    // Private mode or blocked storage — fall back rather than throwing.
+    state = DEFAULT;
   }
-
   return state;
 }
 
-export function hasConsent(category: ConsentCategory) {
+export function hasConsent(category: ConsentCategory): boolean {
   return read()[category] === true;
+}
+
+/**
+ * The single boolean sent with a form submission.
+ *
+ * Requires BOTH categories, and that's the point: the server gates CAPI on
+ * this value while the client's Pixel call goes through track(), which gates
+ * on `analytics`. If the two could disagree — marketing granted, analytics
+ * denied — the server would send CAPI while the client suppressed the Pixel,
+ * so Meta would receive one half of a deduplicated pair and count it as a
+ * whole conversion.
+ *
+ * Requiring both makes disagreement impossible by construction rather than by
+ * everyone remembering to keep two call sites in step. It's latent today
+ * (both default granted, nothing calls setConsent) and would have surfaced
+ * the day the banner shipped.
+ */
+export function consentForSubmit(): boolean {
+  return hasConsent("analytics") && hasConsent("marketing");
 }
 
 export function setConsent(next: Partial<ConsentState>) {
@@ -75,9 +98,21 @@ export function setConsent(next: Partial<ConsentState>) {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
-    // Non-fatal — consent then lasts for this page view only.
+    // Non-fatal: the choice then applies for this page view only.
   }
-  notify();
+
+  /*
+    Google's tags are told directly, not through the listener loop.
+
+    Consent Mode is a property of the already-loaded tag rather than something
+    our own code checks, so it can't be expressed as a track() gate — a denied
+    visitor whose tag was never updated keeps writing cookies no matter what
+    track() does. Doing it here means a banner added later needs no analytics
+    work at all: it calls setConsent and Google follows.
+  */
+  updateGoogleConsent(state);
+
+  listeners.forEach((fn) => fn());
 }
 
 export function onConsentChange(fn: () => void) {
