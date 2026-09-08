@@ -37,7 +37,19 @@ function readId(name: string, prefix: string): string {
   const raw = process.env[name];
   if (!raw) return "";
 
-  const value = raw.trim();
+  /*
+    Strip surrounding quotes as well as whitespace.
+
+    `.env` files don't need quotes, but people add them out of habit and some
+    dashboards keep them as part of the value — so NEXT_PUBLIC_GA4_ID can
+    arrive as `"G-XM24N84PTY"` with the quotes included. That fails the prefix
+    check below and the tag silently never loads, which is a miserable thing to
+    debug because the value LOOKS right everywhere you inspect it.
+
+    Cheap to tolerate, so tolerate it.
+  */
+  const value = raw.trim().replace(/^['"]|['"]$/g, "").trim();
+
   if (!value.startsWith(prefix)) {
     /*
       Warn rather than throw. A misconfigured analytics id must never take the
@@ -60,3 +72,40 @@ export const GA4_ID = readId("NEXT_PUBLIC_GA4_ID", "G-");
 
 /** GTM container id, e.g. `GTM-TR8ZF32W`. Empty when unset. */
 export const GTM_ID = readId("NEXT_PUBLIC_GTM_ID", "GTM-");
+
+/*
+  ---------------------------------------------------------------------------
+  DIAGNOSING "the tag isn't on the live site"
+  ---------------------------------------------------------------------------
+  This happened once and cost real time, so here is the checklist in the order
+  that actually resolves it. The symptom is zero occurrences of the id in the
+  production HTML while the same commit renders it fine locally.
+
+  Confirm with:
+      BASE=https://www.coolstuffwithcoco.com npm run check:tags
+
+  1. IS THE VARIABLE IN THE PRODUCTION ENVIRONMENT, not just .env.local?
+     .env.local is gitignored and never reaches Vercel. Production values come
+     only from the dashboard, and a variable scoped to Preview does nothing on
+     the production domain. Note that a DIFFERENT NEXT_PUBLIC_ var arriving
+     correctly proves the plumbing works but proves nothing about this one —
+     they are set independently.
+
+  2. DID THE BUILD RUN AFTER THE VARIABLE WAS SAVED?
+     `NEXT_PUBLIC_*` is inlined into the bundle at BUILD time, not read at
+     runtime. Saving the variable and then doing nothing changes nothing;
+     saving it while a build is already running changes nothing either. It
+     needs a fresh deploy afterwards, every time the value changes.
+
+  3. IS THE NAME EXACT?
+     NEXT_PUBLIC_GA4_ID and NEXT_PUBLIC_GTM_ID. Not GA_ID, not
+     NEXT_PUBLIC_GA_ID, not GOOGLE_ANALYTICS_ID. A near-miss is indistinguishable
+     from unset.
+
+  4. IS THE VALUE THE RIGHT SHAPE?
+     G-XXXXXXXXXX and GTM-XXXXXXX. The two are easy to swap. Quotes and
+     whitespace are tolerated (see readId), a pasted <script> snippet is not.
+     A rejected value logs a warning in the SERVER logs — Vercel → the
+     deployment → Functions — which is worth checking, because a rejected
+     value and an absent one look identical in the HTML.
+*/
