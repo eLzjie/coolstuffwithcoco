@@ -11,6 +11,7 @@ import {
   NAME_MAX,
 } from "@/lib/validation";
 import { TextAreaField, TextField } from "@/components/forms/TextField";
+import { FormSuccess } from "@/components/forms/FormSuccess";
 
 /**
  * Contact form. Deliberately NOT a lead capture.
@@ -193,20 +194,22 @@ export function ContactForm({ className }: { className?: string }) {
   const formErrorId = `${uid}-form-error`;
 
   if (succeeded) {
+    /*
+      This form already replaced itself on success — it just did it with two
+      lines of plain text. Now it uses the shared FormSuccess so all three
+      forms end the same way.
+
+      The "ring your vet" line stays, and stays last. Someone who wrote in
+      about a poorly dog is the exact person who should not sit waiting on our
+      reply, and a friendlier success panel makes it MORE important to say so,
+      not less.
+    */
     return (
-      <div
-        className={className}
-        // Announced rather than silently swapped in.
-        role="status"
-        aria-live="polite"
-      >
-        <p className="t-h3">Got it — thanks.</p>
-        <p className="t-body mt-2 text-ink/80">
-          We read everything that comes in and usually reply within a couple of
-          working days. If it&apos;s urgent and about your dog, please ring your
-          vet rather than waiting on us.
-        </p>
-      </div>
+      <FormSuccess className={className} heading="Got it — thanks.">
+        We read everything that comes in and usually reply within a couple of
+        working days. If it&apos;s urgent and about your dog, please ring your
+        vet rather than waiting on us.
+      </FormSuccess>
     );
   }
 

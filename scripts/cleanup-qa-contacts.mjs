@@ -174,7 +174,12 @@ for (const c of targets) {
   if (res.ok) ok += 1;
   else {
     failed += 1;
-    // A 404 here is almost always the search index still listing a deleted row.
+    /*
+      A failure here is almost always the search index still listing a row that
+      is already gone. Measured: GHL answers 400 for a delete against a
+      non-existent contact, not 404 — so don't special-case 404 and assume
+      anything else is real. Re-run and check `matched 0` instead.
+    */
     console.error(`  FAILED ${c.email} -> ${res.status}`);
   }
 }
