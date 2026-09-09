@@ -44,7 +44,30 @@ import { Ambient } from "@/components/motion/Ambient";
  * is also much smaller on mobile. The interaction is the point; the photo
  * supports it.
  */
-export function GuessTheSignal() {
+/**
+ * Optional section wash.
+ *
+ * The split-test variants need a different background on some of these
+ * sections — Chase's note was "it's somewhat feminine, we should try to speak
+ * to both audiences", and bubblegum on every capture surface is most of why.
+ *
+ * ONLY the wash. Not the id, not the heading, not the copy. Those are the
+ * things a variant is supposed to be testing, so a variant that wants a
+ * different heading should say so in its own page file where the difference is
+ * visible — not reach in through a prop and make two pages look like one
+ * component with a flag. Add more props when a variant actually needs them.
+ *
+ * The default reproduces the class list byte-for-byte, so `/decode` and
+ * `/vetbill` render exactly what they rendered before this prop existed. That
+ * was verified rather than assumed, and it is worth re-verifying if the class
+ * list is ever reordered:
+ *
+ *     curl -s localhost:3000/decode > before.html   # then make the change
+ *     curl -s localhost:3000/decode | diff before.html -
+ */
+type Props = { wash?: string };
+
+export function GuessTheSignal({ wash = "bg-bubblegum" }: Props = {}) {
   const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -79,7 +102,7 @@ export function GuessTheSignal() {
   return (
     <section
       id="signals"
-      className="section-pad relative isolate overflow-hidden scroll-mt-8 bg-bubblegum"
+      className={`section-pad relative isolate overflow-hidden scroll-mt-8 ${wash}`}
       aria-labelledby="signals-heading"
     >
       <Ambient variant="paws" />

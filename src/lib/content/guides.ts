@@ -285,11 +285,17 @@ export const TRIAGE: TriageRow[] = [
 ];
 
 /**
- * Cost ranges. Every figure is a placeholder.
+ * One row of the cost table.
  *
- * TODO(Eli): verify source. Nothing here goes live without sign-off — these
- * numbers are invented to hold the layout, not researched. The vet-cost survey
- * figures you mentioned are better sourced but still need your approval.
+ * `range` is a display string, not a number pair, because the guide prints it
+ * that way and the guide is the source of truth. `CostChart` parses it for the
+ * bar widths — see `parseRange` there, and its self-check.
+ *
+ * (This docstring previously said every figure was an unresearched placeholder.
+ * That stopped being true on 2026-09-08 when the figures were replaced with the
+ * guide's own table, and the block below explains the swap in full. Two adjacent
+ * comments were contradicting each other about whether the live numbers were
+ * verified; they are.)
  */
 export type CostRow = {
   label: string;
@@ -363,6 +369,87 @@ export const COSTS: CostRow[] = [
     note: "Can develop in minutes, not hours.",
   },
 ];
+
+export type CheatRow = {
+  /** The thing you can see. Left column. */
+  signal: string;
+  /** What it means. Right column. */
+  meaning: string;
+};
+
+export type CheatGroup = {
+  title: string;
+  rows: CheatRow[];
+};
+
+/**
+ * The quick-reference cheat sheet — page 12 of `CTWCDecode YourDog V5.pdf`,
+ * transcribed verbatim on 2026-09-09.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS HERE AND NOT REWRITTEN
+ * ---------------------------------------------------------------------------
+ * This is the page the guide tells people to print and stick on the fridge, so
+ * it is the single most-looked-at thing we produce. Showing a slice of it on
+ * the landing page is showing the actual product rather than describing it.
+ *
+ * Every pair below is the guide's own wording, down to the "=" — which is
+ * also why the phrasing is clipped rather than sentence-shaped. Do not
+ * paraphrase for the web. A visitor who reads a signal here and then finds it
+ * worded differently in the PDF has caught us being loose with the one
+ * document we asked them for their email to get.
+ *
+ * Eighteen rows, six per group. That count is the reason `GuessTheSignal` no
+ * longer claims "about thirty more of these in the guide" — the brief said
+ * thirty, the guide has eighteen, and the guide wins.
+ */
+export const CHEAT_SHEET: CheatGroup[] = [
+  {
+    title: "The face",
+    rows: [
+      { signal: "Forward ears", meaning: "alert" },
+      { signal: "Flat ears", meaning: "anxious" },
+      { signal: "Soft eyes", meaning: "happy" },
+      { signal: "Hard stare", meaning: "tension" },
+      { signal: "Whale eye", meaning: "stressed" },
+      { signal: "Open mouth", meaning: "content" },
+    ],
+  },
+  {
+    title: "The body",
+    rows: [
+      { signal: "High stiff tail", meaning: "aroused" },
+      { signal: "Loose wag", meaning: "relaxed" },
+      { signal: "Tucked tail", meaning: "fear" },
+      { signal: "Weight forward", meaning: "confident" },
+      { signal: "Play bow", meaning: "let's play" },
+      { signal: "Freeze", meaning: "step in now" },
+    ],
+  },
+  {
+    title: "Weird stuff",
+    rows: [
+      { signal: "Grass", meaning: "instinct" },
+      { signal: "Head tilt", meaning: "listening" },
+      { signal: "Zoomies", meaning: "pure joy" },
+      { signal: "Guilty look", meaning: "appeasement" },
+      { signal: "Digging", meaning: "survival wiring" },
+      { signal: "Licking", meaning: "context matters" },
+    ],
+  },
+];
+
+/**
+ * The calming signals from the same page. Five of them, listed rather than
+ * paired — the guide prints them as a single run, not as signal/meaning.
+ */
+export const CALMING_SIGNALS = [
+  "Yawning",
+  "Lip licking",
+  "Turning away",
+  "Ground sniffing",
+  "Slow blinking",
+] as const;
 
 /** Where the ranges above came from. Rendered on the page. */
 export const COST_SOURCES: Array<{ name: string; url: string }> = [
