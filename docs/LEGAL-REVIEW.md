@@ -69,6 +69,42 @@ single source for every mention on the page.
 
 ---
 
+## Cookie banner REMOVED 2026-09-10
+
+At Chase's request, one day after it shipped. Recorded here because it changes
+the site's compliance posture and nothing else in the repo says so.
+
+**What is now true.** The Consent Mode default in
+`src/lib/analytics/consentMode.ts` is `granted`, and there is no longer any UI
+that can change it. So analytics and advertising cookies (`_ga`, `_gcl_*`,
+Clarity's `_clck`/`_clsk`) are set on every visit, with no way for a visitor to
+refuse them on the site.
+
+- **US traffic.** This is an opt-out posture with no opt-out. Defensible for
+  now, weaker than it was, and it is worth knowing that several state privacy
+  laws expect an opt-out mechanism for targeted advertising and sale/sharing.
+- **EEA/UK traffic.** Setting non-essential cookies before consent is the
+  thing ePrivacy prohibits outright, and Consent Mode being `granted` by
+  default is exactly that. `src/lib/consent.ts` already carried the standing
+  mitigation and it now matters more, not less: **do not send EU/UK traffic to
+  these pages.** That is a targeting constraint on the ad account, not
+  something the code can enforce.
+
+**What still works.** `setConsent()` and the whole gate are intact, just
+callerless. Anyone who declined during the banner's one day stays declined —
+the inline snippet still reads the stored value on every load, so that read
+must not be "cleaned up" as dead code.
+
+**Restoring it** is one component and one line in `src/app/layout.tsx`:
+`git show 5e67afc:src/components/consent/ConsentBanner.tsx`.
+
+**Consequence for §7 below:** the Clarity gap described there is no longer a
+gap between the Decline button and Clarity — there is no Decline button. The
+`/privacy` copy has been updated to point at browser-level controls instead,
+which do stop Clarity.
+
+---
+
 ## Needs a lawyer's eyes, not blocking a soft launch
 
 ### 4. The veterinary disclaimer on `/vetbill`

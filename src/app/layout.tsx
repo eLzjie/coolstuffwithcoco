@@ -3,7 +3,6 @@ import Script from "next/script";
 import { Poppins, Inter } from "next/font/google";
 import { SITE_NAME, SITE_URL } from "@/lib/content/guides";
 import { AnalyticsBoot } from "@/components/AnalyticsBoot";
-import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import {
   GoogleTags,
   GoogleTagsNoScript,
@@ -94,14 +93,20 @@ export default function RootLayout({
         {children}
 
         {/*
-          The cookie notice. Last in the body so it is last in the tab order —
-          a fixed bar at the bottom of the screen that grabs focus before the
-          page content would be its own accessibility problem.
+          NO COOKIE BANNER. Removed 2026-09-10 at Chase's request.
 
-          Renders nothing until hydration and nothing at all once a choice is
-          stored, so this costs an empty component on almost every page view.
+          What that changes, so nobody has to reverse-engineer it: the Consent
+          Mode default in `consentMode.ts` was already `granted`, so removing
+          the banner does not silence analytics — it removes the only way a
+          visitor could say no. The stored-decision plumbing is still wired
+          (`lib/consent.ts`, and the snippet still reads the stored value), so
+          anyone who declined while the banner existed stays declined.
+
+          The exposure is EEA/UK traffic: analytics and advertising cookies
+          now set without prior consent, which is the thing ePrivacy and GDPR
+          actually prohibit. Recorded in docs/LEGAL-REVIEW.md. If that traffic
+          ever matters, the banner is one component and one line here.
         */}
-        <ConsentBanner />
       </body>
     </html>
   );
