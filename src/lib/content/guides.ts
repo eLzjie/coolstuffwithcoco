@@ -610,5 +610,32 @@ export const SITE_NAME = "Cool Stuff with Coco";
  *
  * The GitHub repo is still named `coolthingswithcoco` — that's only a repo
  * name and doesn't affect anything served.
+ *
+ * ---------------------------------------------------------------------------
+ * WWW, NOT THE APEX — changed 2026-09-09, and it was wrong before
+ * ---------------------------------------------------------------------------
+ * This was the apex. Measured against the live site:
+ *
+ *     GET https://coolstuffwithcoco.com/vetbill
+ *       -> 308 Permanent Redirect
+ *          Location: https://www.coolstuffwithcoco.com/vetbill
+ *     GET https://www.coolstuffwithcoco.com/vetbill
+ *       -> 200
+ *
+ * So www is the primary domain and the apex permanently redirects to it. With
+ * the apex in here, every page served from www was emitting a canonical
+ * pointing at a URL that redirects away from itself — confirmed on the live
+ * page:
+ *
+ *     <link rel="canonical" href="https://coolstuffwithcoco.com/vetbill"/>
+ *
+ * A canonical is supposed to name the final, non-redirecting address. So did
+ * every sitemap entry and the robots `host`. It is the kind of thing that
+ * doesn't break anything visibly and quietly splits the signal Google uses to
+ * decide which URL to rank.
+ *
+ * If the primary domain is ever switched to the apex, change this back — and
+ * check with a request, not from memory. `curl -sI https://<apex>/vetbill`
+ * and read the Location header.
  */
-export const SITE_URL = "https://coolstuffwithcoco.com";
+export const SITE_URL = "https://www.coolstuffwithcoco.com";
