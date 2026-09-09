@@ -17,8 +17,8 @@ import type { NextConfig } from "next";
 
 const securityHeaders = [
   /*
-    HSTS. Tells the browser to refuse plain HTTP for this host for a year, so
-    a `http://coolstuffwithcoco.com` link can't be intercepted before Vercel's
+    HSTS. Tells the browser to refuse plain HTTP for this host, so a
+    `http://coolstuffwithcoco.com` link can't be intercepted before Vercel's
     redirect fires.
 
     `includeSubDomains` is on, and that is a real commitment: it applies to
@@ -29,10 +29,29 @@ const securityHeaders = [
     NOT preloaded. Getting on the HSTS preload list is a manual submission and
     effectively permanent, which is the wrong shape of decision for a site
     this young.
+
+    ---------------------------------------------------------------------------
+    MAX-AGE IS DELIBERATELY 5 MINUTES. RAISE IT ON PURPOSE, IN STEPS.
+    ---------------------------------------------------------------------------
+    This shipped at a year first, which was the wrong order. HSTS is cached BY
+    THE BROWSER, so a max-age you regret cannot be withdrawn — shortening the
+    header only helps visitors who come back and get the new one. Anyone who
+    already has the old value keeps it for its full term. A year of that is a
+    year of no plain-HTTP anything on any subdomain, including
+    `mail.coolstuffwithcoco.com`.
+
+    So: the standard ramp, and it is the only reversible order.
+
+      300           <- HERE. Confirm every subdomain serves HTTPS.
+      86400         <- a day. Leave it a day.
+      31536000      <- a year. Only once you are sure.
+
+    Five minutes still does the real job for a visitor mid-session, which is
+    the case that matters most on paid traffic.
   */
   {
     key: "Strict-Transport-Security",
-    value: "max-age=31536000; includeSubDomains",
+    value: "max-age=300; includeSubDomains",
   },
 
   /*

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAllOutOfView } from "@/lib/useOutOfView";
 
 type Props = {
   /** Where the button goes. An in-page anchor, e.g. `#get`. */
@@ -56,59 +56,21 @@ type Props = {
  * if a form ever succeeds without navigating — `useRecentCapture` is the hook,
  * and it would need a real `subscribe` to fire mid-page.
  *
- * ---------------------------------------------------------------------------
- * WHY setState HERE IS FINE
- * ---------------------------------------------------------------------------
- * `react-hooks/set-state-in-effect` is an error in this repo, and rightly. It
- * catches state written during an effect's own body. This writes from an
- * IntersectionObserver callback, which the browser dispatches as its own task
- * — the same category as a click handler, not a render.
- *
- * The initial state is `false` (hidden), so the server HTML and first paint
- * carry no bar. The observer's first callback then tells the truth about where
- * the visitor actually is, which matters on a restored scroll position.
+ * The observer itself lives in `lib/useOutOfView.ts`, shared with StickyNav
+ * — including why writing state from an IntersectionObserver callback does
+ * not trip `react-hooks/set-state-in-effect`.
  */
 export function FloatingCta({
   href = "#get",
   label = "Get the free guide",
   watch = "#get",
 }: Props) {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    const targets = [
-      ...document.querySelectorAll(watch),
-      ...document.querySelectorAll("footer"),
-    ];
-
-    if (targets.length === 0) return;
-
-    /*
-      One observer, several targets, and the decision is "is ANY of them on
-      screen". `visible` is keyed by element rather than counted, so a
-      duplicated callback for the same element can't push the count negative.
-    */
-    const visible = new Set<Element>();
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) visible.add(e.target);
-          else visible.delete(e.target);
-        }
-        setShow(visible.size === 0);
-      },
-      /*
-        A little early on both edges: the bar should be gone before the form's
-        heading reaches the bottom of the screen, not at the moment its first
-        pixel does.
-      */
-      { rootMargin: "0px 0px -80px 0px", threshold: 0 },
-    );
-
-    for (const t of targets) io.observe(t);
-    return () => io.disconnect();
-  }, [watch]);
+  /*
+    The footer is appended to whatever the caller passed. Every page has one,
+    and no page should have to remember to opt into not covering its own
+    hotline numbers.
+  */
+  const show = useAllOutOfView(`${watch}, footer`);
 
   return (
     <div

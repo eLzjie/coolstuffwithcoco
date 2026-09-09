@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { BookletMockup } from "@/components/brand/BookletMockup";
-import { BrandImage } from "@/components/brand/BrandImage";
 import { BrandLockup } from "@/components/brand/BrandLockup";
 import { CaptureSlot } from "@/components/forms/CaptureSlot";
 import { Footer } from "@/components/layout/Footer";
 import { ContentsStrip } from "@/components/shared/ContentsStrip";
+import { MeetCoco } from "@/components/shared/MeetCoco";
 import { FloatingCta } from "@/components/shared/FloatingCta";
 import { ViewContent } from "@/components/shared/ViewContent";
 import { CallNowTable } from "@/components/vetbill/CallNowTable";
 import { CostChart } from "@/components/vetbill/CostChart";
-import { VETBILL, VETBILL_STATS } from "@/lib/content/guides";
+import { COSTS, VETBILL, VETBILL_STATS } from "@/lib/content/guides";
 
 export const metadata: Metadata = {
   title: VETBILL.title,
@@ -150,18 +150,18 @@ export default function VetBillVariantB() {
           </div>
         </section>
 
-        {/* Coco, moved down out of the hero — Chase's instruction. */}
-        <section className="bg-paper py-10" aria-label="Coco">
-          <div className="shell">
-            <div className="mx-auto w-[min(88vw,26rem)]">
-              <BrandImage
-                slot="cocoHero"
-                sizes="(max-width: 1024px) 88vw, 26rem"
-                className="w-full"
-              />
-            </div>
-          </div>
-        </section>
+        {/*
+          Coco, moved down out of the hero — Chase's instruction. Counts are
+          derived from COSTS and VETBILL.chapters rather than typed, so they
+          cannot drift away from the guide.
+        */}
+        <MeetCoco
+          facts={[
+            `${COSTS.length} emergency cost ranges`,
+            `${VETBILL.chapters.length} chapters`,
+            "Free, no card",
+          ]}
+        />
 
         {/*
           The triage table. Compliance-load-bearing — see the note at the top

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { BookletMockup } from "@/components/brand/BookletMockup";
-import { BrandImage } from "@/components/brand/BrandImage";
 import { BrandLockup } from "@/components/brand/BrandLockup";
 import { GuessTheSignal } from "@/components/decode/GuessTheSignal";
 import { SignalGrid } from "@/components/decode/SignalGrid";
 import { CaptureSlot } from "@/components/forms/CaptureSlot";
 import { Footer } from "@/components/layout/Footer";
 import { ContentsStrip } from "@/components/shared/ContentsStrip";
+import { MeetCoco } from "@/components/shared/MeetCoco";
 import { FloatingCta } from "@/components/shared/FloatingCta";
 import { ViewContent } from "@/components/shared/ViewContent";
-import { DECODE } from "@/lib/content/guides";
+import { CHEAT_SHEET, DECODE } from "@/lib/content/guides";
 
 export const metadata: Metadata = {
   title: DECODE.title,
@@ -189,18 +189,18 @@ export default function DecodeVariantB() {
           Coco, moved down from the hero — Chase's instruction. She's the brand
           and she's why this doesn't read like a content farm, but she is not
           what a visitor needs in the first 745px.
+
+          Counts are derived, never typed: CHEAT_SHEET is the guide's page-12
+          card and DECODE.chapters is its contents. Editing the guide data
+          moves these numbers with it.
         */}
-        <section className="bg-paper py-10" aria-label="Coco">
-          <div className="shell">
-            <div className="mx-auto w-[min(88vw,26rem)]">
-              <BrandImage
-                slot="cocoHero"
-                sizes="(max-width: 1024px) 88vw, 26rem"
-                className="w-full"
-              />
-            </div>
-          </div>
-        </section>
+        <MeetCoco
+          facts={[
+            `${CHEAT_SHEET.reduce((n, g) => n + g.rows.length, 0)} signals, one page`,
+            `${DECODE.chapters.length} chapters`,
+            "Free, no card",
+          ]}
+        />
 
         {/*
           The quiz. Chase: "definitely onto something with the signal stuff...

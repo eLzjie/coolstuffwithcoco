@@ -7,6 +7,7 @@ import { SeenCoco } from "@/components/home/SeenCoco";
 import { Library } from "@/components/home/Library";
 import { Community } from "@/components/home/Community";
 import { InboxPreview } from "@/components/home/InboxPreview";
+import { StickyNav } from "@/components/home/StickyNav";
 import { Footer } from "@/components/layout/Footer";
 import { IG_URL, SITE_NAME, SITE_URL } from "@/lib/content/guides";
 
@@ -42,6 +43,12 @@ export default function Home() {
         // Static object we author — no user input reaches this.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
       />
+
+      {/*
+        Home only. The landing pages deliberately have no nav — see the note
+        in StickyNav, and the funnel plan's rule about routes out.
+      */}
+      <StickyNav />
 
       <main id="main">
         <Hero />

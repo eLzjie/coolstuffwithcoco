@@ -174,8 +174,15 @@ export function Hero() {
         <Bone aria-hidden className="drift delay-3 absolute left-[6%] top-[26%] hidden h-8 w-8 text-ink/15 sm:block" />
       </motion.div>
 
-      {/* ---- Top bar ---- */}
-      <div className="rise rise-1 shell relative z-20 flex items-center justify-between py-6">
+      {/* ---- Top bar ----
+        `id` so `StickyNav` can watch it: the sticky header appears exactly
+        when this one scrolls out of view, which is what makes it read as the
+        same bar sticking rather than a second one arriving.
+      */}
+      <div
+        id="topbar"
+        className="rise rise-1 shell relative z-20 flex items-center justify-between py-6"
+      >
         <BrandLockup href="/" />
         <Link href="#guides" className="btn-coral btn-coral-sm">
           Free guides
