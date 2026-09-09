@@ -754,10 +754,47 @@ text, new sections render correctly.
 
 ## Still open
 
-- **LCP not re-measured.** Lighthouse isn't installed in this environment. The
-  loaders are `afterInteractive` and verified not inlined, which is the
-  mechanism that keeps them off the LCP path — but that's an architectural
-  guarantee, not a measurement. Worth one real Lighthouse run before spend.
+- **LCP was re-measured 2026-09-09.** Lighthouse 12 installed via npx against
+  a production `next start`, mobile form factor, simulated throttling.
+
+  | Page | Perf | A11y | FCP | LCP | TBT | CLS |
+  |---|---|---|---|---|---|---|
+  | `/decode` (A) | 95 | 100 | 1.2s | 2.9s | 20ms | 0 |
+  | `/decode/b` (B) | see below | 100 | see below | see below | 40ms | 0 |
+  | `/vetbill` (A) | 95 | 100 | 1.2s | 2.9s | 20ms | 0 |
+  | `/vetbill/b` (B) | 94 | 100 | 1.2s | 3.0s | 70ms | 0 |
+  | `/` | 94 | 100 | 1.2s | 3.1s | 30ms | 0 |
+
+  **A11y is 100 everywhere, and getting there fixed three real defects** — two
+  contrast violations below the palette's documented 75%-ink floor
+  (`ContentsStrip` numbers, `CostChart` axis labels) and an invalid `<dl>`
+  content model that also existed on the `/vetbill` control and had been
+  costing it 7 points unnoticed. CLS is 0 on every page.
+
+  **The perf numbers for the two VARIANT pages are not trustworthy from
+  localhost, and this is worth knowing before anyone acts on them.** Each
+  variant produced both ~1.2s and ~2.9s FCP across runs on identical builds,
+  while `/decode` returned 95 / 1.2s / 2.9s on three consecutive runs. The
+  real network waterfall is the same either way — every request, CSS and
+  fonts included, finishes inside 35ms — so the swing is Lighthouse
+  recomputing its simulated critical path from a CPU trace that differs run to
+  run on this machine, not the pages behaving differently.
+
+  Two things were chased down and ruled out along the way, both by measurement
+  rather than reasoning: `mix-blend-mode` on the booklet spine (no measurable
+  cost, so it stayed) and the `priority` preload of the cover SVG (2KB, Low
+  priority, done at 19ms).
+
+  One real fix did come out of it: `FloatingCta` shipped with
+  `bg-paper/95 backdrop-blur-sm` — a blur behind a 95%-opaque surface, so
+  invisible, but a full-width fixed backdrop-filter that makes the compositor
+  hold a snapshot of the page behind it for as long as the page is open. Now
+  opaque.
+
+  **So: run Lighthouse against the Vercel preview URL before spend.** That is
+  where the number actually matters, and it removes the localhost CPU noise
+  that makes the variant scores unreadable here.
+
 - **Mark `generate_lead` as a key event in the GA4 UI.** The code sends it;
   GA4 won't treat it as a conversion until someone ticks that box.
 - **Don't add a GA4 tag to the GTM container** (see above).

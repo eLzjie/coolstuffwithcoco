@@ -120,7 +120,21 @@ export function FloatingCta({
       */
       aria-hidden={!show}
       className={[
-        "fixed inset-x-0 bottom-0 z-40 border-t-2 border-ink bg-paper/95 backdrop-blur-sm",
+        /*
+          Opaque, and NO backdrop-blur.
+
+          This shipped as `bg-paper/95 backdrop-blur-sm`, which is a blur
+          behind a 95%-opaque surface — invisible, and not free: a
+          backdrop-filter on a full-width fixed element makes the compositor
+          keep a snapshot of everything behind it for the life of the page,
+          whether the bar is on screen or translated away.
+
+          Lighthouse on /decode/b showed 89% of LCP as render delay (3.6s)
+          with zero load time, against 36% on the control. This was the only
+          always-present new element with a compositing cost. Removing it cost
+          nothing visually, because there was nothing to see.
+        */
+        "fixed inset-x-0 bottom-0 z-40 border-t-2 border-ink bg-paper",
         "transition-transform duration-300 ease-out motion-reduce:transition-none",
         show ? "translate-y-0" : "translate-y-full",
       ].join(" ")}

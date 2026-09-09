@@ -47,8 +47,19 @@ export const BRAND = {
      ---------------------------------------------------------------------- */
   logoBadge: {
     file: "logo.png",
-    w: 1254,
-    h: 1254,
+    /*
+      512, down from 1254 on 2026-09-09. It renders at 44px on mobile and 56px
+      from `sm:` up — nothing on the site asks for more — and the source was a
+      1.3MB PNG, the largest file in the repo after the success image. 512
+      still leaves better than 4x for a retina screen and any future larger
+      placement.
+
+      These numbers must match the file on disk: `next/image` builds its
+      srcset from them, so claiming 1254 for a 512px file asks for candidates
+      that cannot exist.
+    */
+    w: 512,
+    h: 512,
     alt: "Cool Stuff with Coco",
     note: "Square badge logo",
     ready: true,

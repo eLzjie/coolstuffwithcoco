@@ -10,8 +10,14 @@ These are **ad creative stills**, not candid photos. The five real Coco photos a
 
 Every prompt below is **image-to-image / reference-driven**, not text-only. Attach Coco's render as the character reference so she stays the same dog across all four:
 
-**Reference attachment:** `public/brand/community/coco-png-front-hero.jpg`
-(identical file: `public/cooc-hero-page.png`)
+**Reference attachment:** `public/cooc-hero-page.png`
+
+(This previously named `public/brand/community/coco-png-front-hero.jpg` as the
+primary and the PNG as an "identical file". That JPG does not exist — checked
+2026-09-09 — and the two were not identical anyway. The PNG is the only copy of
+this reference, which is why it survived the image cleanup despite being
+unreferenced from `src/`. It is a cut-out with a real alpha channel, so it has
+to stay a PNG.)
 
 Set reference/character weight high — around **0.6–0.75** on Midjourney `--cref`, or "keep the subject's face, coat and ear shape identical to the reference" on Nano Banana / Gemini / GPT-image. Coco's face is the brand's entire trust mechanism; if she reads as a different dog in one still, that still is unusable.
 

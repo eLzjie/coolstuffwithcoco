@@ -29,9 +29,28 @@
  * honest mitigation is a targeting constraint rather than pretending otherwise:
  * do not send EU/UK traffic to these pages.
  *
- * TODO(Eli): decide banner vs CMP, wire the region in from the edge, then flip
- * the default to denied for gated regions. Until then this is a targeting
- * discipline, not a technical control — and it needs to stay written down.
+ * BANNER SHIPPED 2026-09-09 (`components/consent/ConsentBanner.tsx`), so
+ * `setConsent` finally has a caller and a visitor can actually decline. What
+ * that changes and what it does not:
+ *
+ *  - DECLINING NOW WORKS. It writes the gate, flips all four Google Consent
+ *    Mode signals to denied, and `track()` stops firing. That was already
+ *    plumbed; it just had no UI.
+ *  - THE DEFAULT IS STILL GRANTED, which makes this an opt-OUT notice (a US
+ *    posture) rather than GDPR consent. Flipping the default to denied is a
+ *    business decision, not a technical one — it would suppress measurement
+ *    for every visitor until they click, and that is Eli's call to make.
+ *  - THE REGION SIGNAL IS STILL NOT WIRED. `x-vercel-ip-country` from a server
+ *    component is how the default becomes denied for EEA/UK only, which is the
+ *    shape that costs nothing in the US and complies in Europe.
+ *  - MICROSOFT CLARITY IS NOT COVERED BY THIS. It records sessions and it is
+ *    installed inside the GTM container, so our gate cannot reach it. That has
+ *    to be done in GTM. Until it is, declining does NOT stop session replay,
+ *    which is why the banner copy does not claim it does. See
+ *    `docs/LEGAL-REVIEW.md` §7.
+ *
+ * So the targeting discipline still stands: do not send EU/UK traffic until
+ * the region default and the Clarity gate are both done.
  */
 
 import {
@@ -68,6 +87,37 @@ function read(): ConsentState {
     state = DEFAULT;
   }
   return state;
+}
+
+/**
+ * Has this browser made a choice yet?
+ *
+ * Separate from `hasConsent` because the default is granted: "analytics is
+ * true" cannot tell you whether that is a decision or an absence of one, and
+ * the banner only exists to ask people in the second group.
+ *
+ * Presence of the key IS the answer, so it reads raw rather than going through
+ * `read()` — which merges over DEFAULT and loses the distinction.
+ *
+ * Returns `true` (decided) in two cases where the honest answer is "don't
+ * ask":
+ *
+ *  - ON THE SERVER. There is no localStorage to read, and rendering a banner
+ *    into the HTML that hydration might immediately remove is a flash of
+ *    content plus a mismatch. The banner appears after hydration instead;
+ *    it is `position: fixed`, so arriving late costs no layout shift.
+ *  - WHEN STORAGE IS BLOCKED. We could ask, but we could not remember the
+ *    answer, so we would ask again on every single page view. Nagging someone
+ *    forever is worse than not asking, and private mode is already the
+ *    least-tracked state a visitor can be in.
+ */
+export function hasDecided(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return true;
+  }
 }
 
 export function hasConsent(category: ConsentCategory): boolean {

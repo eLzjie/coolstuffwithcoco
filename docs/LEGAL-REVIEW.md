@@ -156,7 +156,7 @@ processors it names, and the file that proves each:
 | GoHighLevel | CRM, email delivery | `src/lib/crm/ghl.ts` |
 | Meta | Pixel + Conversions API (email hashed) | `src/lib/meta/capi.ts` |
 | Google | GA4 + Tag Manager (behavioural, IP) | `src/components/analytics/Tags.tsx` |
-| Microsoft | Clarity — heatmaps and **session recording** | `src/components/analytics/Clarity.tsx` |
+| Microsoft | Clarity — heatmaps and **session recording** | none — installed in the GTM container, not this repo |
 | Vercel | Hosting, server logs | — |
 | Upstash Redis | Rate limiting (IP, short TTL) | `src/lib/rateLimit.ts` |
 
@@ -174,13 +174,22 @@ rather than described generically.
 **Google was added 2026-09-08** alongside GA4 and Tag Manager. Two points for
 counsel specifically:
 
-- **Google Consent Mode v2 is wired but every signal defaults to granted**,
-  matching the site's existing US-only posture
-  (`src/lib/analytics/consentMode.ts`). The mechanism is in place, so honouring
-  a denial is a one-line change — but until a banner exists and the region is
-  read from the CDN header, an EEA/UK visitor would be tracked by default. That
-  is the same targeting-discipline caveat already recorded for the Meta Pixel,
-  and it now applies to Google too.
+- **Google Consent Mode v2 is wired, a banner now exists, and the default is
+  still granted.** All three parts matter separately.
+
+  As of 2026-09-09 `src/components/consent/ConsentBanner.tsx` asks every
+  undecided visitor, and declining genuinely works — measured in a browser,
+  not assumed. Clicking Decline stores `{analytics:false,marketing:false}`,
+  pushes `consent update` with all four signals denied, and on the next page
+  view the pre-tag inline snippet emits `consent default` as **denied** with
+  `wait_for_update: 500`, i.e. before any tag loads.
+
+  What has NOT changed is the default: an undecided visitor is still measured.
+  That makes this an opt-OUT notice (a US posture), not GDPR consent, which
+  requires the default denied before the first tag fires. Flipping it needs the
+  region signal (`x-vercel-ip-country` from a server component) so that only
+  EEA/UK gets the denied default and US measurement is unaffected. Until then
+  the targeting constraint stands.
 - **No Google Signals / ads data-sharing** has been enabled, and no Google Ads
   account is linked. If either changes, this section needs revisiting — it
   moves the processing from analytics into advertising, which is what
@@ -203,15 +212,30 @@ Three things for counsel, and the second is the one that matters:
   form carries free text someone may have written about a sick animal, and the
   capture forms carry names and email addresses. None of that belongs in a
   replay.
-- **It is NOT gated on this site's consent state.** Measured: it loaded on a
-  fresh page view with `coco_consent_v1` set to `analytics:false`. Because the
-  tag lives in GTM, our own gate cannot reach it. So a visitor who declines
-  analytics is still recorded.
+- **It is NOT gated on this site's consent state, and this is now the single
+  most exposed item in this file.** Re-measured 2026-09-09, after the banner
+  shipped, with `coco_consent_v1` set to `{"analytics":false}`:
 
-  That is the sharpest edge of the default-granted posture. Today nothing can
-  decline, since no banner exists — but it means **gating Clarity is part of
-  the cookie-banner job, and it has to be done in GTM** (Consent Mode, or a
-  trigger condition on the tag), not in this repo.
+  | Checked | Result |
+  |---|---|
+  | `clarity.ms/tag/yff7ashiza?ref=gtm` | loaded |
+  | `scripts.clarity.ms/0.8.69/clarity.js` | loaded |
+  | `window.clarity` | present |
+  | `_clck` / `_clsk` cookies | both set |
+
+  So a visitor who clicks **Decline is still session-recorded.** Before the
+  banner existed this was a theoretical gap, because nobody could decline.
+  Now someone can, and we do not honour it for this one processor.
+
+  Because the tag lives in GTM, this repo cannot fix it. **It has to be done in
+  GTM** — either tick Clarity's consent settings so it requires
+  `analytics_storage`, or put a trigger condition on the tag. This is the
+  remaining blocker on the cookie-banner job.
+
+  The banner copy was written around this rather than over it: it says
+  "measure which pages work" and "show these guides on social", both of which
+  Decline genuinely controls, and says nothing about recording. A banner
+  claiming to stop something it does not stop would be worse than none.
 - Session replay is the processing most likely to need explicit disclosure
   under EU/UK rules, which reinforces the existing constraint: do not send
   EEA/UK traffic until the banner ships.

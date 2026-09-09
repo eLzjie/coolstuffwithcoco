@@ -62,31 +62,49 @@ const money = (n: number) => `$${n.toLocaleString("en-US")}`;
 export function CostChart() {
   return (
     <div>
-      <dl className="mt-10">
+      {/*
+        A <ul>, not a <dl>, and that is a correctness fix rather than a
+        preference.
+
+        HTML5's content model for <dl> is strict: either dt/dd groups directly,
+        or ONE layer of <div> containing only dt/dd groups. This row needs four
+        things — a label, a value, a bar and a note — so it had a nested
+        <div class="flex"> plus a <p>, which puts <dt> two levels deep and a <p>
+        somewhere <dl> does not allow. Lighthouse flagged it as
+        `definition-list` + `dlitem` on every row.
+
+        Bending the layout to fit <dl> would have meant burying the bar and the
+        note inside the <dd>, which is worse markup for better-sounding
+        semantics. A list of cost items is what this is, so it is a list. A
+        screen reader reads "list, 8 items", then "Bloat (GDV) surgery,
+        $2,000 - $7,500, life threatening and it moves in hours" — which is
+        the whole row, in the right order.
+      */}
+      <ul className="mt-10">
         {COSTS.map((c) => {
           const p = parseRange(c.range);
 
           return (
-            <div
+            <li
               key={c.label}
               className="border-b-2 border-ink/12 py-4 first:border-t-2"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5">
-                <dt className="t-h3 max-w-[30ch]">{c.label}</dt>
+                <span className="t-h3 max-w-[30ch]">{c.label}</span>
                 {/*
                   The number stays as text at full size. The bar is a second
                   reading of the same fact, never the only one — a chart a
                   screen reader can't use would hide the whole section from
                   anyone not looking at it.
                 */}
-                <dd className="t-h3 whitespace-nowrap tabular-nums">
+                <span className="t-h3 whitespace-nowrap tabular-nums">
                   {c.range}
-                </dd>
+                </span>
               </div>
 
               {/*
-                The track. `aria-hidden` because the `<dd>` above already
-                states the range in words — announcing it twice is noise.
+                The track. `aria-hidden` because the range is already stated
+                in words directly above — announcing it twice is noise.
 
                 A row whose range doesn't parse simply has no track. That is
                 the graceful-degradation path, and `npm run check:costs`
@@ -124,10 +142,10 @@ export function CostChart() {
                   {c.note}
                 </p>
               )}
-            </div>
+            </li>
           );
         })}
-      </dl>
+      </ul>
 
       {/*
         The axis, below the bars. Above them it would be read as a heading;
@@ -136,7 +154,12 @@ export function CostChart() {
       */}
       <div
         aria-hidden
-        className="mt-3 flex justify-between text-[0.6875rem] tabular-nums text-ink/45"
+        /*
+          text-ink-muted, not the lighter tint this shipped with. Same rule as
+          everywhere else: globals.css puts the floor at 75% ink, and below it
+          is for borders and icons. Lighthouse flagged every tick label.
+        */
+        className="mt-3 flex justify-between text-[0.6875rem] tabular-nums text-ink-muted"
       >
         {TICKS.map((t) => (
           <span key={t}>{t === 0 ? "$0" : money(t)}</span>

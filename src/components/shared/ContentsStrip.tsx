@@ -48,10 +48,17 @@ export function ContentsStrip({ chapters, className }: Props) {
           {/*
             `tabular-nums` so 1 and 10 occupy the same width — a contents page
             with a ragged number column looks like a bug.
+
+            `text-ink-muted` (75%), not the lighter tint this first shipped
+            with. globals.css says it outright: 75% is the LOWEST ink opacity
+            clearing 4.5:1 across all six washes, and anything below it is for
+            borders and icons only. Lighthouse caught ink/40 here on every row.
+            `aria-hidden` is not an excuse — it hides the number from a screen
+            reader, which does nothing for the sighted reader who can't see it.
           */}
           <span
             aria-hidden
-            className="w-[1.75rem] shrink-0 font-display text-base font-bold tabular-nums text-ink/40"
+            className="w-7 shrink-0 font-display text-base font-bold tabular-nums text-ink-muted"
           >
             {String(i + 1).padStart(2, "0")}
           </span>

@@ -139,7 +139,9 @@ export default function Privacy() {
           used: where you scroll, what you tap, and a replay of your visit so
           we can see where a page is confusing. Text you type into forms is
           masked before it leaves your browser, so your name, email and
-          anything you write to us are not in those recordings.
+          anything you write to us are not in those recordings. See the
+          exception under &ldquo;Your choices&rdquo; below: Clarity is the one
+          thing our tracking notice does not yet switch off.
         </li>
         <li>
           <strong>Vercel</strong> — hosting. Standard server logs.
@@ -169,6 +171,16 @@ export default function Privacy() {
         <li>
           <strong>Meta Pixel cookies</strong> (including <code>_fbp</code>) —
           only set when the Pixel loads.
+        </li>
+        <li>
+          <strong>Microsoft Clarity cookies</strong> (<code>_clck</code> and{" "}
+          <code>_clsk</code>) — how Clarity ties the parts of one visit
+          together into a single replay. Unlike the two above,{" "}
+          <strong>these are not controlled by your tracking preference</strong>
+          . Clarity is loaded through our tag manager rather than by this site
+          directly, so turning tracking off here does not currently stop it.
+          Clearing your browser storage does, and so does your
+          browser&apos;s tracking protection.
         </li>
         <li>
           <strong>Google Analytics cookies</strong> (<code>_ga</code> and
@@ -229,8 +241,19 @@ export default function Privacy() {
           don&apos;t accidentally email you again.
         </li>
         <li>
-          <strong>Turn off tracking</strong> — clear the browser storage above,
-          or use your browser&apos;s tracking protection.
+          <strong>Turn off tracking</strong> — there&apos;s a notice at the
+          bottom of the screen on your first visit with an{" "}
+          <strong>Accept</strong> and a <strong>Decline</strong> button, both
+          one tap. Declining stops the analytics and advertising cookies this
+          site sets. If you already chose and want to change it, clear the
+          browser storage listed above and the notice comes back.
+        </li>
+        <li>
+          <strong>The one exception, stated plainly</strong> — Declining does
+          not currently stop Microsoft Clarity, because it loads through our
+          tag manager rather than from this site. We&apos;re fixing that. Until
+          then, clearing your browser storage or using your browser&apos;s
+          tracking protection is what stops it.
         </li>
       </ul>
       <p>

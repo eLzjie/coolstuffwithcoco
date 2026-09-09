@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Poppins, Inter } from "next/font/google";
 import { SITE_NAME, SITE_URL } from "@/lib/content/guides";
 import { AnalyticsBoot } from "@/components/AnalyticsBoot";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import {
   GoogleTags,
   GoogleTagsNoScript,
@@ -91,6 +92,16 @@ export default function RootLayout({
         <GoogleTags />
         <AnalyticsBoot />
         {children}
+
+        {/*
+          The cookie notice. Last in the body so it is last in the tab order —
+          a fixed bar at the bottom of the screen that grabs focus before the
+          page content would be its own accessibility problem.
+
+          Renders nothing until hydration and nothing at all once a choice is
+          stored, so this costs an empty component on almost every page view.
+        */}
+        <ConsentBanner />
       </body>
     </html>
   );

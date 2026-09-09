@@ -6,7 +6,17 @@ type Props = {
   slot: BrandKey;
   /** Responsive sizes hint. Required for anything not fixed-width. */
   sizes?: string;
-  /** Set on the LCP image only — above the fold, this usually is one. */
+  /**
+   * Above the fold? Then yes.
+   *
+   * Not "is this the LCP element" — measured on both variants, it is not; the
+   * LCP element there is the consent paragraph. What `priority` buys is the
+   * absence of `loading="lazy"`, which next/image would otherwise put on an
+   * image the visitor can already see.
+   *
+   * It costs almost nothing to be wrong about here: the covers are 3KB SVGs
+   * and the preload lands at ~19ms at Low priority.
+   */
   priority?: boolean;
   className?: string;
   /**
