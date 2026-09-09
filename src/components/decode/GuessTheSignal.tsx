@@ -52,20 +52,32 @@ type Props = { wash?: string };
  * used to sit here.
  *
  * ---------------------------------------------------------------------------
- * MOBILE ORDER: THE INTERACTION COMES BEFORE THE PHOTO
+ * MOBILE ORDER: PHOTO, THEN THE QUESTION — REVERSED TWICE, SO READ THIS
  * ---------------------------------------------------------------------------
- * Client feedback: "it's hard to find or understand on mobile."
- *
- * Measured, and he was right. The photo used to be first in the DOM, so on a
- * 390px phone the order was heading, then lead, then a 361px-tall image, then
- * a caption, and only THEN the first tappable answer — roughly 1,950px down
- * the page. The section looked like an illustrated paragraph rather than
+ * Chase's feedback was "it's hard to find or understand on mobile", and he was
+ * right: the photo used to be first at 361px tall, so the order was heading,
+ * lead, image, caption, and only THEN the first tappable answer — roughly
+ * 1,950px down the page. It read as an illustrated paragraph rather than
  * something you do.
  *
- * So the beat card is now first in source order and the photo second, with
- * `lg:order-*` putting the photo back on the left at desktop widths. The photo
- * is also much smaller on mobile. The interaction is the point; the photo
- * supports it.
+ * The fix at the time was to put the beat card first and the photo second.
+ * That fixed the distance and broke the logic: in a "guess the signal" quiz
+ * the PHOTO IS THE QUESTION, and showing the answers above the thing you are
+ * being asked to judge is backwards. Eli called it — "better if the image is
+ * on top".
+ *
+ * So the photo is first again, and the original complaint is answered by size
+ * rather than by sequence:
+ *
+ *     before   361px tall, full column width
+ *     now      ~175px tall at 390px
+ *
+ * Which was the right lever all along. The distance was never really about
+ * order; it was about a photo taking most of a phone screen.
+ *
+ * Source order and visual order now agree at every width — no `order`
+ * overrides anywhere — so a keyboard user tabs through it in the order it
+ * reads. That is worth more than either arrangement of the two.
  */
 export function GuessTheSignal({ wash = "bg-bubblegum" }: Props = {}) {
   const reduce = useReducedMotion();
@@ -126,11 +138,32 @@ export function GuessTheSignal({ wash = "bg-bubblegum" }: Props = {}) {
 
         <div className="mt-10 grid items-start gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-8">
           {/*
-            The beat is FIRST in source order so mobile gets the interaction
-            immediately; `lg:order-2` moves it back to the right on desktop.
-            See the mobile-order note at the top of this file.
+            The photo is FIRST, because in a "guess the signal" quiz the photo
+            IS the question. Answers above the thing you are judging is
+            backwards, and Eli called it: "better if the image is on top".
+
+            It stays small — it was `min(74vw,22rem)`, which rendered ~361px
+            tall and pushed every answer button below the fold. That is the
+            complaint the order was reversed for in the first place, and size
+            is the better lever. See the mobile-order note at the top.
           */}
-          <div className="rounded-2xl border-2 border-ink/20 bg-paper p-6 sm:p-8 lg:order-2">
+          <div className="mx-auto w-[min(58vw,14rem)] lg:w-full">
+            {/* One photo per signal, keyed off the signal id */}
+            <BrandImage
+              slot={`signal-${signal.id}` as BrandKey}
+              alt={signal.caption}
+              sizes="(max-width: 1024px) 58vw, 30vw"
+              className="w-full rounded-2xl border-2 border-ink/20"
+            />
+            <p className="t-small mt-3 text-ink/75">{signal.caption}</p>
+          </div>
+          {/*
+            The beat card second, so on desktop the grid's first column takes
+            the photo and this lands on the right with no `order` overrides at
+            all. Source order and visual order agree at every width, which is
+            the only arrangement a keyboard user experiences as sane.
+          */}
+          <div className="rounded-2xl border-2 border-ink/20 bg-paper p-5 sm:p-6">
             {/* Progress. A real sequence, so numbering is warranted here. */}
             <p className="t-small text-ink-muted">
               Signal {step + 1} of {SIGNALS.length}
@@ -138,9 +171,9 @@ export function GuessTheSignal({ wash = "bg-bubblegum" }: Props = {}) {
 
             <AnimatePresence mode="wait">
               <motion.div key={signal.id} {...fade}>
-                <p className="t-h2 mt-3 text-ink">{signal.prompt}</p>
+                <p className="t-h3 mt-2 text-ink">{signal.prompt}</p>
 
-                <div className="mt-6 space-y-3">
+                <div className="mt-4 space-y-2.5">
                   {signal.options.map((opt, i) => {
                     const isPicked = picked === i;
                     const revealed = picked !== null;
@@ -152,7 +185,7 @@ export function GuessTheSignal({ wash = "bg-bubblegum" }: Props = {}) {
                         disabled={revealed}
                         aria-pressed={isPicked}
                         className={[
-                          "block w-full rounded-xl border-2 px-5 py-4 text-left transition-colors",
+                          "block w-full rounded-xl border-2 px-4 py-3 text-left transition-colors",
                           revealed && opt.correct
                             ? "border-ink bg-mint"
                             : isPicked
@@ -161,7 +194,7 @@ export function GuessTheSignal({ wash = "bg-bubblegum" }: Props = {}) {
                           revealed ? "cursor-default" : "cursor-pointer",
                         ].join(" ")}
                       >
-                        <span className="t-h3">{opt.label}</span>
+                        <span className="font-semibold text-ink">{opt.label}</span>
                         {revealed && opt.correct && (
                           <span className="t-small mt-1 block text-ink/75">
                             That&apos;s the one
@@ -186,7 +219,7 @@ export function GuessTheSignal({ wash = "bg-bubblegum" }: Props = {}) {
                   {...(reduce ? {} : { initial: { opacity: 0 }, animate: { opacity: 1 } })}
                   className="mt-6 border-t-2 border-ink/15 pt-5"
                 >
-                  <p className="t-body text-ink/85">{signal.reveal}</p>
+                  <p className="t-small text-ink/85">{signal.reveal}</p>
 
                   {!done ? (
                     /*
@@ -244,21 +277,6 @@ export function GuessTheSignal({ wash = "bg-bubblegum" }: Props = {}) {
             </div>
           </div>
 
-          {/*
-            Photo second, and much smaller on mobile — it was `min(74vw,22rem)`,
-            which rendered ~361px tall and pushed every answer button below the
-            fold. It is support, not the subject.
-          */}
-          <div className="mx-auto w-[min(52vw,13rem)] lg:order-1 lg:w-full">
-            {/* One photo per signal, keyed off the signal id */}
-            <BrandImage
-              slot={`signal-${signal.id}` as BrandKey}
-              alt={signal.caption}
-              sizes="(max-width: 1024px) 52vw, 30vw"
-              className="w-full rounded-2xl border-2 border-ink/20"
-            />
-            <p className="t-small mt-3 text-ink/75">{signal.caption}</p>
-          </div>
         </div>
       </div>
     </section>
