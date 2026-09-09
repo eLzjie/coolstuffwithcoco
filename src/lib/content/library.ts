@@ -13,6 +13,41 @@
  * exist, and CHECKOUT_URL is set. Nothing else needs to change.
  */
 
+/* -------------------------------------------------------------------------
+   Thank-you page: email-only delivery
+   ------------------------------------------------------------------------- */
+
+/**
+ * Whether the thank-you pages show a direct download link.
+ *
+ * ---------------------------------------------------------------------------
+ * FALSE ON INSTRUCTION, AND THIS REVERSES A WRITTEN DECISION
+ * ---------------------------------------------------------------------------
+ * Chase: "let's make them check their email, that's the point of getting them
+ * to opt in", and "let's just do a generic check-your-email sort of
+ * situation". Eli chose to follow that.
+ *
+ * It is worth knowing what it trades away. docs/specs/Coco_GHL_Build_Spec.pdf
+ * calls the on-page download "THE CHANGE THAT DE-RISKS WEDNESDAY" and says,
+ * verbatim:
+ *
+ *   "The sending domain is days old and Chase's forward test landed in spam.
+ *    If the guide arrives by email only, then every dollar of ad spend on
+ *    Wednesday converts into leads who may never receive the thing they asked
+ *    for — and the complaint rate from people who opted in and got nothing
+ *    damages the domain further."
+ *
+ * So this is a deliberate, informed reversal rather than an oversight. The
+ * upside is real too: it drives opens on a young domain, which is the fastest
+ * way to build sending reputation, and it makes the email habit the norm.
+ *
+ * WATCH THE BOUNCE AND COMPLAINT RATE IN GHL FOR THE FIRST 48 HOURS. If
+ * delivery is poor, flip this to true — the pages already carry the download
+ * branch and NEXT_PUBLIC_GUIDE_*_URL is still set for exactly that reason.
+ * That is the whole revert.
+ */
+export const SHOW_ON_PAGE_DOWNLOAD = false;
+
 export type OfferMode = "waitlist" | "checkout";
 
 /** Waitlist until the products exist and a checkout URL is set. */

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "check:ghl": "node scripts/check-ghl-fields.mjs",
+    "check:costs": "node --experimental-strip-types scripts/check-costs.mjs",
     "test:traffic": "node scripts/test-traffic-source.mjs",
     "test:api": "node scripts/test-api.mjs",
     "test:crm": "node scripts/test-crm.mjs",

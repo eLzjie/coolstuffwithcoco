@@ -13,6 +13,10 @@
  *   NEXT_PUBLIC_GA4_ID   G-XM24N84PTY
  *   NEXT_PUBLIC_GTM_ID   GTM-TR8ZF32W
  *
+ * Microsoft Clarity (yff7ashiza) is deliberately NOT here — it is installed
+ * inside the GTM container, not by this codebase. See the note at the foot of
+ * this file.
+ *
  * ---------------------------------------------------------------------------
  * WHY ENV VARS RATHER THAN CONSTANTS
  * ---------------------------------------------------------------------------
@@ -108,4 +112,35 @@ export const GTM_ID = readId("NEXT_PUBLIC_GTM_ID", "GTM-");
      A rejected value logs a warning in the SERVER logs — Vercel → the
      deployment → Functions — which is worth checking, because a rejected
      value and an absent one look identical in the HTML.
+*/
+
+/*
+  ---------------------------------------------------------------------------
+  MICROSOFT CLARITY IS INSTALLED IN GTM, NOT HERE — AND THAT WAS MEASURED
+  ---------------------------------------------------------------------------
+  Clarity (project yff7ashiza) was added to the codebase on 2026-09-09 and then
+  removed the same day, because a browser check showed it was ALREADY live:
+
+      https://www.clarity.ms/tag/yff7ashiza?ref=gtm
+
+  That `?ref=gtm` is the giveaway — the tag is inside container GTM-TR8ZF32W.
+  Two installs on one page means two recorders, doubled sessions and doubled
+  data, which is the same failure mode as putting a GA4 tag in GTM while gtag.js
+  is loaded directly. So the code install lost, being the redundant one.
+
+  DO NOT re-add it here without first removing the GTM tag. If you ever want it
+  in code instead — the argument for it is that a diff can see it, and that it
+  could then be gated on our own consent state — remove the container tag in
+  the same change.
+
+  ONE THING TO KNOW, and it is not a small one: the GTM copy is NOT gated on
+  this site consent state. It loaded on a fresh page view with
+  `coco_consent_v1` set to analytics:false. A session recorder running against
+  a visitor who declined is the least comfortable version of the
+  default-granted posture documented in lib/consent.ts.
+
+  Nothing to fix today, since no banner exists and consent is assumed anyway.
+  But when the banner is built, gating Clarity belongs in that job — in GTM,
+  via Consent Mode or a trigger condition. It is written into
+  docs/LEGAL-REVIEW.md as part of that task.
 */

@@ -8,13 +8,7 @@ import { getAttribution } from "@/lib/utm";
 import { consentForSubmit } from "@/lib/consent";
 import type { LeadMagnet } from "@/lib/leadMagnet";
 import { CONSENT_GUIDE, CONSENT_NEWSLETTER } from "@/lib/content/consent";
-import {
-  EMAIL_MAX,
-  EMAIL_RE,
-  NAME_MAX,
-  PHONE_MAX,
-  isValidPhone,
-} from "@/lib/validation";
+import { EMAIL_MAX, EMAIL_RE, NAME_MAX } from "@/lib/validation";
 import { TextField } from "@/components/forms/TextField";
 import { FormSuccess } from "@/components/forms/FormSuccess";
 import { rememberCapture } from "@/lib/recentCapture";
@@ -25,14 +19,33 @@ import { rememberCapture } from "@/lib/recentCapture";
  * ---------------------------------------------------------------------------
  * FIELDS DIFFER BY MAGNET, ON PURPOSE
  * ---------------------------------------------------------------------------
- * The two guides collect first name (required), last name and phone
- * (optional), and email. The newsletter collects email only — it's a
- * subscribe, not a delivery, and there's nothing to personalise yet.
+ * The two guides collect first name (required) and email. The newsletter
+ * collects email only — it's a subscribe, not a delivery, and there's nothing
+ * to personalise yet.
  *
- * Phone being OPTIONAL is a compliance decision as much as a conversion one:
- * TCPA consent has to state that consent isn't a condition of getting the
- * thing, which sits badly with a mandatory phone field on a free guide. Full
- * reasoning in lib/content/consent.ts.
+ * ---------------------------------------------------------------------------
+ * LAST NAME AND PHONE WERE REMOVED (2026-09-09)
+ * ---------------------------------------------------------------------------
+ * Client feedback, twice: "we're asking too much, let's just do name and
+ * email". Four fields on a free guide is a lot to ask of someone who arrived
+ * thirty seconds ago from an ad.
+ *
+ * This was cheap because nothing downstream depended on either field. The
+ * route treats all three of firstName/lastName/phone as optional and
+ * null-tolerant, the CRM adapter spreads lastName conditionally, and delivery
+ * fires off the `lead-magnet-*` tag rather than off any contact detail. So no
+ * server or CRM change was needed at all.
+ *
+ * What DID have to change was the consent disclosure: two of its four
+ * sentences described the phone field, so leaving it would have been a
+ * dangling reference to something the form no longer collects. Rewritten and
+ * CONSENT_VERSION bumped — see lib/content/consent.ts.
+ *
+ * The phone plumbing that remains untouched: the server still accepts and
+ * validates a phone if one is posted, and `phone_number` still exists as a GHL
+ * custom field. So re-adding the field later is a client-only change. Note the
+ * TCPA reasoning in consent.ts before you do — collecting a number brings
+ * obligations that a free-guide form doesn't otherwise carry.
  *
  * ---------------------------------------------------------------------------
  * Rules that cost real completions if broken
@@ -61,7 +74,7 @@ type Props = {
 };
 
 type Status = "idle" | "submitting" | "success" | "error";
-type Field = "firstName" | "lastName" | "phone" | "email";
+type Field = "firstName" | "email";
 type Values = Record<Field, string>;
 type Errors = Partial<Record<Field, string>>;
 
@@ -84,7 +97,6 @@ const REQUEST_TIMEOUT_MS = 15_000;
 
 const SERVER_COPY = {
   INVALID_EMAIL: "That doesn't look like an email address — mind checking it?",
-  INVALID_PHONE: "That phone number doesn't look right — mind checking it?",
   BAD_REQUEST: "Something went wrong on our end. Try once more?",
   UPSTREAM_ERROR: "Can't reach us right now. Try again in a moment.",
   RATE_LIMITED: "That's a few too many tries. Give it a minute.",
@@ -93,7 +105,7 @@ const SERVER_COPY = {
   discarded: "That didn't go through — could you tap it once more?",
 } as const;
 
-const GUIDE_FIELDS: Field[] = ["firstName", "lastName", "phone", "email"];
+const GUIDE_FIELDS: Field[] = ["firstName", "email"];
 const NEWSLETTER_FIELDS: Field[] = ["email"];
 
 /** Pure. Returns a message, or null when the value is acceptable. */
@@ -115,19 +127,9 @@ function validateField(
     return null;
   }
 
-  if (field === "firstName") {
-    if (!v) return "Just a first name is fine.";
-    if (v.length > NAME_MAX) return "That's longer than we can store, sorry.";
-    return null;
-  }
-
-  // Optional from here down — empty is always valid.
-  if (!v) return null;
-
-  if (field === "lastName" && v.length > NAME_MAX) {
-    return "That's longer than we can store, sorry.";
-  }
-  if (field === "phone" && !isValidPhone(v)) return SERVER_COPY.INVALID_PHONE;
+  // firstName — the only other field, and required.
+  if (!v) return "Just a first name is fine.";
+  if (v.length > NAME_MAX) return "That's longer than we can store, sorry.";
   return null;
 }
 
@@ -141,8 +143,6 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
 
   const [values, setValues] = useState<Values>({
     firstName: "",
-    lastName: "",
-    phone: "",
     email: "",
   });
   const [status, setStatus] = useState<Status>("idle");
@@ -240,13 +240,7 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
           email: submittedEmail,
           // Omitted entirely for the newsletter rather than sent empty, so a
           // blank can't overwrite a name captured on an earlier submission.
-          ...(isNewsletter
-            ? {}
-            : {
-                firstName: values.firstName.trim(),
-                lastName: values.lastName.trim() || undefined,
-                phone: values.phone.trim() || undefined,
-              }),
+          ...(isNewsletter ? {} : { firstName: values.firstName.trim() }),
           leadMagnet: magnet,
           consent: consented,
           consentVersion: consent.version,
@@ -263,10 +257,7 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
 
       if (!res.ok || !data?.ok) {
         const code = data?.code;
-        // A bad phone belongs on the phone field, not in the form-level slot.
-        if (code === "INVALID_PHONE") {
-          setErrors({ phone: SERVER_COPY.INVALID_PHONE });
-        } else if (code === "INVALID_EMAIL") {
+        if (code === "INVALID_EMAIL") {
           setErrors({ email: SERVER_COPY.INVALID_EMAIL });
         } else {
           setFormError((code && SERVER_COPY[code]) || SERVER_COPY.network);
@@ -314,6 +305,21 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
           lead_magnet: magnet,
           content_name: magnet,
           eventId: data.eventId,
+          /*
+            Which page the form was on. Needed because the split-test variants
+            share a magnet: `/decode` and `/decode/b` both submit
+            `magnet="decode"`, deliberately — a new LeadMagnet value would mean
+            a new GHL delivery tag, and delivery is triggered off that tag.
+
+            So the pathname is the only thing separating the two arms in GA4.
+            Without it every `generate_lead` is attributed to "decode" and the
+            test can't be read. `ga4Params` forwards `page_path` already.
+
+            Attribution on the CRM side is separate and already handled: utm.ts
+            records `landingPage` at first touch, which is what lands in the
+            contact's `landing_page` field.
+          */
+          page_path: window.location.pathname,
         });
       }
 
@@ -392,65 +398,28 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
 
       {!isNewsletter && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextField
-              id={`${uid}-firstName`}
-              name="firstName"
-              type="text"
-              label="What should I call you?"
-              value={values.firstName}
-              error={errors.firstName}
-              required
-              placeholder="Sam"
-              autoComplete="given-name"
-              autoCapitalize="words"
-              maxLength={NAME_MAX}
-              enterKeyHint="next"
-              readOnly={locked}
-              onValueChange={(v) => changeField("firstName", v, Date.now())}
-              onFocus={() => noteStart(Date.now())}
-              onBlur={() => blurField("firstName")}
-            />
-
-            <TextField
-              id={`${uid}-lastName`}
-              name="lastName"
-              type="text"
-              label="Last name"
-              optional
-              value={values.lastName}
-              error={errors.lastName}
-              placeholder="Rivera"
-              autoComplete="family-name"
-              autoCapitalize="words"
-              maxLength={NAME_MAX}
-              enterKeyHint="next"
-              readOnly={locked}
-              onValueChange={(v) => changeField("lastName", v, Date.now())}
-              onFocus={() => noteStart(Date.now())}
-              onBlur={() => blurField("lastName")}
-            />
-          </div>
-
+          {/*
+            One field, full width. It was a two-column grid holding first and
+            last name, with phone below — see the note at the top of this file
+            for why those went.
+          */}
           <TextField
-            id={`${uid}-phone`}
-            name="phone"
-            type="tel"
-            label="Phone"
-            optional
-            hint="Only if you'd like us to be able to reach you — never required."
-            value={values.phone}
-            error={errors.phone}
-            placeholder="(555) 123-4567"
-            inputMode="tel"
-            autoComplete="tel"
-            maxLength={PHONE_MAX}
+            id={`${uid}-firstName`}
+            name="firstName"
+            type="text"
+            label="What should I call you?"
+            value={values.firstName}
+            error={errors.firstName}
+            required
+            placeholder="Sam"
+            autoComplete="given-name"
+            autoCapitalize="words"
+            maxLength={NAME_MAX}
             enterKeyHint="next"
             readOnly={locked}
-            className="mt-4"
-            onValueChange={(v) => changeField("phone", v, Date.now())}
+            onValueChange={(v) => changeField("firstName", v, Date.now())}
             onFocus={() => noteStart(Date.now())}
-            onBlur={() => blurField("phone")}
+            onBlur={() => blurField("firstName")}
           />
         </>
       )}

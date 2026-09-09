@@ -1,5 +1,6 @@
 import { Ambient } from "@/components/motion/Ambient";
 import { Reveal } from "@/components/motion/Reveal";
+import { READ_METHOD } from "@/lib/content/guides";
 
 /**
  * The R.E.A.D. method — Section 3 of the Decode guide.
@@ -31,35 +32,34 @@ import { Reveal } from "@/components/motion/Reveal";
  * Server component — no interactivity.
  */
 
-/** Verbatim from the guide, and the wording is deliberate. */
-const STEPS: Array<{ letter: string; title: string; body: string }> = [
-  {
-    letter: "R",
-    title: "Relax yourself first",
-    body: "Dogs read your stress before you read theirs. If you come in tense, you're now part of what they're reacting to.",
-  },
-  {
-    letter: "E",
-    title: "Eyes, ears, mouth",
-    body: "Scan the face as a whole and take the overall expression. One signal on its own tells you almost nothing.",
-  },
-  {
-    letter: "A",
-    title: "Assess the body",
-    body: "Tail height and stiffness, posture, and where their weight is sitting. The tail gets the attention but posture tells the real story.",
-  },
-  {
-    letter: "D",
-    title: "Decide",
-    body: "Comfortable, or do they need space? That's the whole question, and you're the one standing there.",
-  },
-];
+/**
+ * Optional section wash.
+ *
+ * The split-test variants need a different background on some of these
+ * sections — Chase's note was "it's somewhat feminine, we should try to speak
+ * to both audiences", and bubblegum on every capture surface is most of why.
+ *
+ * ONLY the wash. Not the id, not the heading, not the copy. Those are the
+ * things a variant is supposed to be testing, so a variant that wants a
+ * different heading should say so in its own page file where the difference is
+ * visible — not reach in through a prop and make two pages look like one
+ * component with a flag. Add more props when a variant actually needs them.
+ *
+ * The default reproduces the class list byte-for-byte, so `/decode` and
+ * `/vetbill` render exactly what they rendered before this prop existed. That
+ * was verified rather than assumed, and it is worth re-verifying if the class
+ * list is ever reordered:
+ *
+ *     curl -s localhost:3000/decode > before.html   # then make the change
+ *     curl -s localhost:3000/decode | diff before.html -
+ */
+type Props = { wash?: string };
 
-export function ReadMethod() {
+export function ReadMethod({ wash = "bg-mint" }: Props = {}) {
   return (
     <section
       id="read-method"
-      className="section-pad relative isolate scroll-mt-8 overflow-hidden bg-mint"
+      className={`section-pad relative isolate scroll-mt-8 overflow-hidden ${wash}`}
       aria-labelledby="read-method-heading"
     >
       <Ambient variant="paws" />
@@ -79,7 +79,7 @@ export function ReadMethod() {
         </div>
 
         <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((step) => (
+          {READ_METHOD.map((step) => (
             <Reveal as="li" key={step.letter}>
               <div className="h-full rounded-2xl border-2 border-ink bg-paper p-6">
                 {/*

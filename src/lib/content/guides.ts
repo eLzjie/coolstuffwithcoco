@@ -285,11 +285,17 @@ export const TRIAGE: TriageRow[] = [
 ];
 
 /**
- * Cost ranges. Every figure is a placeholder.
+ * One row of the cost table.
  *
- * TODO(Eli): verify source. Nothing here goes live without sign-off — these
- * numbers are invented to hold the layout, not researched. The vet-cost survey
- * figures you mentioned are better sourced but still need your approval.
+ * `range` is a display string, not a number pair, because the guide prints it
+ * that way and the guide is the source of truth. `CostChart` parses it for the
+ * bar widths — see `parseRange` there, and its self-check.
+ *
+ * (This docstring previously said every figure was an unresearched placeholder.
+ * That stopped being true on 2026-09-08 when the figures were replaced with the
+ * guide's own table, and the block below explains the swap in full. Two adjacent
+ * comments were contradicting each other about whether the live numbers were
+ * verified; they are.)
  */
 export type CostRow = {
   label: string;
@@ -363,6 +369,154 @@ export const COSTS: CostRow[] = [
     note: "Can develop in minutes, not hours.",
   },
 ];
+
+export type ReadStep = {
+  /** R, E, A or D. Decorative — rendered aria-hidden. */
+  letter: string;
+  title: string;
+  body: string;
+};
+
+/**
+ * The R.E.A.D. method — Section 3 of the Decode guide, verbatim.
+ *
+ * Lifted here from `components/decode/ReadMethod.tsx` on 2026-09-09, where it
+ * was a module-local const. It now has two consumers — `ReadMethod` on
+ * `/decode` and `BodyLanguageDiagram` on `/decode/b` — and two copies of
+ * guide-verbatim wording is exactly how a page ends up contradicting the PDF
+ * someone just downloaded.
+ *
+ * ---------------------------------------------------------------------------
+ * TWO OF THE FOUR STEPS ARE NOT ABOUT THE DOG
+ * ---------------------------------------------------------------------------
+ * R and D are instructions to the human: calm yourself down, then make a
+ * judgement. Only E and A point at anatomy. That is why the diagram on
+ * `/decode/b` pins two of these four and not all of them — there is nothing
+ * on a dog to point at for "relax yourself first".
+ *
+ * DO NOT let step D grow into advice about what to do next. "Comfortable, or
+ * do they need space" is an observation; "so do X" would be behavioural
+ * advice, which this brand is not qualified to give.
+ */
+export const READ_METHOD: ReadStep[] = [
+  {
+    letter: "R",
+    title: "Relax yourself first",
+    body: "Dogs read your stress before you read theirs. If you come in tense, you're now part of what they're reacting to.",
+  },
+  {
+    letter: "E",
+    title: "Eyes, ears, mouth",
+    body: "Scan the face as a whole and take the overall expression. One signal on its own tells you almost nothing.",
+  },
+  {
+    letter: "A",
+    title: "Assess the body",
+    body: "Tail height and stiffness, posture, and where their weight is sitting. The tail gets the attention but posture tells the real story.",
+  },
+  {
+    letter: "D",
+    title: "Decide",
+    body: "Comfortable, or do they need space? That's the whole question, and you're the one standing there.",
+  },
+];
+
+export type CheatRow = {
+  /** The thing you can see. Left column. */
+  signal: string;
+  /** What it means. Right column. */
+  meaning: string;
+};
+
+export type CheatGroup = {
+  title: string;
+  rows: CheatRow[];
+};
+
+/**
+ * The quick-reference cheat sheet — page 12 of `CTWCDecode YourDog V5.pdf`,
+ * transcribed verbatim on 2026-09-09.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS HERE AND NOT REWRITTEN
+ * ---------------------------------------------------------------------------
+ * This is the page the guide tells people to print and stick on the fridge, so
+ * it is the single most-looked-at thing we produce. Showing a slice of it on
+ * the landing page is showing the actual product rather than describing it.
+ *
+ * Every pair below is the guide's own wording, down to the "=" — which is
+ * also why the phrasing is clipped rather than sentence-shaped. Do not
+ * paraphrase for the web. A visitor who reads a signal here and then finds it
+ * worded differently in the PDF has caught us being loose with the one
+ * document we asked them for their email to get.
+ *
+ * Eighteen rows, six per group. That count is the reason `GuessTheSignal` no
+ * longer claims "about thirty more of these in the guide" — the brief said
+ * thirty, the guide has eighteen, and the guide wins.
+ */
+export const CHEAT_SHEET: CheatGroup[] = [
+  {
+    title: "The face",
+    rows: [
+      { signal: "Forward ears", meaning: "alert" },
+      { signal: "Flat ears", meaning: "anxious" },
+      { signal: "Soft eyes", meaning: "happy" },
+      { signal: "Hard stare", meaning: "tension" },
+      { signal: "Whale eye", meaning: "stressed" },
+      { signal: "Open mouth", meaning: "content" },
+    ],
+  },
+  {
+    title: "The body",
+    rows: [
+      { signal: "High stiff tail", meaning: "aroused" },
+      { signal: "Loose wag", meaning: "relaxed" },
+      { signal: "Tucked tail", meaning: "fear" },
+      { signal: "Weight forward", meaning: "confident" },
+      { signal: "Play bow", meaning: "let's play" },
+      { signal: "Freeze", meaning: "step in now" },
+    ],
+  },
+  {
+    title: "Weird stuff",
+    rows: [
+      { signal: "Grass", meaning: "instinct" },
+      { signal: "Head tilt", meaning: "listening" },
+      { signal: "Zoomies", meaning: "pure joy" },
+      { signal: "Guilty look", meaning: "appeasement" },
+      { signal: "Digging", meaning: "survival wiring" },
+      { signal: "Licking", meaning: "context matters" },
+    ],
+  },
+];
+
+/**
+ * The calming signals from the same page. Five of them, listed rather than
+ * paired — the guide prints them as a single run, not as signal/meaning.
+ */
+export const CALMING_SIGNALS = [
+  "Yawning",
+  "Lip licking",
+  "Turning away",
+  "Ground sniffing",
+  "Slow blinking",
+] as const;
+
+/**
+ * How many things are actually printed on the fridge card.
+ *
+ * 18 signal/meaning pairs plus the 5 calming signals, which are listed on the
+ * same page but not paired — so 23. Derived, because three places on
+ * `/decode/b` quote this number and they were not agreeing: the fact chip and
+ * the section heading both said 18 (the pair count) while the quiz payoff said
+ * "twenty-odd", which is only true if you include the calming five. Both were
+ * defensible readings of the same page, which is the worst kind of
+ * inconsistency — nobody notices until a reader does.
+ *
+ * One number, one story, and it moves if the guide does.
+ */
+export const CHEAT_SHEET_COUNT: number =
+  CHEAT_SHEET.reduce((n, g) => n + g.rows.length, 0) + CALMING_SIGNALS.length;
 
 /** Where the ranges above came from. Rendered on the page. */
 export const COST_SOURCES: Array<{ name: string; url: string }> = [
@@ -523,5 +677,32 @@ export const SITE_NAME = "Cool Stuff with Coco";
  *
  * The GitHub repo is still named `coolthingswithcoco` — that's only a repo
  * name and doesn't affect anything served.
+ *
+ * ---------------------------------------------------------------------------
+ * WWW, NOT THE APEX — changed 2026-09-09, and it was wrong before
+ * ---------------------------------------------------------------------------
+ * This was the apex. Measured against the live site:
+ *
+ *     GET https://coolstuffwithcoco.com/vetbill
+ *       -> 308 Permanent Redirect
+ *          Location: https://www.coolstuffwithcoco.com/vetbill
+ *     GET https://www.coolstuffwithcoco.com/vetbill
+ *       -> 200
+ *
+ * So www is the primary domain and the apex permanently redirects to it. With
+ * the apex in here, every page served from www was emitting a canonical
+ * pointing at a URL that redirects away from itself — confirmed on the live
+ * page:
+ *
+ *     <link rel="canonical" href="https://coolstuffwithcoco.com/vetbill"/>
+ *
+ * A canonical is supposed to name the final, non-redirecting address. So did
+ * every sitemap entry and the robots `host`. It is the kind of thing that
+ * doesn't break anything visibly and quietly splits the signal Google uses to
+ * decide which URL to rank.
+ *
+ * If the primary domain is ever switched to the apex, change this back — and
+ * check with a request, not from memory. `curl -sI https://<apex>/vetbill`
+ * and read the Location header.
  */
-export const SITE_URL = "https://coolstuffwithcoco.com";
+export const SITE_URL = "https://www.coolstuffwithcoco.com";

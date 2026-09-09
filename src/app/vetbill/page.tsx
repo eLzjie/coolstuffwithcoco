@@ -115,21 +115,40 @@ export default function VetBillPage() {
               one you&apos;ve seen.
             </p>
 
-            <dl className="mt-10 max-w-3xl divide-y-2 divide-ink/10 border-y-2 border-ink/20">
+            {/*
+              A <ul>, changed from <dl> on 2026-09-09.
+
+              HTML5 only allows <dl> to contain dt/dd groups, or one layer of
+              <div> holding dt/dd groups. This had a nested <div class="flex">
+              and a <p> for the note, which puts <dt> two levels deep and a <p>
+              where <dl> forbids one. Lighthouse: `definition-list` + `dlitem`
+              on all eight rows, taking this page's accessibility score to 93.
+
+              THIS IS THE CONTROL ARM of a split test, so the rule is that its
+              rendered output does not change. This is the exception and it is
+              a narrow one: element names and nothing else. Not one pixel, word
+              or class moves, so it cannot influence what the test measures.
+              Leaving a real accessibility defect in place for the duration of
+              a marketing test would be the wrong trade.
+
+              `/vetbill/b` renders the same data through `CostChart`, which was
+              built with the same bug and fixed at the same time.
+            */}
+            <ul className="mt-10 max-w-3xl divide-y-2 divide-ink/10 border-y-2 border-ink/20">
               {COSTS.map((c) => (
-                <div key={c.label} className="py-5">
+                <li key={c.label} className="py-5">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1">
-                    <dt className="t-h3 max-w-[34ch]">{c.label}</dt>
-                    <dd className="t-h3 whitespace-nowrap">{c.range}</dd>
+                    <span className="t-h3 max-w-[34ch]">{c.label}</span>
+                    <span className="t-h3 whitespace-nowrap">{c.range}</span>
                   </div>
                   {c.note && (
                     <p className="t-small mt-1.5 max-w-[52ch] text-ink-muted">
                       {c.note}
                     </p>
                   )}
-                </div>
+                </li>
               ))}
-            </dl>
+            </ul>
 
             {/*
               The numbers are real and sourced, so the caveat has to be equally

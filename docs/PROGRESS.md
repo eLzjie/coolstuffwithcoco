@@ -179,6 +179,24 @@ d1ccdb5  Set up Next.js shell with locked brand tokens
 - [`docs/specs/decode-signal-image-prompts.md`](specs/decode-signal-image-prompts.md) — the two remaining quiz signals
 - [`public/brand/README.md`](../public/brand/README.md) — asset list with shot notes
 
+**Added after this section was first written** — kept here so the index stays
+the one place to look:
+
+- [`docs/SPLIT-TEST.md`](SPLIT-TEST.md) — the four landing pages, what is and
+  isn't being tested, the above-fold budget, how the arms are told apart in GHL
+  and GA4, what to do when a winner is picked. **Read before touching either
+  variant.**
+- [`docs/LEGAL-REVIEW.md`](LEGAL-REVIEW.md) — the handover list for counsel.
+  Blockers before taking money, the veterinary disclaimer, the consent record,
+  the processor list, and the Clarity session-replay gap.
+- [`docs/GHL-PIPELINE.md`](GHL-PIPELINE.md) — pipeline and stage mapping.
+- [`docs/WEBHOOKS.md`](WEBHOOKS.md) — why delivery triggers on a contact tag
+  rather than an inbound webhook, and what was removed.
+- [`docs/VSL-AND-VIDEO.md`](VSL-AND-VIDEO.md) — the VSL script and Magic Hour
+  prompts, plus the recommendation against an AI talking Coco.
+- [`docs/emails/README.md`](emails/README.md) — the three delivery emails and
+  how to load them into GHL.
+
 ---
 
 ## Before launch
@@ -754,13 +772,594 @@ text, new sections render correctly.
 
 ## Still open
 
-- **LCP not re-measured.** Lighthouse isn't installed in this environment. The
-  loaders are `afterInteractive` and verified not inlined, which is the
-  mechanism that keeps them off the LCP path — but that's an architectural
-  guarantee, not a measurement. Worth one real Lighthouse run before spend.
+- **LCP re-measured 2026-09-09.** Resolved — see Session 5.
 - **Mark `generate_lead` as a key event in the GA4 UI.** The code sends it;
   GA4 won't treat it as a conversion until someone ticks that box.
 - **Don't add a GA4 tag to the GTM container** (see above).
 - Designed OG artwork, to replace the generated cards.
 - Everything in `docs/LEGAL-REVIEW.md` — entity name and governing law still
   blank, refund mechanics still unverified against a checkout.
+
+---
+
+# Session 5 — 2026-09-09 (branch `staging`)
+
+Acting on Chase's review of the live site, plus the pre-launch checklist and
+Eli's own note that the pages were too wordy.
+
+Seven commits, `244438f..e01e36a`. 47 files, +3,123 / −276.
+
+| | |
+|---|---|
+| `70c2b83` | Chase's quick wins: no visitor TODOs, 2-field forms, email-only thank-you |
+| `835e75f` | The visual kit: booklet, contents, cost chart, signal grid, floating CTA |
+| `5ad3fa3` | `/decode/b` and `/vetbill/b` |
+| `719febd` | Hygiene: consent banner, security headers, 4.1MB of images, three a11y bugs |
+| `e274021` | Scale the variants' subhook to the compact hero |
+| `91f2b83` | `SITE_URL` → www |
+| `e01e36a` | The Coco band, home sticky nav, HSTS ramp |
+
+New operational doc: **`docs/SPLIT-TEST.md`** — the four pages, what is and
+isn't being tested, the above-fold budget, how the arms are told apart in GHL
+and GA4, and what to do when a winner is picked. Read that before changing
+either variant.
+
+---
+
+## Chase's feedback, item by item
+
+His review, transcribed, and what happened to each point.
+
+| His words | Done |
+|---|---|
+| "everything should be above the fold, the email submit, everything" | Both `/b` pages. Consent bottoms out at 677px of a 745px fold, 68px spare |
+| "headline, hero, booklet picture, email, CTA button" | New `BookletMockup` beside the headline. The covers previously rendered nowhere on a landing page |
+| "Coco and product imagery below fold" | Moved. She starts at 779px on decode, 1081px on vetbill |
+| "we don't have call to action… I would click out" | Form above the fold + `FloatingCta` in between |
+| "dynamic floating CTA" | `FloatingCta`, suppressed by both forms and the footer |
+| "we're asking too much. Let's just do name and email" (said twice) | `lastName` and `phone` dropped |
+| "too much info" | 1,118 → 353 words on decode, 1,727 → 767 on vetbill |
+| "it's somewhat feminine… speak to both audiences" | Bubblegum gone from B entirely. Cover art still pink — flagged, brand call |
+| "make two versions, don't overwrite" | A untouched and proved byte-identical |
+| "let's make them check their email" | Thank-you pages are email-only, headline "Check your inbox" |
+| "drop the bundle pitch this week" | Gone. The waitlist strip stayed — a waitlist isn't a pitch |
+| "let's prompt the action / hard to find or understand on mobile" (on the signals) | Intro is now an instruction; answer buttons precede the photo; CTA on every beat |
+| "definitely onto something with the signal stuff" | Kept, and scaled up: `SignalGrid`, all 18 pairs from the guide's fridge card |
+| Four landing pages to split test | `/decode` + `/decode/b`, `/vetbill` + `/vetbill/b` |
+| No testimonials | Slot stays empty. We have none that are real and inventing them is a locked prohibition |
+
+**One deviation, deliberate.** The plan called for a new pain-point headline on
+B. Dropped: changing copy and structure in the same arm makes the result
+unreadable. `DECODE.hook` is byte-identical across both arms. If the copy is
+worth testing, that is a third arm. See `docs/SPLIT-TEST.md`.
+
+---
+
+## Built
+
+### Phase 1 — launch hygiene
+
+- **`src/components/home/Library.tsx` was rendering the literal string
+  "TODO(Eli)" to visitors**, bolded inside a dashed placeholder box, on the
+  live home page. Replaced with a quick peek at the two v1 titles plus the
+  waitlist line. The build note moved into a code comment.
+- **Guide forms are first name + email.** Server and CRM needed no change —
+  both fields were already optional and nullable, and delivery fires off the
+  `lead-magnet-*` tag.
+- **`src/app/not-found.tsx`** — there was no 404, so every mistyped URL and
+  stale ad link got Next's blank "This page could not be found". It names both
+  guides rather than offering a generic way home, and carries the full footer
+  because someone arriving from a shared Vet Bill link may be the person who
+  needs the hotlines.
+- Both thank-you pages email-only, with a promotions-tab nudge and a route to
+  `/contact`.
+
+**The mandatory follow-on was compliance.** Two of `CONSENT_GUIDE.text`'s four
+sentences described the phone field. Rewritten, and `CONSENT_VERSION` bumped to
+`2026-09-09.guide-v2`. Contacts captured before that keep `guide-v1` and
+genuinely agreed to the phone-inclusive wording — that record stays accurate
+and must not be rewritten.
+
+### Phase 2 — the visual kit
+
+Five new shared components, no page changes, so the wiring was a separate
+reviewable step. All authored in code: no new asset, no designer dependency,
+no chart library.
+
+- **`BookletMockup`** — the covers existed but rendered only on the home page
+  and the thank-you pages: before the click and after the conversion, never on
+  the page doing the asking. A visitor was handed a photo of a dog and asked
+  for an email with no picture of the thing on offer. Page stack, spine shade
+  and a small tilt, all CSS over the existing SVG, so a future cover swap
+  inherits it free.
+- **`ContentsStrip`** — replaces 213/251 words of chapter blurbs with a
+  contents page. Numbered, leader dots. The numbers are a real sequence, so
+  they carry information rather than decorate.
+- **`CostChart`** — the first real chart on the site. Bars float low→high on a
+  shared axis rather than growing from zero, because a 0→high bar would say
+  "bloat surgery costs $7,500" and neither the guide nor reality says that.
+  Open-ended rows (`$300 – $3,000+`) dissolve at the right edge — the one thing
+  the guide's `+` carries that a plain bar throws away.
+- **`SignalGrid`** — page 12 of the Decode guide, the page the guide itself
+  says to print and stick on the fridge. 18 signal/meaning pairs in the space
+  two paragraphs used, transcribed verbatim including the clipped register.
+- **`FloatingCta`** — suppressed by two things: every capture section (so it
+  cannot cover the consent line the build spec requires visible) and the
+  footer (the hotline numbers are down there).
+- Optional `wash` prop on the four signature sections, since the variants need
+  a less-bubblegum capture surface. Only the wash — a variant's heading and
+  copy are what it's testing, so those stay visible in its own page file.
+
+### Phase 3 — the variants
+
+See `docs/SPLIT-TEST.md` for the full contract. Summary: `noindex`, no
+canonical, absent from `sitemap.ts`, existing thank-you pages reused, existing
+`LeadMagnet` values reused because `tagsFor()` emits the GHL delivery trigger.
+
+### Phase 4 — the checklist
+
+- **Cookie banner** — the largest compliance gap. See below.
+- **Security headers** — `next.config.ts` was an empty stub.
+- **4.1MB of images** out of the repo.
+- **Three a11y defects**, all found by Lighthouse.
+
+### Session 5 addenda, from Eli's review of the result
+
+- **`MeetCoco`** — the Coco band on both variants was a full-bleed cream
+  section holding a centred 26rem photo and nothing else. Fine as a breath on
+  a phone; at 1280px a 416px image floating in 1280px of paper. Now Coco left,
+  her story in two sentences right, three fact chips, `Ambient`'s existing paws
+  behind for texture. The chips are derived from `CHEAT_SHEET`,
+  `chapters.length` and `COSTS.length`, never typed.
+- **`StickyNav`** — home only. `FloatingCta` works on a variant because those
+  pages have exactly one ask; the home page has two guides, so a single
+  floating button would have to silently pick one. A header solves it: the
+  button goes to `#guides` where both sit side by side.
+- **HSTS ramped** from a year to 5 minutes.
+
+---
+
+## The cookie banner — and the one thing it does not cover
+
+**The plumbing was already complete.** `setConsent` wrote localStorage, pushed
+all four Google Consent Mode signals and notified listeners; `track()` checked
+the gate. It had **zero callers**, so no visitor was ever asked, and the
+mitigation ("don't send EU/UK traffic") lived only in a code comment.
+
+`src/components/consent/ConsentBanner.tsx` is the missing UI and nothing else.
+New `hasDecided()` in `lib/consent.ts` distinguishes "chose granted" from
+"never asked", which `hasConsent` cannot do while the default is granted.
+
+**Measured in a browser, not assumed:**
+
+| Action | Result |
+|---|---|
+| Decline | stores `{analytics:false,marketing:false}` |
+| Decline | pushes `consent update` — all four signals `denied` |
+| Reload after declining | inline pre-tag snippet emits `consent default` **denied**, `wait_for_update: 500` — i.e. before any tag loads |
+| Accept | mirror image, all four `granted` |
+| Either | banner gone, stays gone across reloads |
+
+**No dark patterns, as a constraint rather than a preference.** The FTC's
+dark-patterns work names exactly what a consent banner is usually guilty of: a
+bright filled Accept beside a grey text link three clicks deep. Both buttons
+here are the same component, same classes, measured at the same 162×58. Accept
+is deliberately **not** `btn-coral` — coral is this site's "click this" colour
+and using it would put a thumb on the scale.
+
+**It is an opt-OUT notice, not GDPR consent.** The default is still granted, so
+an undecided visitor is measured. Flipping the default needs the region signal
+(`x-vercel-ip-country` from a server component) so only EEA/UK gets denied and
+US measurement is unaffected. That is a business decision.
+
+### Clarity is not covered, and it is now the sharpest edge
+
+Re-measured with `analytics: false` stored:
+
+| Checked | Result |
+|---|---|
+| `clarity.ms/tag/yff7ashiza?ref=gtm` | loaded |
+| `scripts.clarity.ms/0.8.69/clarity.js` | loaded |
+| `window.clarity` | present |
+| `_clck` / `_clsk` cookies | both set |
+
+**A visitor who clicks Decline is still session-recorded.** Before the banner
+existed this was theoretical — nobody could decline. Now they can, and we don't
+honour it for this one processor.
+
+Clarity lives in the GTM container, so this repo cannot reach it. **The fix is
+in GTM** — tick Clarity's consent settings so it requires `analytics_storage`,
+or put a trigger condition on the tag.
+
+The banner copy was written around this rather than over it: it says "measure
+which pages work" and "show these guides on social", both of which Decline
+genuinely controls, and says nothing about recording. `/privacy` now discloses
+Clarity's cookies (it didn't) and states the exception in three places.
+
+---
+
+## `SITE_URL` was the apex; www is what serves
+
+Found while checking a preview link. Measured:
+
+```
+GET https://coolstuffwithcoco.com/vetbill      -> 308, Location: https://www....
+GET https://www.coolstuffwithcoco.com/vetbill  -> 200
+
+live page, served from www:
+  <link rel="canonical" href="https://coolstuffwithcoco.com/vetbill"/>
+```
+
+So **every live page was emitting a canonical pointing at a URL that redirects
+away from itself**, and so were all seven sitemap entries and the robots
+`Host`. A canonical is meant to name the final non-redirecting address. Nothing
+breaks visibly, which is why it sat there — it splits the signal Google uses to
+pick which URL ranks.
+
+This was on the plan's "only Eli can check" list. It turned out to be
+answerable with two curls.
+
+One constant, seven files downstream. Verified after: canonicals, `robots.txt`
+Host + Sitemap, all sitemap entries, and `og:url` all www; the two `/b` pages
+still carry no canonical.
+
+---
+
+## Bugs found and fixed, in the order they were found
+
+Nine, and five were mine.
+
+1. **`FloatingCta` watched a single id**, so on a page with a form above the
+   fold and a repeat form at the bottom it sat squarely over the second one's
+   consent line — the one thing the component was told not to do. Now takes a
+   selector and watches both, plus the footer. Verified across six scroll
+   positions.
+2. **The variant headline ran to five lines.** `.t-hero`'s 40px mobile size in
+   the narrow column beside the booklet cost 192px of a 745px budget and pushed
+   the consent line under the fold. `.t-hero-compact` sets it in three.
+3. **The form card's heading duplicated its own button** — "Send me the guide"
+   above a button reading "Send me the guide", for 28px.
+4. **`ContentsStrip` numbers at `text-ink/40`.** globals.css states outright
+   that 75% is the lowest ink opacity clearing 4.5:1 across all six washes, and
+   below it is for borders and icons. `aria-hidden` is not an excuse — it hides
+   the number from a screen reader, which does nothing for the sighted reader
+   who can't see it.
+5. **`CostChart` axis labels at `text-ink/45`.** Same rule, same fix.
+6. **An invalid `<dl>` content model — mine in `CostChart`, and pre-existing on
+   the `/vetbill` control.** HTML5 allows `<dl>` → dt/dd groups, or one layer
+   of `<div>` holding dt/dd groups. Both had a nested `<div class="flex">` plus
+   a `<p>`, putting `<dt>` two levels deep and a `<p>` where `<dl>` forbids one.
+   It had been costing the control 7 accessibility points unnoticed. Both are
+   `<ul>` now.
+7. **`FloatingCta` shipped with `backdrop-blur-sm` behind a 95%-opaque
+   surface** — invisible, but a full-width fixed backdrop-filter makes the
+   compositor hold a snapshot of the page behind it for as long as the page is
+   open.
+8. **`SITE_URL`** — above.
+9. **The variants' subhook competed with the headline.** `.t-hero-echo` was
+   sized as ~0.7 of `.t-hero`, which is the ratio that keeps the h1 leading.
+   Pairing it with the smaller compact hero made it 0.83. `.t-hero-echo-compact`
+   restores 0.70 — verified in the browser at 32px / 22.4px.
+
+### Fixing the control arm, and why that was allowed
+
+Items 6 and 9 raise the same question. The rule is that A's rendered output
+does not change, so Phase 2's optional props could be proved inert.
+
+The `<dl>` → `<ul>` fix on `/vetbill` is the one exception, and it is a narrow
+one: **element names and nothing else.** Not one pixel, word or class moves, so
+it cannot influence what the test measures. Leaving a live accessibility defect
+in place for the duration of a marketing test would be the wrong trade.
+
+---
+
+## Two hypotheses chased and killed by measurement
+
+Worth recording because both were plausible and both were wrong.
+
+- **`mix-blend-mode` on the booklet spine.** Suspected of forcing a
+  rasterisation group that couldn't paint until the image decoded. Removed,
+  rebuilt, re-measured: perf 91, FCP 1.2s, LCP 3.4s — identical to with it.
+  Restored, because `multiply` is the honest treatment against arbitrary cover
+  art.
+- **The `priority` preload of the cover SVG.** Suspected of competing with
+  render-blocking CSS. The waterfall says 2KB transferred at Low priority,
+  finished at 19ms. `priority` stayed — its real job here is preventing
+  `loading="lazy"` on an above-the-fold image, not marking an LCP element,
+  and the prop doc was corrected to say so.
+
+---
+
+## Lighthouse — the run the plan asked for
+
+Lighthouse 12 via npx against a production `next start`, mobile form factor,
+simulated throttling.
+
+| Page | Perf | A11y | FCP | LCP | TBT | CLS |
+|---|---|---|---|---|---|---|
+| `/` | 94 | 100 | 1.2s | 3.1s | 30ms | 0 |
+| `/decode` (A) | 95 | 100 | 1.2s | 2.9s | 20ms | 0 |
+| `/vetbill` (A) | 95 | 100 | 1.2s | 2.9s | 20ms | 0 |
+| `/vetbill/b` (B) | 94 | 100 | 1.2s | 3.0s | 70ms | 0 |
+| `/decode/b` (B) | see below | 100 | see below | see below | 40ms | 0 |
+
+**A11y is 100 everywhere and CLS is 0 everywhere.** Getting there fixed items
+4, 5 and 6 above.
+
+**The variant perf numbers are not trustworthy from localhost.** Each variant
+returned both ~1.2s and ~2.9s FCP across runs on identical builds, while
+`/decode` returned 95 / 1.2s / 2.9s on three consecutive runs. The real
+network waterfall is the same either way — every request, CSS and fonts
+included, finishes inside 35ms — so the swing is Lighthouse recomputing its
+simulated critical path from a CPU trace that differs run to run on this
+machine.
+
+`/vetbill` also improved 94 → 95 from the `<dl>` fix, incidentally.
+
+**Run it against the Vercel preview URL before spend.** That is where the
+number matters, and it removes the localhost CPU noise.
+
+---
+
+## Images — 4.1MB out of the repo
+
+| File | Before | After | Why |
+|---|---|---|---|
+| `public/logo.png` | 1,295KB | deleted | byte-identical duplicate of `brand/logo.png`; `brandSrc` always resolves to `/brand/`, so it was unreachable |
+| `brand/community/ig-03.png` | 866KB | 116KB `.jpg` | a photo with a **fully opaque** alpha channel stored as PNG. Every sibling `ig-*` was already a JPEG |
+| `public/success-coco-png.png` | 1,364KB | 321KB | 1024px → 512px; renders at 232px |
+| `brand/logo.png` | 1,295KB | 269KB | 1254px → 512px; renders at 44–56px. Manifest `w`/`h` updated to match, since `next/image` builds its srcset from them |
+
+**`public/cooc-hero-page.png` was on the delete list and survived.** It turned
+out to be the **only** copy of the image-generation reference: the
+`coco-png-front-hero.jpg` that `docs/specs/community-ad-image-prompts.md`
+named as primary does not exist, and the two were not identical anyway. The
+doc was fixed instead.
+
+---
+
+## Security headers
+
+`next.config.ts` was an empty stub. Verified on both a page and an API route:
+
+```
+Strict-Transport-Security: max-age=300; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+```
+
+**HSTS is deliberately 5 minutes.** It shipped at a year first, which was the
+wrong order: HSTS is cached **by the browser**, so a max-age you regret cannot
+be withdrawn — shortening the header only helps people who come back and get
+the new one; anyone holding the old value keeps it for its full term. A year of
+that is a year of no plain HTTP on any subdomain, `mail.coolstuffwithcoco.com`
+included.
+
+The ramp, and it is the only reversible order: **300 → 86400 → 31536000**,
+raised on purpose at each step once nothing has broken.
+
+**No CSP.** `next.config.ts` documents what a working one has to allow — the
+`beforeInteractive` consent snippet needs a nonce, and Clarity/GA4/GTM/fbq all
+need naming. Half-doing it would take analytics down silently, which is exactly
+the failure mode that already cost a day on the GTM install.
+
+---
+
+## Gotchas added to the list
+
+- **`pkill -f` does not match `next start` on Windows.** A stale server held
+  port 3210 and served an old build, which made an early "control is
+  byte-identical" check meaningless — it was comparing a build against itself.
+  Kill by walking `Win32_Process` and matching `CommandLine`, and re-verify
+  after a restart. This invalidated one verification pass before it was caught.
+- **`next start` pins the routes manifest at boot.** New routes 404 until
+  restart, even after a successful build.
+- **Lighthouse runs batched in one shell contend for CPU.** The second and
+  third runs in a batch reported inflated FCP. Run them one at a time, warm
+  each route first, and re-run anything surprising before believing it.
+- **A `<dl>` with a nested wrapper div is invalid**, not merely unusual. One
+  `<div>` layer holding dt/dd groups is allowed; a second layer, or a `<p>`,
+  is not.
+- **Node 22's `--experimental-strip-types` can import the real `.ts` sources**,
+  which is how `check:costs` asserts against live `COSTS` data rather than a
+  fixture copy.
+- **Bash heredocs and `python -c` keep eating quotes on this machine.** Write
+  the script or the content to a file first. This bit three times across the
+  session.
+
+---
+
+## Test state
+
+| Suite | Result |
+|---|---|
+| `npx tsc --noEmit` | clean |
+| `npm run lint` | clean |
+| `npm run build` | clean, 23 routes |
+| `npm run check:tags` | 14/14 |
+| `npm run check:costs` | 22/22 — **new** |
+| `npm run test:api -- --dry` | 17/17 |
+| `npm run test:traffic` | 19/19 |
+| Security headers | 5/5 on pages and API routes |
+| TODO / Placeholder / ILLUSTRATION sweep | clean across all 11 rendered routes |
+| Control pages vs pre-Phase-2 build | identical apart from Next's build id |
+
+**`npm run check:costs` is new.** `CostChart` parses the guide's printed range
+strings for its bar widths rather than duplicating them as numbers, because
+`guides.ts` says the guide is the source of truth and the duplicate nobody
+reads is the one that goes stale. An unparseable row loses its bar and keeps
+its text — a silent failure, so this makes it loud. 22 assertions, including
+every live `COSTS` row. Run it after touching `COSTS`.
+
+---
+
+## Still open
+
+### Only Eli can check these
+
+- **Is the Meta Pixel actually installed?** `analytics/track.ts` calls
+  `window.fbq?.(…)` but the repo contains no Pixel base code. If it isn't in
+  the GTM container, every Pixel call silently no-ops, CAPI is firing with no
+  browser-side pair, and `event_id` deduplication has nothing to dedupe
+  against. Five-minute check in GTM, and it's half the conversion tracking.
+- **Are `UPSTASH_REDIS_REST_URL` / `_TOKEN` set in Production?**
+  `lib/rateLimit.ts` logs a warning and **fails open** — if they're missing,
+  rate limiting silently doesn't exist.
+- **Gate Clarity in GTM.** The remaining blocker on the cookie-banner job, and
+  on EU/UK traffic.
+
+### Before merging to `main`
+
+- **Turn off Vercel Authentication or use a Share link.** Chase cannot open
+  either preview URL — both return `302 → Login – Vercel` on every path.
+- **Watch GHL's bounce and complaint rate for 48 hours** after the merge.
+  Delivery is email-only now and the sending domain is days old.
+  `SHOW_ON_PAGE_DOWNLOAD` in `lib/content/library.ts` restores the download in
+  one line.
+- **Raise HSTS to 86400** once nothing has broken, then to a year.
+
+### Content decisions, flagged not taken
+
+- **The guide promises six Library titles the site doesn't list.** Page 12 of
+  the Decode PDF says: *"Six guides covering dental health, flat-face care,
+  apartment living, nutrition myths, puppy foundations and senior mobility.
+  Available on the thank-you page after your download."* `LIBRARY_V1` lists two
+  different ones. A subscriber can read both and notice.
+- **The guide cover art is bubblegum pink**, and on the variants it is now the
+  most prominent pink thing on the page — directly against Chase's "speak to
+  both audiences" note, which the page washes now honour and the artwork does
+  not.
+- **The guide PDFs still contain 19 visible `ILLUSTRATION` placeholders** — 13
+  across 11 of Decode's 12 pages, 6 in Vet Bill. Subscribers receive those
+  today. It is the same complaint Eli raised about the site, and it matters
+  more: the product is the thing missing its illustrations.
+
+### Carried forward
+
+- Mark `generate_lead` as a key event in the GA4 UI.
+- Designed OG artwork.
+- Everything in `docs/LEGAL-REVIEW.md` — entity name and governing law still
+  blank, refund mechanics still unverified against a checkout.
+- Flip the consent default to denied for EEA/UK, once the region signal is
+  wired from the edge.
+
+---
+
+# Session 6 - 2026-09-09 (branch `staging`)
+
+The variant Coco bands were founder bios. Eli's note: on a landing page whose
+only job is to make someone want the guide, that is close to the weakest thing
+that could occupy the space - it should carry content.
+
+Two renders were supplied (`public/decode.png`, `public/vetbil.png`) and split
+into five slots. Full prompt record, including what had to be adapted:
+**`docs/specs/variant-band-image-prompts.md`**.
+
+## Built
+
+- **`BodyLanguageDiagram`** on `/decode/b` - the R.E.A.D. method with two of
+  its four steps pinned onto Coco. Replaces `MeetCoco`.
+- **`PreventableCompact`** on `/vetbill/b` - the preventable five as compact
+  rows beside the bandaged-paw render, with the three props as a kit row
+  underneath. Replaces `MeetCoco`.
+- **`FactChips`** - the one genuinely shared piece of `MeetCoco`. The section
+  shell around it is four classes and is better duplicated than abstracted.
+- `MeetCoco` deleted. Its founder copy still exists on the home page in
+  `AboutCoco`, which is where it belongs.
+
+**`READ_METHOD` lifted from `ReadMethod.tsx` into `guides.ts`.** It was a
+module-local const with one consumer and now has two; two copies of
+guide-verbatim wording is how a page ends up contradicting the PDF someone
+just downloaded. That touches a file the control renders - verified below.
+
+**`CHEAT_SHEET_COUNT` added**, and it settles a contradiction that was live on
+one page: the fact chip and the grid heading on `/decode/b` both said 18 (the
+signal/meaning pair count) while the quiz payoff said "twenty-odd", which is
+only true counting the 5 calming signals as well. Both defensible, which is
+the worst kind of inconsistency. One derived number, 23, quoted everywhere.
+The quiz's visible copy was already correct and is unchanged.
+
+## Two things measured rather than guessed
+
+**Where the pins go.** Alpha-profiled the diagram render: silhouette fills
+x 13-85%, y 9-93%, and the body occupies x 5-88% continuously from y 37% to
+y 92%. The only genuinely empty region is the top-left corner, so floating
+four labels over the image collides with the dog at every width. Hence
+numbered pins plus a real text list - which also keeps the labels as DOM text
+and satisfies the rule `CostChart` set: the visual is a second reading, never
+the only one.
+
+**Where the props go.** They were absolutely positioned over Coco first and it
+was wrong - the asset is trimmed to its alpha bbox, so she fills the box and
+every position inside 0-100% lands on the dog. The wrap roll sat across her
+muzzle and read as her eating it. Profiling found exactly one prop-sized empty
+region inside her silhouette (x 4-29%, y 38-62%); one prop fits, three do not.
+So the premise was wrong rather than the coordinates, and they became a row
+underneath - which reads as a kit, which is what they are.
+
+## The tail, and why not having one is fine
+
+The render has no visible tail, which step A names first. Not re-rolled: the
+step's own second half says "the tail gets the attention but posture tells the
+real story", so pinning posture is closer to the guide than pinning a tail.
+Client confirmed - "Coco's don't have long tail either way."
+
+## Assets
+
+Both renders arrived 1024x1024 with 55-157px of dead transparent margin per
+edge. All five slots are trimmed to their alpha bbox and their `w`/`h`
+re-probed from the trimmed files, because `cocoHero` already taught us what
+untrimmed padding costs. The manifest header's old step 3 - "nothing else,
+aspect ratios are already reserved" - was wrong and is now corrected in place.
+
+The vet-bill render came back as one frame holding Coco plus three props. Split
+by measuring an empty alpha gutter at x 617-694 and row-profiling the prop
+column, not by eyeballing boxes.
+
+Source renders moved to `docs/specs/source-renders/` - out of `/public/`,
+which is web-served, but preserved as the only copies.
+
+## Test state
+
+| Check | Result |
+|---|---|
+| tsc, lint, build | clean |
+| `check:tags` | 14/14 |
+| `check:costs` | 22/22 |
+| `test:api -- --dry` | 17/17 |
+| `test:traffic` | 19/19 |
+| Lighthouse a11y, both variants | **100 / 100** |
+| TODO / Placeholder / ILLUSTRATION sweep | clean, 11 routes |
+| Control HTML before vs after | **byte-identical** |
+
+The control diff is the one that mattered: `READ_METHOD` moving out of
+`ReadMethod.tsx` is the only change touching a file `/decode` renders. Captured
+`/decode` and `/vetbill` from a build of the stashed tree, then from the new
+one - identical once Next's build id is normalised.
+
+Words: `/decode/b` 353 to 430, `/vetbill/b` 767 to 910. Both grew on purpose.
+`/vetbill/b`'s compliance share drops from 51% to 43% because the
+non-compliance half finally has something in it other than a bio.
+
+## Still open
+
+Unchanged from Session 5 - Meta Pixel check in GTM, Upstash env vars in
+Production, gating Clarity in GTM, Vercel Authentication on the previews.
+
+New:
+
+- **The guide-PDF illustrations are in progress** and are a separate job:
+  `docs/illustrations/CTWC illustration prompts.md` plus 18 generated JPGs
+  (12 decode, 6 vetbill). Its style block is flat vector children's-book
+  illustration, not the site's soft 3D renders, which is legitimate for print
+  interiors.
+
+  **Its palette is nearly the site's but not identical** - `#E8877D` vs
+  `#F4837E` coral, `#F4F0E9` vs `#FDF9F5` cream, plus mint/blue/gold values
+  that are not in `globals.css` at all. Two almost-matching corals across a
+  product and the page selling it reads as a mistake rather than a choice.
+  Worth reconciling before those go into a PDF the site quotes.
+- The three motion poses (`play-bow`, `loose-wag`, `zoomies`) are prompted and
+  ungenerated - the diagram took the slot they were for.
