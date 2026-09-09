@@ -144,26 +144,38 @@ export const BRAND = {
   },
 
   /* ---- Guide covers -----------------------------------------------------
-     Designed SVG stand-ins, drawn in the locked palette — not labelled grey
-     boxes. They read as real covers at thumbnail size, which is the only size
-     they ever appear at on the site.
+     The real thing now: page 1 of each illustrated guide, rendered at 120dpi.
+     The designed SVG stand-ins are gone — nothing referenced them once these
+     landed, so they were deleted rather than left to rot in /public.
 
-     TODO(Eli): swap for the real PDF cover art when it exists. Change the
-     filename to .jpg/.png and keep w/h at 800×1035 (A-series-ish 1:1.294) or
-     update both numbers together.
+     RENDERED FROM THE PDF, NOT SCREENSHOTTED. Two screenshots of these same
+     pages were tried first and carried three defects a re-render doesn't: a
+     1px ink line down the left edge of the decode one only (which doubles
+     BookletMockup's own border and sits under its spine gradient),
+     inconsistent crops so the two covers were different shapes side by side
+     on the home page, and 602px against a 320px placement that wants 640 at
+     2x.
+
+     120dpi is deliberate: 1020px covers the largest placement (`w-80`, 320px
+     CSS) at 3x. Letter at 120dpi is 1020×1320 — aspect 0.7727, which is what
+     the 800×1035 reservation was approximating, so the swap costs no shift.
+
+     If the guides are re-cut, re-render rather than screenshot, and re-probe
+     w/h: BrandImage passes these straight to next/image as width/height, and
+     a lying value here is what caused the home page's 0.004 CLS.
      ---------------------------------------------------------------------- */
   coverDecode: {
-    file: "cover-decode.svg",
-    w: 800,
-    h: 1035,
+    file: "decode-cover.png",
+    w: 1020,
+    h: 1320,
     alt: "Decode Your Dog — guide cover",
     note: "Cover: Decode Your Dog",
     ready: true,
   },
   coverVetbill: {
-    file: "cover-vetbill.svg",
-    w: 800,
-    h: 1035,
+    file: "vet-bill-cover.png",
+    w: 1020,
+    h: 1320,
     alt: "The $1,000 Vet Bill — guide cover",
     note: "Cover: The $1,000 Vet Bill",
     ready: true,

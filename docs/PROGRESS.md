@@ -1363,3 +1363,75 @@ New:
   Worth reconciling before those go into a PDF the site quotes.
 - The three motion poses (`play-bow`, `loose-wag`, `zoomies`) are prompted and
   ungenerated - the diagram took the slot they were for.
+
+---
+
+# Session 7 - 2026-09-10 (branch `staging`)
+
+## The guide covers are real now
+
+`coverDecode` and `coverVetbill` pointed at `cover-decode.svg` /
+`cover-vetbill.svg` - designed stand-ins, carrying a `TODO(Eli)` to swap in
+the real cover art once the guides were illustrated. They are, so they're
+swapped: `decode-cover.png` and `vet-bill-cover.png`, both 1020x1320.
+
+**Rendered from page 1 of the illustrated PDFs, not screenshotted.** Two
+screenshots of those same pages were dropped in first. They were the right
+artwork and the wrong asset, in three measurable ways:
+
+| | decode | vet bill |
+|---|---|---|
+| screenshot | 602x776, aspect 0.7758 | 671x849, aspect 0.7903 |
+| left edge | **1px ink line, all 776 rows** | clean |
+| render | 1020x1320, 0.7727 | 1020x1320, 0.7727 |
+
+- The stray line matters because `BookletMockup` draws its own 2px ink border
+  and lays the spine gradient over the left 7%. A dark line 1px inside that
+  border, on one side only, reads as a doubled and misaligned edge.
+- Two different aspects meant two different shapes side by side in
+  `GuideSplit` on the home page.
+- 602px is short for the largest placement: `/decode/b` renders the booklet at
+  `w-80`, which is 320px CSS and wants 640 at 2x.
+
+120dpi gives 1020px, which covers 320px CSS at 3x. Letter at that dpi is
+1020x1320 - aspect 0.7727, which is what the old 800x1035 reservation was
+approximating, so the swap costs no layout shift. Both files verified RGB with
+all four edges uniform to 0.
+
+The SVGs are deleted. Nothing referenced them once the PNGs landed, and an
+unreferenced asset in `/public` still ships in the deploy.
+
+`BookletMockup`'s docblock had a whole section titled "NOT USING THE REAL PDF
+COVER, DELIBERATELY", and a note that the covers are 3KB SVGs. Both were true
+and are now false, so both are corrected. The component itself needed no
+change - which was the point of building it over a manifest slot.
+
+## Test state
+
+`tsc --noEmit` clean, `eslint` clean, `next build` clean. No GHL sends.
+
+## Still open
+
+Unchanged from Session 6, plus - from the email templates, which are modified
+but deliberately **not committed**:
+
+- **Mailgun's tracking host serves plain `http` with no certificate.**
+  `email.mail.coolstuffwithcoco.com` resolves (CNAME to `mailgun.org` is live)
+  but `https://` on it fails the TLS name check, and the panel shows Tracking
+  protocol `http`, certificate `None`. So every click-tracked link and every
+  unsubscribe link ships as `http://` on a subdomain of the brand. Fix is
+  Domain settings -> Tracking protocol -> HTTPS; Let's Encrypt validates over
+  the CNAME that already exists.
+- **Do that before raising HSTS.** The comment in `next.config.ts` claimed
+  `includeSubDomains` covers `mail.coolstuffwithcoco.com`. Measured, it does
+  not - the header only ships on `www` (so it reaches `*.www.`), and the apex
+  serves Vercel's own `max-age=63072000` with no `includeSubDomains`. The
+  comment is corrected. The hazard is real though: a policy that did cover it,
+  while tracking is http-only, would force-upgrade those links into a hard TLS
+  failure in emails that sit in inboxes for years.
+- **Blank both Mailgun unsubscribe template fields.** The templates now carry
+  `%unsubscribe_url%` themselves; Mailgun does not suppress its appended
+  footer just because the body has the variable.
+- Does the postal address need `Ste 102 PMB 457`? Form 1583 lists the PMB.
+- Mailgun's account name is `The Chaseyrita, LLC` - possibly the legal entity
+  `docs/LEGAL-REVIEW.md` is waiting on.

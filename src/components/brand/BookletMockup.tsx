@@ -14,8 +14,9 @@ type Props = {
    * absence of `loading="lazy"`, which next/image would otherwise put on an
    * image the visitor can already see.
    *
-   * It costs almost nothing to be wrong about here: the covers are 3KB SVGs
-   * and the preload lands at ~19ms at Low priority.
+   * It costs almost nothing to be wrong about here: next/image serves these
+   * resized and re-encoded, so the bytes on the wire at these sizes are tiny
+   * whatever the source PNG weighs.
    */
   priority?: boolean;
   className?: string;
@@ -56,13 +57,17 @@ type Props = {
  * orchestrated moment on these pages is already the hero's load sequence.
  *
  * ---------------------------------------------------------------------------
- * NOT USING THE REAL PDF COVER, DELIBERATELY
+ * NOW THE REAL PDF COVER
  * ---------------------------------------------------------------------------
- * Page 1 of each guide is exactly the reserved 800×1035 aspect (0.773), so the
- * real cover would drop in with zero CLS — but it currently has the word
- * ILLUSTRATION printed across it. The SVG stand-in is the better asset until
- * the guides are finished. When they are, swap the file in `manifest.ts` and
- * this component needs no change.
+ * It used to be an SVG stand-in, because page 1 still had the word
+ * ILLUSTRATION printed across it. The guides are illustrated now, so
+ * `manifest.ts` points at a render of page 1 and this component needed no
+ * change — which was the point of building it over the manifest slot.
+ *
+ * Two things here now depend on the cover art rather than on the SVG, and
+ * both are why the render is a full page with its margins intact:
+ * `overflow-hidden` plus the 2px ink border assume the art has NO border of
+ * its own, and the spine gradient assumes the left edge is quiet.
  *
  * Server component. No JS.
  */
