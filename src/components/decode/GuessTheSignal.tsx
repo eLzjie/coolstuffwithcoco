@@ -216,10 +216,16 @@ export function GuessTheSignal({ wash = "bg-bubblegum" }: Props = {}) {
                         "About thirty" was from the brief's description, not a
                         count of the real file — and it was carrying its own
                         TODO admitting so. Counted: the cheat sheet on page 12
-                        lists 23 signals (6 face, 6 body, 6 weird, 5 calming),
-                        three of which are the ones shown here. So twenty-odd
-                        more is true, and it sells the cheat sheet, which the
-                        guide itself says is the page people keep.
+                        lists 23 things (18 signal/meaning pairs across face,
+                        body and weird stuff, plus 5 calming signals), three of
+                        which are the ones shown here. So twenty-odd more is
+                        true, and it sells the cheat sheet, which the guide
+                        itself says is the page people keep.
+
+                        That 23 is `CHEAT_SHEET_COUNT` in guides.ts now, and
+                        `/decode/b` quotes it rather than counting the pairs
+                        alone — which is how that page ended up saying 18 in
+                        two places and implying 23 here.
                       */}
                       <p className="t-h3">
                         Twenty-odd more, all on one page for the fridge.

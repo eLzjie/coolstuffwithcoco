@@ -4,11 +4,11 @@ import { BrandLockup } from "@/components/brand/BrandLockup";
 import { CaptureSlot } from "@/components/forms/CaptureSlot";
 import { Footer } from "@/components/layout/Footer";
 import { ContentsStrip } from "@/components/shared/ContentsStrip";
-import { MeetCoco } from "@/components/shared/MeetCoco";
 import { FloatingCta } from "@/components/shared/FloatingCta";
 import { ViewContent } from "@/components/shared/ViewContent";
 import { CallNowTable } from "@/components/vetbill/CallNowTable";
 import { CostChart } from "@/components/vetbill/CostChart";
+import { PreventableCompact } from "@/components/vetbill/PreventableCompact";
 import { COSTS, VETBILL, VETBILL_STATS } from "@/lib/content/guides";
 
 export const metadata: Metadata = {
@@ -151,11 +151,18 @@ export default function VetBillVariantB() {
         </section>
 
         {/*
-          Coco, moved down out of the hero — Chase's instruction. Counts are
-          derived from COSTS and VETBILL.chapters rather than typed, so they
-          cannot drift away from the guide.
+          Coco, moved down out of the hero — Chase's instruction. She has a
+          bandaged paw and is fine, next to the five preventable emergencies
+          and what heads each one off.
+
+          `Preventable` was cut from this variant while trimming words, and
+          its own docblock warned against exactly that: without it the page is
+          three frightening numbers, a triage table and a cost chart, with
+          nothing a reader can do. This puts the protective half back.
+
+          Counts derived from COSTS and VETBILL.chapters, never typed.
         */}
-        <MeetCoco
+        <PreventableCompact
           facts={[
             `${COSTS.length} emergency cost ranges`,
             `${VETBILL.chapters.length} chapters`,

@@ -8,11 +8,16 @@
  * TO SWAP IN REAL ASSETS:
  *   1. Drop the file into /public/brand/ using exactly the `file` name below.
  *   2. Flip `ready` to true for that slot.
- *   3. Nothing else. Aspect ratios are already reserved, so CLS stays 0.
+ *   3. RE-PROBE the real dimensions and update `w`/`h` to match the file
+ *      exactly.
  *
- * Do not change `w`/`h` when swapping — they reserve layout space. If the real
- * asset has a different aspect ratio, update both numbers together and re-check
- * the section it appears in.
+ * Step 3 used to read "nothing else — aspect ratios are already reserved".
+ * That was wrong and it bit us: `cocoHero` was declared 1024x1280 against an
+ * 815x1087 file, the browser reserved a 0.80 box from the attributes and
+ * reflowed to the real 0.75 on load, and that was the home page's stubborn
+ * 0.004 CLS. `next/image` also builds its srcset from these numbers, so
+ * claiming a size the file does not have asks for candidates that cannot
+ * exist. If the crop changes, re-probe and update BOTH numbers.
  */
 
 export type AssetSlot = {
@@ -161,6 +166,64 @@ export const BRAND = {
     h: 1035,
     alt: "The $1,000 Vet Bill — guide cover",
     note: "Cover: The $1,000 Vet Bill",
+    ready: true,
+  },
+
+  /* ---- Variant-page illustrations ---------------------------------------
+     Delivered 2026-09-09 as two 1024x1024 transparent renders in /public/.
+     Split and trimmed into the five slots below — the vet-bill render came
+     back as one frame holding Coco plus three props, and separate files let
+     the page arrange them instead of being stuck with a baked composition.
+
+     ALL FIVE ARE ALPHA CUT-OUTS, which is a deliberate break from the six
+     prompt-generated stills in /public/ad/. Those bake a flat brand wash and
+     ship as JPG; these composite over a live CSS wash, so they are PNG and
+     their contact shadow is drawn in code, not baked.
+
+     Every one is trimmed to its alpha bounding box. The source renders
+     carried 55-157px of dead transparent margin per edge, and `cocoHero`
+     already taught us what that costs: it read smaller than its box, and a
+     w/h that disagreed with the file was the source of the home page's
+     stubborn 0.004 CLS. w/h below were re-probed from the trimmed files.
+     ---------------------------------------------------------------------- */
+  cocoDiagram: {
+    file: "coco-french-bulldog-body-language-diagram.png",
+    w: 730,
+    h: 860,
+    alt: "Coco standing side-on, ears up, showing her whole body",
+    note: "DIAGRAM — standing pose carrying the body-language pins",
+    ready: true,
+  },
+  cocoBandaged: {
+    file: "coco-french-bulldog-bandaged-paw-recovering.png",
+    w: 550,
+    h: 884,
+    alt: "Coco sitting calmly with a light blue bandage on one front paw",
+    note: "VETBILL — recovering and fine. Not a sympathy shot.",
+    ready: true,
+  },
+  propFirstAidKit: {
+    file: "prop-pet-first-aid-kit.png",
+    w: 264,
+    h: 286,
+    alt: "",
+    note: "PROP — coral first-aid pouch. Decorative, always aria-hidden.",
+    ready: true,
+  },
+  propContactsCard: {
+    file: "prop-emergency-contacts-card.png",
+    w: 256,
+    h: 188,
+    alt: "",
+    note: "PROP — blank contacts card and pen. Decorative, aria-hidden.",
+    ready: true,
+  },
+  propVetWrapRoll: {
+    file: "prop-vet-wrap-roll.png",
+    w: 275,
+    h: 200,
+    alt: "",
+    note: "PROP — roll of sky vet wrap. Decorative, aria-hidden.",
     ready: true,
   },
 

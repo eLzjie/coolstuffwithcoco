@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { BookletMockup } from "@/components/brand/BookletMockup";
 import { BrandLockup } from "@/components/brand/BrandLockup";
+import { BodyLanguageDiagram } from "@/components/decode/BodyLanguageDiagram";
 import { GuessTheSignal } from "@/components/decode/GuessTheSignal";
 import { SignalGrid } from "@/components/decode/SignalGrid";
 import { CaptureSlot } from "@/components/forms/CaptureSlot";
 import { Footer } from "@/components/layout/Footer";
 import { ContentsStrip } from "@/components/shared/ContentsStrip";
-import { MeetCoco } from "@/components/shared/MeetCoco";
 import { FloatingCta } from "@/components/shared/FloatingCta";
 import { ViewContent } from "@/components/shared/ViewContent";
-import { CHEAT_SHEET, DECODE } from "@/lib/content/guides";
+import { CHEAT_SHEET_COUNT, DECODE } from "@/lib/content/guides";
 
 export const metadata: Metadata = {
   title: DECODE.title,
@@ -186,17 +186,17 @@ export default function DecodeVariantB() {
         {/* ================= BELOW THE FOLD ================= */}
 
         {/*
-          Coco, moved down from the hero — Chase's instruction. She's the brand
-          and she's why this doesn't read like a content farm, but she is not
-          what a visitor needs in the first 745px.
+          Coco, moved down from the hero — Chase's instruction. She is no
+          longer here to be looked at: this is the R.E.A.D. method with two of
+          its four steps pinned onto her. Eli's note was that the band should
+          carry content from the guide rather than a founder bio.
 
           Counts are derived, never typed: CHEAT_SHEET is the guide's page-12
-          card and DECODE.chapters is its contents. Editing the guide data
-          moves these numbers with it.
+          card and DECODE.chapters is its contents.
         */}
-        <MeetCoco
+        <BodyLanguageDiagram
           facts={[
-            `${CHEAT_SHEET.reduce((n, g) => n + g.rows.length, 0)} signals, one page`,
+            `${CHEAT_SHEET_COUNT} signals, one page`,
             `${DECODE.chapters.length} chapters`,
             "Free, no card",
           ]}
@@ -218,7 +218,7 @@ export default function DecodeVariantB() {
               id="grid-heading"
               className="reveal-heading t-display-l max-w-[20ch] text-ink"
             >
-              Eighteen signals, one page
+              {CHEAT_SHEET_COUNT} signals, one page
             </h2>
             <p className="t-lead mt-4 text-ink-muted">
               This is the card the guide tells you to stick on the fridge.

@@ -1244,3 +1244,122 @@ every live `COSTS` row. Run it after touching `COSTS`.
   blank, refund mechanics still unverified against a checkout.
 - Flip the consent default to denied for EEA/UK, once the region signal is
   wired from the edge.
+
+---
+
+# Session 6 - 2026-09-09 (branch `staging`)
+
+The variant Coco bands were founder bios. Eli's note: on a landing page whose
+only job is to make someone want the guide, that is close to the weakest thing
+that could occupy the space - it should carry content.
+
+Two renders were supplied (`public/decode.png`, `public/vetbil.png`) and split
+into five slots. Full prompt record, including what had to be adapted:
+**`docs/specs/variant-band-image-prompts.md`**.
+
+## Built
+
+- **`BodyLanguageDiagram`** on `/decode/b` - the R.E.A.D. method with two of
+  its four steps pinned onto Coco. Replaces `MeetCoco`.
+- **`PreventableCompact`** on `/vetbill/b` - the preventable five as compact
+  rows beside the bandaged-paw render, with the three props as a kit row
+  underneath. Replaces `MeetCoco`.
+- **`FactChips`** - the one genuinely shared piece of `MeetCoco`. The section
+  shell around it is four classes and is better duplicated than abstracted.
+- `MeetCoco` deleted. Its founder copy still exists on the home page in
+  `AboutCoco`, which is where it belongs.
+
+**`READ_METHOD` lifted from `ReadMethod.tsx` into `guides.ts`.** It was a
+module-local const with one consumer and now has two; two copies of
+guide-verbatim wording is how a page ends up contradicting the PDF someone
+just downloaded. That touches a file the control renders - verified below.
+
+**`CHEAT_SHEET_COUNT` added**, and it settles a contradiction that was live on
+one page: the fact chip and the grid heading on `/decode/b` both said 18 (the
+signal/meaning pair count) while the quiz payoff said "twenty-odd", which is
+only true counting the 5 calming signals as well. Both defensible, which is
+the worst kind of inconsistency. One derived number, 23, quoted everywhere.
+The quiz's visible copy was already correct and is unchanged.
+
+## Two things measured rather than guessed
+
+**Where the pins go.** Alpha-profiled the diagram render: silhouette fills
+x 13-85%, y 9-93%, and the body occupies x 5-88% continuously from y 37% to
+y 92%. The only genuinely empty region is the top-left corner, so floating
+four labels over the image collides with the dog at every width. Hence
+numbered pins plus a real text list - which also keeps the labels as DOM text
+and satisfies the rule `CostChart` set: the visual is a second reading, never
+the only one.
+
+**Where the props go.** They were absolutely positioned over Coco first and it
+was wrong - the asset is trimmed to its alpha bbox, so she fills the box and
+every position inside 0-100% lands on the dog. The wrap roll sat across her
+muzzle and read as her eating it. Profiling found exactly one prop-sized empty
+region inside her silhouette (x 4-29%, y 38-62%); one prop fits, three do not.
+So the premise was wrong rather than the coordinates, and they became a row
+underneath - which reads as a kit, which is what they are.
+
+## The tail, and why not having one is fine
+
+The render has no visible tail, which step A names first. Not re-rolled: the
+step's own second half says "the tail gets the attention but posture tells the
+real story", so pinning posture is closer to the guide than pinning a tail.
+Client confirmed - "Coco's don't have long tail either way."
+
+## Assets
+
+Both renders arrived 1024x1024 with 55-157px of dead transparent margin per
+edge. All five slots are trimmed to their alpha bbox and their `w`/`h`
+re-probed from the trimmed files, because `cocoHero` already taught us what
+untrimmed padding costs. The manifest header's old step 3 - "nothing else,
+aspect ratios are already reserved" - was wrong and is now corrected in place.
+
+The vet-bill render came back as one frame holding Coco plus three props. Split
+by measuring an empty alpha gutter at x 617-694 and row-profiling the prop
+column, not by eyeballing boxes.
+
+Source renders moved to `docs/specs/source-renders/` - out of `/public/`,
+which is web-served, but preserved as the only copies.
+
+## Test state
+
+| Check | Result |
+|---|---|
+| tsc, lint, build | clean |
+| `check:tags` | 14/14 |
+| `check:costs` | 22/22 |
+| `test:api -- --dry` | 17/17 |
+| `test:traffic` | 19/19 |
+| Lighthouse a11y, both variants | **100 / 100** |
+| TODO / Placeholder / ILLUSTRATION sweep | clean, 11 routes |
+| Control HTML before vs after | **byte-identical** |
+
+The control diff is the one that mattered: `READ_METHOD` moving out of
+`ReadMethod.tsx` is the only change touching a file `/decode` renders. Captured
+`/decode` and `/vetbill` from a build of the stashed tree, then from the new
+one - identical once Next's build id is normalised.
+
+Words: `/decode/b` 353 to 430, `/vetbill/b` 767 to 910. Both grew on purpose.
+`/vetbill/b`'s compliance share drops from 51% to 43% because the
+non-compliance half finally has something in it other than a bio.
+
+## Still open
+
+Unchanged from Session 5 - Meta Pixel check in GTM, Upstash env vars in
+Production, gating Clarity in GTM, Vercel Authentication on the previews.
+
+New:
+
+- **The guide-PDF illustrations are in progress** and are a separate job:
+  `docs/illustrations/CTWC illustration prompts.md` plus 18 generated JPGs
+  (12 decode, 6 vetbill). Its style block is flat vector children's-book
+  illustration, not the site's soft 3D renders, which is legitimate for print
+  interiors.
+
+  **Its palette is nearly the site's but not identical** - `#E8877D` vs
+  `#F4837E` coral, `#F4F0E9` vs `#FDF9F5` cream, plus mint/blue/gold values
+  that are not in `globals.css` at all. Two almost-matching corals across a
+  product and the page selling it reads as a mistake rather than a choice.
+  Worth reconciling before those go into a PDF the site quotes.
+- The three motion poses (`play-bow`, `loose-wag`, `zoomies`) are prompted and
+  ungenerated - the diagram took the slot they were for.

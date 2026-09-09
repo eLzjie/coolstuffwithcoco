@@ -11,9 +11,9 @@ just two pages.
 | Arm | Route | Indexed | In sitemap | Words in `<main>` |
 |---|---|---|---|---|
 | A (control) | `/decode` | yes | yes | 1,118 |
-| B (variant) | `/decode/b` | **no** | **no** | 353 |
+| B (variant) | `/decode/b` | **no** | **no** | 430 |
 | A (control) | `/vetbill` | yes | yes | 1,727 |
-| B (variant) | `/vetbill/b` | **no** | **no** | 767 |
+| B (variant) | `/vetbill/b` | **no** | **no** | 910 |
 
 **A is the page we built through August and September:** long, FAQ-rich,
 SEO-optimised, form at the very bottom. On `/decode` the email field sits
@@ -53,7 +53,9 @@ If the copy is worth testing too, that is a **third arm**, not an edit to B.
 | FAQ | yes (589 / 573 words) | **absent** |
 | Chapter blurbs | yes | replaced by `ContentsStrip` |
 | Cost data (`/vetbill`) | `<ul>` of ranges | `CostChart` bars |
-| Signal reference | quiz only | quiz + `SignalGrid` (18 pairs) |
+| Signal reference | quiz only | quiz + `SignalGrid` (23 items) |
+| R.E.A.D. method | 4 text cards | pinned onto a diagram of Coco |
+| Preventable five | full section | compact rows beside a recovering Coco |
 | Floating CTA | no | yes |
 | Capture wash | bubblegum | butter / sky |
 
@@ -187,14 +189,20 @@ traffic; that is an ad-platform job.
 
 ## Two things about `/vetbill/b` that look like problems and aren't
 
-**It misses the ~600-word target at 767 words.** Measured breakdown:
+**It misses the ~600-word target at 910 words.** Measured breakdown:
 
 | | Words | Share |
 |---|---|---|
-| Triage table + veterinary disclaimer | 303 | 40% |
-| "Ranges, not quotes" caveat + 4 sources | 90 | 12% |
-| **Compliance subtotal** | **393** | **51%** |
-| Everything else | 374 | |
+| Triage table + veterinary disclaimer | 303 | 33% |
+| "Ranges, not quotes" caveat + 4 sources | 90 | 10% |
+| **Compliance subtotal** | **393** | **43%** |
+| Everything else | 517 | |
+
+Both arms grew on 2026-09-09 when the founder-bio band was replaced with real
+guide content — `/decode/b` 353 to 430 (the R.E.A.D. method), `/vetbill/b`
+767 to 910 (the preventable five). That was deliberate: the note being answered
+was "the band should carry content", and a word target is a proxy for
+wordiness, not a goal in itself.
 
 Strip the compliance copy and what is left is comparable to `/decode/b`. That
 copy is **not** the wordiness the brief was complaining about, and it stays:

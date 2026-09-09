@@ -1,5 +1,6 @@
 import { Ambient } from "@/components/motion/Ambient";
 import { Reveal } from "@/components/motion/Reveal";
+import { READ_METHOD } from "@/lib/content/guides";
 
 /**
  * The R.E.A.D. method — Section 3 of the Decode guide.
@@ -54,30 +55,6 @@ import { Reveal } from "@/components/motion/Reveal";
  */
 type Props = { wash?: string };
 
-/** Verbatim from the guide, and the wording is deliberate. */
-const STEPS: Array<{ letter: string; title: string; body: string }> = [
-  {
-    letter: "R",
-    title: "Relax yourself first",
-    body: "Dogs read your stress before you read theirs. If you come in tense, you're now part of what they're reacting to.",
-  },
-  {
-    letter: "E",
-    title: "Eyes, ears, mouth",
-    body: "Scan the face as a whole and take the overall expression. One signal on its own tells you almost nothing.",
-  },
-  {
-    letter: "A",
-    title: "Assess the body",
-    body: "Tail height and stiffness, posture, and where their weight is sitting. The tail gets the attention but posture tells the real story.",
-  },
-  {
-    letter: "D",
-    title: "Decide",
-    body: "Comfortable, or do they need space? That's the whole question, and you're the one standing there.",
-  },
-];
-
 export function ReadMethod({ wash = "bg-mint" }: Props = {}) {
   return (
     <section
@@ -102,7 +79,7 @@ export function ReadMethod({ wash = "bg-mint" }: Props = {}) {
         </div>
 
         <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((step) => (
+          {READ_METHOD.map((step) => (
             <Reveal as="li" key={step.letter}>
               <div className="h-full rounded-2xl border-2 border-ink bg-paper p-6">
                 {/*
