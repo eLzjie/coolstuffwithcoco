@@ -184,6 +184,24 @@ body {
   letter-spacing: -0.018em;
 }
 
+/*
+  The answering line under .t-hero-compact.
+
+  .t-hero-echo was sized as ~0.7 of .t-hero, which is what keeps the h1
+  clearly leading. Pairing it with the smaller compact hero broke that ratio:
+  48px against 40px on desktop, 32 against 25.6 on mobile — 0.83 either way,
+  and the supporting line starts arguing with the headline it supports.
+
+  Same 0.7, measured against .t-hero-compact instead.
+*/
+.t-hero-echo-compact {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+  line-height: 1.05;
+  letter-spacing: -0.018em;
+}
+
 .t-display-l {
   font-family: var(--font-display);
   font-weight: 700;

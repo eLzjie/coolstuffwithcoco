@@ -88,7 +88,7 @@ export default function VetBillVariantB() {
                     <h1 className="t-hero-compact max-w-[18ch] text-ink">
                       {VETBILL.hook}
                     </h1>
-                    <p className="t-hero-echo mt-2 max-w-[18ch] text-ink/80">
+                    <p className="t-hero-echo-compact mt-2 max-w-[22ch] text-ink/80">
                       {VETBILL.subhook}
                     </p>
                   </div>
