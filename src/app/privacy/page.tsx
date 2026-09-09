@@ -139,9 +139,9 @@ export default function Privacy() {
           used: where you scroll, what you tap, and a replay of your visit so
           we can see where a page is confusing. Text you type into forms is
           masked before it leaves your browser, so your name, email and
-          anything you write to us are not in those recordings. See the
-          exception under &ldquo;Your choices&rdquo; below: Clarity is the one
-          thing our tracking notice does not yet switch off.
+          anything you write to us are not in those recordings. Clarity
+          loads through our tag manager rather than from this site, so the way
+          to stop it is your browser — see &ldquo;Your choices&rdquo; below.
         </li>
         <li>
           <strong>Vercel</strong> — hosting. Standard server logs.
@@ -241,19 +241,14 @@ export default function Privacy() {
           don&apos;t accidentally email you again.
         </li>
         <li>
-          <strong>Turn off tracking</strong> — there&apos;s a notice at the
-          bottom of the screen on your first visit with an{" "}
-          <strong>Accept</strong> and a <strong>Decline</strong> button, both
-          one tap. Declining stops the analytics and advertising cookies this
-          site sets. If you already chose and want to change it, clear the
-          browser storage listed above and the notice comes back.
-        </li>
-        <li>
-          <strong>The one exception, stated plainly</strong> — Declining does
-          not currently stop Microsoft Clarity, because it loads through our
-          tag manager rather than from this site. We&apos;re fixing that. Until
-          then, clearing your browser storage or using your browser&apos;s
-          tracking protection is what stops it.
+          <strong>Turn off tracking</strong> — this site doesn&apos;t show a
+          cookie prompt, so the controls are your browser&apos;s rather than
+          ours. Tracking protection or a content blocker stops the analytics
+          and advertising cookies described above, and clearing the storage
+          listed above removes whatever is already set. Both also stop
+          Microsoft Clarity, which our own settings never could — it loads
+          through our tag manager rather than from this site. If you&apos;d
+          rather we handled it, email us and we will.
         </li>
       </ul>
       <p>

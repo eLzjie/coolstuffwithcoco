@@ -29,17 +29,23 @@
  * honest mitigation is a targeting constraint rather than pretending otherwise:
  * do not send EU/UK traffic to these pages.
  *
- * BANNER SHIPPED 2026-09-09 (`components/consent/ConsentBanner.tsx`), so
- * `setConsent` finally has a caller and a visitor can actually decline. What
- * that changes and what it does not:
+ * BANNER REMOVED 2026-09-10 at Chase's request. It shipped 2026-09-09 and
+ * lasted a day. `setConsent` therefore has NO CALLER again — everything below
+ * still works, and nothing on the site invokes it.
  *
- *  - DECLINING NOW WORKS. It writes the gate, flips all four Google Consent
- *    Mode signals to denied, and `track()` stops firing. That was already
- *    plumbed; it just had no UI.
- *  - THE DEFAULT IS STILL GRANTED, which makes this an opt-OUT notice (a US
- *    posture) rather than GDPR consent. Flipping the default to denied is a
- *    business decision, not a technical one — it would suppress measurement
- *    for every visitor until they click, and that is Eli's call to make.
+ *  - DECLINING STILL WORKS, mechanically. It writes the gate, flips all four
+ *    Google Consent Mode signals to denied and stops `track()`. There is just
+ *    no UI that calls it, so no visitor can reach it.
+ *  - ANYONE WHO DECLINED IN THAT ONE DAY STAYS DECLINED. The stored value
+ *    outlives the banner: `CONSENT_DEFAULT_SNIPPET` reads it on every load, so
+ *    those visitors keep their denied defaults. Do not "clean up" that read.
+ *  - THE DEFAULT IS GRANTED, and with no banner that now means analytics and
+ *    advertising cookies set on every visit with no way to refuse. In the US
+ *    that is a defensible opt-out posture with no opt-out. For EEA/UK it is
+ *    the thing ePrivacy prohibits outright. See `docs/LEGAL-REVIEW.md`.
+ *  - RESTORING IT is one component plus one line in `app/layout.tsx`. The
+ *    deleted file is recoverable from commit 5e67afc, the last one before the
+ *    removal: `git show 5e67afc:src/components/consent/ConsentBanner.tsx`.
  *  - THE REGION SIGNAL IS STILL NOT WIRED. `x-vercel-ip-country` from a server
  *    component is how the default becomes denied for EEA/UK only, which is the
  *    shape that costs nothing in the US and complies in Europe.
