@@ -305,6 +305,21 @@ export function CaptureForm({ magnet, redirectTo, className }: Props) {
           lead_magnet: magnet,
           content_name: magnet,
           eventId: data.eventId,
+          /*
+            Which page the form was on. Needed because the split-test variants
+            share a magnet: `/decode` and `/decode/b` both submit
+            `magnet="decode"`, deliberately — a new LeadMagnet value would mean
+            a new GHL delivery tag, and delivery is triggered off that tag.
+
+            So the pathname is the only thing separating the two arms in GA4.
+            Without it every `generate_lead` is attributed to "decode" and the
+            test can't be read. `ga4Params` forwards `page_path` already.
+
+            Attribution on the CRM side is separate and already handled: utm.ts
+            records `landingPage` at first touch, which is what lands in the
+            contact's `landing_page` field.
+          */
+          page_path: window.location.pathname,
         });
       }
 

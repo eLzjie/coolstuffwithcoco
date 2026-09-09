@@ -7,11 +7,14 @@ type Props = {
   href?: string;
   label?: string;
   /**
-   * The element whose visibility hides the bar — the capture section. Passed
-   * as an id so this component never needs a ref threaded down through a
-   * server-rendered page.
+   * CSS selector for the elements whose visibility hides the bar — every
+   * capture section on the page.
+   *
+   * A selector rather than an id, because a page with a form above the fold
+   * AND a repeat form at the bottom has two of them, and ids can't be shared.
+   * Pass `"#get, #get-repeat"` for that shape.
    */
-  watchId?: string;
+  watch?: string;
 };
 
 /**
@@ -30,10 +33,16 @@ type Props = {
  * ---------------------------------------------------------------------------
  * Two elements suppress it, both observed by one IntersectionObserver:
  *
- *  - THE CAPTURE SECTION. If the real form is on screen, a floating button
- *    pointing at it is noise. This is also what keeps the bar off the consent
- *    line: the build spec requires that copy visible before submit, and the
- *    bar cannot cover it because the bar is gone whenever it's in view.
+ *  - EVERY CAPTURE SECTION, matched by selector. If a real form is on screen,
+ *    a floating button pointing at one is noise. This is also what keeps the
+ *    bar off the consent line: the build spec requires that copy visible
+ *    before submit, and the bar cannot cover it because the bar is gone
+ *    whenever a form is in view.
+ *
+ *    A selector and not an id, because the variant pages have TWO forms — one
+ *    above the fold and a repeat at the bottom. Watching only the first one
+ *    put the bar squarely over the second one's consent line, which is the
+ *    single thing this component was told not to do.
  *
  *  - THE FOOTER. The hotline numbers live down there. A fixed bar sitting over
  *    (888) 426-4435 while someone tries to read it in a panic is the single
@@ -62,15 +71,15 @@ type Props = {
 export function FloatingCta({
   href = "#get",
   label = "Get the free guide",
-  watchId = "get",
+  watch = "#get",
 }: Props) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     const targets = [
-      document.getElementById(watchId),
-      document.querySelector("footer"),
-    ].filter((el): el is HTMLElement => el !== null);
+      ...document.querySelectorAll(watch),
+      ...document.querySelectorAll("footer"),
+    ];
 
     if (targets.length === 0) return;
 
@@ -99,7 +108,7 @@ export function FloatingCta({
 
     for (const t of targets) io.observe(t);
     return () => io.disconnect();
-  }, [watchId]);
+  }, [watch]);
 
   return (
     <div

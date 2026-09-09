@@ -146,6 +146,31 @@ body {
 }
 
 /*
+  The split-test variants' hero headline.
+
+  Smaller than .t-hero deliberately. Variant B puts the whole form above the
+  fold at 390x844, and there the headline shares its row with the booklet
+  mockup — which leaves it a ~224px column. Measured: .t-hero's 40px mobile
+  size runs the locked 33-character headline to FIVE lines there, 192px of a
+  745px budget, and pushes the consent line under the fold.
+
+  At 32px it sets in three lines and the budget closes with room. Same family,
+  weight and tracking as .t-hero, so it reads as the same voice at a different
+  size — this is a measure problem, not a hierarchy one.
+
+  It exists as its own class rather than a `text-[2rem]` override because
+  .t-hero is declared outside any cascade layer and would win against a
+  Tailwind utility.
+*/
+.t-hero-compact {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+}
+
+/*
   The answering line on the right of the hero. Deliberately ~0.7 of .t-hero:
   both flanking blocks stay large enough to frame Coco, but the h1 clearly
   leads. Matching their sizes made the supporting line outweigh the headline.
