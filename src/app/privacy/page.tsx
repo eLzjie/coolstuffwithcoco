@@ -21,6 +21,7 @@ const UPDATED = "2026-09-08";
  *   CRM writes      src/lib/crm/ghl.ts
  *   Meta CAPI       src/lib/meta/capi.ts      (SHA-256 email, IP, UA, fbclid)
  *   GA4 + GTM       src/components/analytics/Tags.tsx
+ *   Clarity         installed in the GTM container, not in this repo
  *   consent mode    src/lib/analytics/consentMode.ts
  *   rate limiting   src/lib/rateLimit.ts      (IP in Upstash Redis)
  *
@@ -132,6 +133,13 @@ export default function Privacy() {
           you&apos;re using. It&apos;s how we know whether the guides are
           worth writing. We don&apos;t send Google your name, email or phone
           number.
+        </li>
+        <li>
+          <strong>Microsoft</strong> — Clarity, which records how pages get
+          used: where you scroll, what you tap, and a replay of your visit so
+          we can see where a page is confusing. Text you type into forms is
+          masked before it leaves your browser, so your name, email and
+          anything you write to us are not in those recordings.
         </li>
         <li>
           <strong>Vercel</strong> — hosting. Standard server logs.

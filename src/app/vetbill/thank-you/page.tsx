@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BrandImage } from "@/components/brand/BrandImage";
 import { BrandLockup } from "@/components/brand/BrandLockup";
 import { LibraryOffer } from "@/components/offer/LibraryOffer";
+import { SHOW_ON_PAGE_DOWNLOAD } from "@/lib/content/library";
 import { Footer } from "@/components/layout/Footer";
 import { HOTLINES, VETBILL } from "@/lib/content/guides";
 
@@ -13,10 +15,8 @@ export const metadata: Metadata = {
 /**
  * /vetbill thank-you — delivery first, offer second.
  *
- * Same structure and the same reasoning as the Decode thank-you page: this
- * page IS the delivery mechanism rather than a receipt, the confirmation band
- * is short so the offer starts inside the second screenful, and the email is
- * named as the backup channel it actually is.
+ * Same structure as the Decode thank-you page: a short confirmation band so
+ * the offer starts inside the second screenful, and email-only delivery.
  *
  * ---------------------------------------------------------------------------
  * WHAT DIFFERS HERE, AND WHY IT MUST
@@ -36,6 +36,27 @@ export const metadata: Metadata = {
  *    be a non-sequitur at best.
  *  - Nothing added to this page may read as clinical advice. There is still no
  *    veterinary sign-off on any of this content.
+ *
+ * ---------------------------------------------------------------------------
+ * EMAIL-ONLY. THE DOWNLOAD IS ONE BOOLEAN AWAY.
+ * ---------------------------------------------------------------------------
+ * Chase: "let's make them check their email — that's the point of getting them
+ * to opt in", and "let's just do a generic check-your-email sort of
+ * situation". So this page no longer carries the guide.
+ *
+ * That reverses the build spec's de-risking move. The full quote and the
+ * reasoning both ways live on SHOW_ON_PAGE_DOWNLOAD in
+ * lib/content/library.ts — read it before changing anything here, and watch
+ * the bounce rate for the first 48 hours.
+ *
+ * The download branch below is kept rather than deleted so the revert is that
+ * one constant. NEXT_PUBLIC_GUIDE_*_URL stays set for the same reason (the
+ * delivery emails hardcode the PDF links, so nothing else depends on it).
+ *
+ * What replaced the download is NOT nothing: a "didn't arrive?" path pointing
+ * at the promotions tab and /contact. On a days-old sending domain some of
+ * these emails will land badly, and the person that happens to needs somewhere
+ * to go that isn't the back button.
  */
 export default function VetBillThankYou() {
   const url = process.env.NEXT_PUBLIC_GUIDE_VETBILL_URL;
@@ -51,43 +72,49 @@ export default function VetBillThankYou() {
           <div className="shell grid items-center gap-6 pb-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
             <div>
               <h1 className="t-display-l max-w-[22ch] text-ink">
-                Here it is — grab it now.
+                Check your inbox.
               </h1>
 
               <p className="t-lead mt-4 max-w-[46ch] text-ink/85">
-                {VETBILL.title}, straight down. Save it to your phone, and do
-                the fill-in page on 12 tonight while nothing is wrong.
+                {VETBILL.title} is on its way from Coco right now — what&apos;s
+                urgent, what it costs, and the five you can head off.
               </p>
 
-              <div className="mt-6">
-                {url ? (
+              {/*
+                The promotions-tab nudge earns its place: the sending domain is
+                days old, and asking someone to drag the email across is the
+                single cheapest thing that improves whether the NEXT one
+                arrives.
+              */}
+              <p className="t-body mt-4 max-w-[46ch] text-ink/85">
+                If it&apos;s not there in a minute or two, check your
+                promotions tab — and dragging it into your main inbox genuinely
+                helps Coco reach you next time.
+              </p>
+
+              {SHOW_ON_PAGE_DOWNLOAD && url && (
+                <div className="mt-6">
                   <a
                     href={url}
                     className="btn-coral inline-flex min-h-11 items-center"
                     target="_blank"
                     rel="noopener"
                   >
-                    Download the guide
+                    Or grab it here now
                   </a>
-                ) : (
-                  <>
-                    <button type="button" className="btn-coral" disabled>
-                      Download the guide
-                    </button>
-                    <p className="t-small mt-3 max-w-[46ch] rounded-lg border-2 border-dashed border-ink/40 p-3 text-ink/80">
-                      <strong className="font-semibold">Placeholder</strong> —
-                      set NEXT_PUBLIC_GUIDE_VETBILL_URL in the environment and
-                      this becomes a working download. It must be set in
-                      PRODUCTION too, not just locally: the value is inlined at
-                      build time, so it also needs a redeploy.
-                    </p>
-                  </>
-                )}
-              </div>
+                </div>
+              )}
 
-              <p className="t-small mt-4 max-w-[46ch] text-ink/75">
-                A copy is on its way to your inbox as well. If it&apos;s not
-                there in a couple of minutes, check your promotions tab.
+              {/* Somewhere to go that isn't the back button. */}
+              <p className="t-small mt-5 max-w-[46ch] text-ink-muted">
+                Still nothing after a few minutes?{" "}
+                <Link
+                  href="/contact"
+                  className="underline decoration-2 underline-offset-4"
+                >
+                  Tell us and we&apos;ll send it straight over
+                </Link>
+                .
               </p>
             </div>
 

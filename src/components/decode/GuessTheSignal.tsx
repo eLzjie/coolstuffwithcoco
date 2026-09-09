@@ -23,8 +23,26 @@ import { Ambient } from "@/components/motion/Ambient";
  * the reveal is announced through an aria-live region so a screen reader user
  * gets the answer without needing to find it visually.
  *
- * TODO(Eli): verify all three signal explanations against the guide text.
- * They're standard body-language reads, but they're still claims.
+ * All three explanations were checked against `CTWCDecode YourDog V5.pdf` on
+ * 2026-09-08 — see the note above SIGNALS in lib/content/guides.ts, where
+ * every entry now carries `verify: false`. A stale TODO asking for that check
+ * used to sit here.
+ *
+ * ---------------------------------------------------------------------------
+ * MOBILE ORDER: THE INTERACTION COMES BEFORE THE PHOTO
+ * ---------------------------------------------------------------------------
+ * Client feedback: "it's hard to find or understand on mobile."
+ *
+ * Measured, and he was right. The photo used to be first in the DOM, so on a
+ * 390px phone the order was heading, then lead, then a 361px-tall image, then
+ * a caption, and only THEN the first tappable answer — roughly 1,950px down
+ * the page. The section looked like an illustrated paragraph rather than
+ * something you do.
+ *
+ * So the beat card is now first in source order and the photo second, with
+ * `lg:order-*` putting the photo back on the left at desktop widths. The photo
+ * is also much smaller on mobile. The interaction is the point; the photo
+ * supports it.
  */
 export function GuessTheSignal() {
   const reduce = useReducedMotion();
@@ -70,25 +88,26 @@ export function GuessTheSignal() {
         <h2 id="signals-heading" className="reveal-heading t-display-l max-w-[22ch] text-ink">
           Three of hers. Have a go.
         </h2>
+        {/*
+          An instruction, not a reassurance.
+
+          This read "No score, no email needed. Just see how you do." — which
+          the client crossed out, and rightly: on a page whose whole job is to
+          get an email, volunteering that no email is needed talks the visitor
+          out of the conversion. It also described what the section ISN'T
+          rather than telling anyone what to do.
+        */}
         <p className="t-lead mt-5 text-ink/75">
-          No score, no email needed. Just see how you do.
+          Three of Coco&apos;s. Tap what you think each one means.
         </p>
 
-        <div className="mt-12 grid items-start gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-          {/* Photo */}
-          <div className="mx-auto w-[min(74vw,22rem)] lg:w-full">
-            {/* One photo per signal, keyed off the signal id */}
-            <BrandImage
-              slot={`signal-${signal.id}` as BrandKey}
-              alt={signal.caption}
-              sizes="(max-width: 1024px) 74vw, 30vw"
-              className="w-full rounded-2xl border-2 border-ink/20"
-            />
-            <p className="t-small mt-3 text-ink/75">{signal.caption}</p>
-          </div>
-
-          {/* The beat */}
-          <div className="rounded-2xl border-2 border-ink/20 bg-paper p-6 sm:p-8">
+        <div className="mt-10 grid items-start gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-8">
+          {/*
+            The beat is FIRST in source order so mobile gets the interaction
+            immediately; `lg:order-2` moves it back to the right on desktop.
+            See the mobile-order note at the top of this file.
+          */}
+          <div className="rounded-2xl border-2 border-ink/20 bg-paper p-6 sm:p-8 lg:order-2">
             {/* Progress. A real sequence, so numbering is warranted here. */}
             <p className="t-small text-ink-muted">
               Signal {step + 1} of {SIGNALS.length}
@@ -147,28 +166,69 @@ export function GuessTheSignal() {
                   <p className="t-body text-ink/85">{signal.reveal}</p>
 
                   {!done ? (
-                    <button type="button" onClick={next} className="btn-coral mt-6">
-                      Next signal
-                    </button>
+                    /*
+                      Both actions on every beat, not just the last one.
+
+                      The guide CTA used to appear only after all three signals
+                      were answered, which meant a visitor who tried one and
+                      lost interest was never once offered the thing the page
+                      is selling. "Next signal" stays primary — finishing the
+                      set is still the better path — and the guide link sits
+                      beside it as a quieter way out.
+                    */
+                    <div className="mt-6 flex flex-wrap items-center gap-4">
+                      <button type="button" onClick={next} className="btn-coral">
+                        Next signal
+                      </button>
+                      <a
+                        href="#get"
+                        className="t-small min-h-11 underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+                      >
+                        Or just send me the guide
+                      </a>
+                    </div>
                   ) : (
                     <div className="mt-6 rounded-xl bg-butter p-5">
+                      {/*
+                        "About thirty" was from the brief's description, not a
+                        count of the real file — and it was carrying its own
+                        TODO admitting so. Counted: the cheat sheet on page 12
+                        lists 23 signals (6 face, 6 body, 6 weird, 5 calming),
+                        three of which are the ones shown here. So twenty-odd
+                        more is true, and it sells the cheat sheet, which the
+                        guide itself says is the page people keep.
+                      */}
                       <p className="t-h3">
-                        There are about thirty more of these in the guide.
+                        Twenty-odd more, all on one page for the fridge.
                       </p>
                       <p className="t-small mt-2 text-ink/75">
-                        {/* TODO(Eli): verify — "about thirty" is from the brief's
-                            description of the guide, not a count of the real file. */}
                         Including the ones that look like bad behaviour and
                         aren&apos;t.
                       </p>
                       <a href="#get" className="btn-coral mt-5">
-                        Get the guide
+                        Send me the guide
                       </a>
                     </div>
                   )}
                 </motion.div>
               )}
             </div>
+          </div>
+
+          {/*
+            Photo second, and much smaller on mobile — it was `min(74vw,22rem)`,
+            which rendered ~361px tall and pushed every answer button below the
+            fold. It is support, not the subject.
+          */}
+          <div className="mx-auto w-[min(52vw,13rem)] lg:order-1 lg:w-full">
+            {/* One photo per signal, keyed off the signal id */}
+            <BrandImage
+              slot={`signal-${signal.id}` as BrandKey}
+              alt={signal.caption}
+              sizes="(max-width: 1024px) 52vw, 30vw"
+              className="w-full rounded-2xl border-2 border-ink/20"
+            />
+            <p className="t-small mt-3 text-ink/75">{signal.caption}</p>
           </div>
         </div>
       </div>

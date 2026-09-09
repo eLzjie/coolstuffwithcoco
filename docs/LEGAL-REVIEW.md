@@ -90,19 +90,38 @@ symptom-tier content more strictly than general pet-care advice.
 Once a vet has reviewed it, delete the "hasn't been reviewed by a veterinarian"
 sentence from the butter panel — and only then.
 
-### 5. TCPA construction on the guide forms
+### 5. TCPA — NO LONGER IN SCOPE, as of 2026-09-09
 
-Phone is collected (optional) on the two guide forms, which brings the TCPA
-into scope. `src/lib/content/consent.ts` documents the four requirements the
-wording is built against and which mechanism satisfies each.
+**Phone collection was removed from both guide forms.** Client instruction:
+"we're asking too much, let's just do name and email". The forms now take first
+name and email only.
 
-Two things for counsel to confirm:
+That closes this item rather than answering it. The TCPA is triggered by
+collecting a number you might call or text; with no number collected there is
+nothing to construct consent around, and the disclosure is now a plain
+marketing-email one.
+
+**Two things that follow, both already done:**
+
+- `CONSENT_GUIDE.text` was rewritten — two of its four sentences described the
+  phone field, so leaving them would have been a dangling reference to
+  something the form no longer has.
+- `CONSENT_VERSION` was bumped to `2026-09-09.guide-v2`. Contacts captured
+  before that carry `guide-v1` and genuinely agreed to the phone-inclusive
+  wording; that record stays accurate and must not be rewritten.
+
+**What is still live, and why this section is kept rather than deleted:** the
+server still accepts a phone if one is posted, and `phone_number` still exists
+as a GHL custom field, so re-adding the field is a client-only change. It is
+not a free one. The TCPA reasoning is preserved in
+`src/lib/content/consent.ts` for whoever does that, and the questions that
+would need answering again are:
 
 - Whether the chosen state requires **prior express _written_ consent** for the
   contact types envisaged. A Feb 2026 Fifth Circuit decision (*Bradford v.
   Sovereign Pest Control*) read the federal statute as requiring only prior
   express consent for prerecorded calls, but state statutes are frequently
-  stricter, so the wording takes the safe construction.
+  stricter, so the old wording took the safe construction.
 - Whether "may contact you" is adequate disclosure of the **nature** of the
   communications, or whether it needs to enumerate call/text/email.
 
@@ -112,9 +131,12 @@ stays true either way; "we'll text you your guide" would be false today.
 
 ### 6. Consent versioning — confirm the record is what's wanted
 
-`CONSENT_VERSION` (currently `2026-09-08.guide-v1`) is written to each
-contact's `consent_version` field alongside `consent_at`, so any contact traces
-back to the exact wording on screen at submit.
+`CONSENT_VERSION` (currently `2026-09-09.guide-v2`, bumped from
+`2026-09-08.guide-v1` when phone was dropped) is written to each contact's
+`consent_version` field alongside `consent_at`, so any contact traces back to
+the exact wording on screen at submit. Both versions are now in the field
+across the contact base, which is the mechanism working as intended rather than
+a problem.
 
 Confirm this record is what counsel would want to produce if a send were ever
 challenged, and whether the **full disclosure text** needs archiving rather
@@ -134,10 +156,11 @@ processors it names, and the file that proves each:
 | GoHighLevel | CRM, email delivery | `src/lib/crm/ghl.ts` |
 | Meta | Pixel + Conversions API (email hashed) | `src/lib/meta/capi.ts` |
 | Google | GA4 + Tag Manager (behavioural, IP) | `src/components/analytics/Tags.tsx` |
+| Microsoft | Clarity — heatmaps and **session recording** | `src/components/analytics/Clarity.tsx` |
 | Vercel | Hosting, server logs | — |
 | Upstash Redis | Rate limiting (IP, short TTL) | `src/lib/rateLimit.ts` |
 
-All five are named on the page, so the list is complete as far as the code
+All six are named on the page, so the list is complete as far as the code
 goes. One thing for counsel:
 
 - Whether a **Data Processing Agreement** is needed with each. Note the Upstash
@@ -162,6 +185,36 @@ counsel specifically:
   account is linked. If either changes, this section needs revisiting — it
   moves the processing from analytics into advertising, which is what
   `ad_user_data` and `ad_personalization` govern.
+
+**Microsoft Clarity (project `yff7ashiza`) is live**, and it is the one
+processor here that does **session replay** — mouse movement, scrolling, taps,
+and a replayable reconstruction of the visit.
+
+It is installed **inside the GTM container**, not by this codebase. Confirmed
+in a browser rather than assumed: the tag loads as
+`clarity.ms/tag/yff7ashiza?ref=gtm`. A code-based install was written on
+2026-09-09 and removed the same day once that was found, because two installs
+means two recorders. See the note at the foot of `src/lib/analytics/ids.ts`.
+
+Three things for counsel, and the second is the one that matters:
+
+- **Text typed into forms is masked by Clarity's default.** Worth confirming
+  it has not been switched off in the Clarity dashboard, because the contact
+  form carries free text someone may have written about a sick animal, and the
+  capture forms carry names and email addresses. None of that belongs in a
+  replay.
+- **It is NOT gated on this site's consent state.** Measured: it loaded on a
+  fresh page view with `coco_consent_v1` set to `analytics:false`. Because the
+  tag lives in GTM, our own gate cannot reach it. So a visitor who declines
+  analytics is still recorded.
+
+  That is the sharpest edge of the default-granted posture. Today nothing can
+  decline, since no banner exists — but it means **gating Clarity is part of
+  the cookie-banner job, and it has to be done in GTM** (Consent Mode, or a
+  trigger condition on the tag), not in this repo.
+- Session replay is the processing most likely to need explicit disclosure
+  under EU/UK rules, which reinforces the existing constraint: do not send
+  EEA/UK traffic until the banner ships.
 
 ### 8. Email address in the disclosures
 
