@@ -21,10 +21,29 @@ const securityHeaders = [
     `http://coolstuffwithcoco.com` link can't be intercepted before Vercel's
     redirect fires.
 
-    `includeSubDomains` is on, and that is a real commitment: it applies to
-    `mail.coolstuffwithcoco.com` (the sending domain) and any future subdomain,
-    all of which must then serve HTTPS. They do — everything is behind Vercel
-    or GHL, both HTTPS-only.
+    `includeSubDomains` is on, and that is a real commitment — but measure
+    what it actually reaches before trusting it. Measured 2026-09-10:
+
+      www.coolstuffwithcoco.com  ->  max-age=300; includeSubDomains  (ours)
+      coolstuffwithcoco.com      ->  max-age=63072000                (Vercel's,
+                                     on the 308 to www, NO includeSubDomains)
+
+    So this policy is scoped to `*.www.` today and does NOT reach the sibling
+    `mail.coolstuffwithcoco.com`. The earlier version of this comment claimed
+    it did, and that the sending subdomain was all-HTTPS anyway. Both were
+    wrong.
+
+    The sending subdomain is NOT all-HTTPS. Mail goes out through Mailgun, and
+    its tracking host `email.mail.coolstuffwithcoco.com` is serving `http`
+    with no certificate — `https://` on that host fails the TLS name check.
+    Every unsubscribe and click link in every delivered email is a plain-http
+    URL on a subdomain of this brand.
+
+    Which is the whole hazard: a policy that DID cover it would force-upgrade
+    those links into a hard TLS failure, in emails that stay in inboxes for
+    years, with no way to withdraw the header. Flip Mailgun's tracking
+    protocol to HTTPS first — the measurements and the steps are in
+    docs/emails/README.md.
 
     NOT preloaded. Getting on the HSTS preload list is a manual submission and
     effectively permanent, which is the wrong shape of decision for a site
@@ -37,12 +56,15 @@ const securityHeaders = [
     THE BROWSER, so a max-age you regret cannot be withdrawn — shortening the
     header only helps visitors who come back and get the new one. Anyone who
     already has the old value keeps it for its full term. A year of that is a
-    year of no plain-HTTP anything on any subdomain, including
+    year of no plain-HTTP anything on any subdomain the policy reaches —
+    which, once this header ships on the apex, includes
     `mail.coolstuffwithcoco.com`.
 
     So: the standard ramp, and it is the only reversible order.
 
       300           <- HERE. Confirm every subdomain serves HTTPS.
+                       As of 2026-09-10 that check FAILS: Mailgun's tracking
+                       host is http-only. See above. Fix it, then ramp.
       86400         <- a day. Leave it a day.
       31536000      <- a year. Only once you are sure.
 
@@ -96,9 +118,68 @@ const securityHeaders = [
   },
 ];
 
+/*
+  SHORT LINKS FOR THE GUIDE PDFs
+  -----------------------------------------------------------------------------
+  The delivery emails carry a "Button not working? Paste this into your
+  browser:" line, and what it showed was
+
+    assets.cdn.filesafe.space/…/6aa0201b360a619b9fc92cc3.pdf
+
+  which is not pasteable. The ellipsis is literal — the line invited someone to
+  copy a URL that cannot resolve. Showing the full CDN URL instead would be
+  pasteable and 96 characters of opaque hash.
+
+  So: one short branded URL per guide, which is readable, actually pasteable,
+  and the same string in the button and in the fallback line. It also means the
+  emails no longer name the CDN id at all — if a guide is re-uploaded, this is
+  the only place that changes.
+
+  `permanent: false` (307) on purpose. A 308 is cached by the browser
+  indefinitely, and the whole point of this indirection is that the
+  destination is expected to change.
+*/
+/*
+  The fallbacks are not laziness and they are not secrets. These exact URLs are
+  already printed in the delivery emails, and the whole job of /g/ is to be the
+  one link that always resolves.
+
+  An earlier version of this threw when the env var was missing, on the theory
+  that a silent 404 in delivered mail is worse than a loud build failure. That
+  was the wrong call: it makes the entire site's deploy depend on a variable
+  that only two redirects need, so a missing value in the Vercel project would
+  take down the whole site rather than one path. Env wins when set; otherwise
+  these.
+
+  If a guide is re-uploaded and gets a new media id, update BOTH here and
+  NEXT_PUBLIC_GUIDE_*_URL, or set only the env var and delete the fallback.
+*/
+const GUIDE_REDIRECTS = [
+  {
+    source: "/g/decode",
+    env: "NEXT_PUBLIC_GUIDE_DECODE_URL",
+    fallback:
+      "https://assets.cdn.filesafe.space/xqC9nSOeygEkT3p5nUi3/media/6aa0201b360a619b9fc92cc3.pdf",
+  },
+  {
+    source: "/g/vetbill",
+    env: "NEXT_PUBLIC_GUIDE_VETBILL_URL",
+    fallback:
+      "https://assets.cdn.filesafe.space/xqC9nSOeygEkT3p5nUi3/media/6aa0201b641597c752ae35e7.pdf",
+  },
+] as const;
+
 const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+
+  async redirects() {
+    return GUIDE_REDIRECTS.map(({ source, env, fallback }) => ({
+      source,
+      destination: process.env[env] || fallback,
+      permanent: false,
+    }));
   },
 };
 
