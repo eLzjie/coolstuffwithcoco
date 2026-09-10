@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { Fragment, useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform, useReducedMotion } from "motion/react";
 import { BrandImage } from "@/components/brand/BrandImage";
@@ -8,6 +8,52 @@ import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Ball, Bone, Paw } from "@/components/brand/Icons";
 import { useIsNarrow } from "@/lib/useIsNarrow";
 import { usePointerTilt } from "@/lib/usePointerTilt";
+
+/**
+ * Which home arm's words to use. The scene, the motion and the LCP handling
+ * are identical either way — only the copy differs, which is the whole point:
+ * if B wins, the 3D stage is not a variable in the result.
+ */
+export type HomeArm = "a" | "b";
+
+/*
+  `headline` is an array because it is set as deliberate ragged lines, not
+  wrapped. Both arms are three lines, so the block is the same height in both
+  and the fold sits in the same place - nothing to re-measure.
+*/
+const HERO_COPY: Record<
+  HomeArm,
+  { headline: readonly string[]; echo: string; lead: string }
+> = {
+  a: {
+    headline: ["Your dog is", "telling you", "something."],
+    echo: "Most owners miss it.",
+    lead: "I'm Coco. My person writes down the things we work out together, and gives them away.",
+  },
+  /*
+    B leads with the introduction instead of the insight. The home page is
+    becoming Coco's catch-all - guides now, products and a gallery later - and
+    a page that opens by naming the problem only works while the problem is
+    the only thing on it.
+  */
+  b: {
+    /*
+      Split at 10/8/8 characters, not at the natural phrase breaks.
+
+      "Hello," / "I'm Coco" / "the Frenchie" reads better on the page but
+      wrapped to FOUR lines at 1440px — the left hero column fits about 11
+      characters at `t-hero`, so "the Frenchie" broke and left "the" stranded
+      on a line by itself. Every line here is inside that budget, which keeps
+      the block three lines at both 390 and 1440 and the same height as arm A.
+
+      If this copy changes, count the characters. The longest line arm A ships
+      is "telling you" at 11.
+    */
+    headline: ["Hello, I'm", "Coco the", "Frenchie"],
+    echo: "This is everything I know.",
+    lead: "Body language, vet bills, the weird things dogs do. My person writes down what we work out together, and shares it with fellow furparents!",
+  },
+};
 
 /**
  * Direction A — "The look", staged in 3D.
@@ -38,7 +84,8 @@ import { usePointerTilt } from "@/lib/usePointerTilt";
  * The h1 stays OUT of the 3D stack. It's the LCP element and must be readable
  * before anything moves — see the note at the element.
  */
-export function Hero() {
+export function Hero({ arm = "a" }: { arm?: HomeArm }) {
+  const copy = HERO_COPY[arm];
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const narrow = useIsNarrow();
@@ -183,7 +230,13 @@ export function Hero() {
         id="topbar"
         className="rise rise-1 shell relative z-20 flex items-center justify-between py-6"
       >
-        <BrandLockup href="/" />
+        {/*
+          The href follows the arm. Pointing it at "/" from /b would walk the
+          visitor out of the arm they were sent to and into a page whose guide
+          buttons go to A — a silent leak that would show up as B
+          underperforming for no reason anyone could see.
+        */}
+        <BrandLockup href={arm === "b" ? "/b" : "/"} />
         <Link href="#guides" className="btn-coral btn-coral-sm">
           Free guides
         </Link>
@@ -210,11 +263,12 @@ export function Hero() {
           style={{ y: wordsY }}
           className="t-hero relative z-10 text-ink lg:col-start-1"
         >
-          Your dog is
-          <br />
-          telling you
-          <br />
-          something.
+          {copy.headline.map((line, i) => (
+            <Fragment key={line}>
+              {i > 0 && <br />}
+              {line}
+            </Fragment>
+          ))}
         </motion.h1>
 
         {/*
@@ -280,10 +334,9 @@ export function Hero() {
         {/* Right column — the turn */}
         <div className="rise rise-3 relative z-10 lg:col-start-3 lg:justify-self-end lg:text-right">
           <motion.div style={{ y: wordsY }}>
-            <p className="t-hero-echo text-ink lg:ml-auto">Most owners miss it.</p>
+            <p className="t-hero-echo text-ink lg:ml-auto">{copy.echo}</p>
             <p className="t-lead mt-5 text-ink-muted lg:ml-auto lg:text-right">
-              I&apos;m Coco. My person writes down the things we work out
-              together, and gives them away.
+              {copy.lead}
             </p>
           </motion.div>
         </div>

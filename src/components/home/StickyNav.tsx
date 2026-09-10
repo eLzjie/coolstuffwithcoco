@@ -25,7 +25,8 @@ import { useAllOutOfView } from "@/lib/useOutOfView";
  * The funnel plan is explicit: no top nav on `/decode` or `/vetbill`, no
  * outbound links competing with the form, and the logo there is not even a
  * link. A persistent header offering a route somewhere else is the exact
- * thing those pages are built without. Home only.
+ * thing those pages are built without. Home only — which now means `/` and
+ * `/b`, the two home arms, and still nothing else.
  *
  * ---------------------------------------------------------------------------
  * IT IS THE SAME BAR, FOLLOWING YOU DOWN
@@ -66,9 +67,13 @@ export function StickyNav() {
     >
       <div className="shell flex items-center justify-between gap-4 py-2.5">
         {/*
-          Not a link. We are already on `/`, so a logo linking home would be a
-          self-link that does nothing — and `BrandLockup`'s own note records
-          that a mismatched label on that link tripped an axe rule once.
+          Not a link. We are already on the home page — `/` or `/b` — so a
+          logo linking home would be a self-link that does nothing, and
+          `BrandLockup`'s own note records that a mismatched label on that
+          link tripped an axe rule once.
+
+          It also means this bar needs no arm awareness: no href to get wrong,
+          and `#guides` resolves in the page it is already on.
         */}
         <BrandLockup />
 

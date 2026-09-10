@@ -5,8 +5,14 @@ type Props = {
   /**
    * Wrap in a link home. Off for the paid landing pages, where nothing may
    * compete with the form.
+   *
+   * The union is narrow on purpose: this lockup may link HOME or nowhere, and
+   * never to an arbitrary route. `/b` is in it because it is the other home
+   * arm — a lockup on `/b` linking to `/` would walk the visitor out of the
+   * arm they were sent to. Widening this to `string` would let the next
+   * caller point the logo anywhere and lose the guarantee.
    */
-  href?: "/" | false;
+  href?: "/" | "/b" | false;
   /** Renders light, for the ink footer. */
   onInk?: boolean;
   className?: string;
