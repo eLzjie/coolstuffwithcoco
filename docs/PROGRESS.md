@@ -1435,3 +1435,100 @@ but deliberately **not committed**:
 - Does the postal address need `Ste 102 PMB 457`? Form 1583 lists the PMB.
 - Mailgun's account name is `The Chaseyrita, LLC` - possibly the legal entity
   `docs/LEGAL-REVIEW.md` is waiting on.
+
+---
+
+# Session 8 - 2026-09-10 (branch `staging`)
+
+## `/b` — a home arm, because the B guide pages had no traffic
+
+Eli: *"we're not getting any traffic with the 2nd pages."* Structural, not a
+measurement gap: every route into a guide goes through the home page and every
+button there pointed at A, so `/decode/b` and `/vetbill/b` had been live for
+days unable to win a test they were never entered in.
+
+`/b` is a second home page whose guide buttons go to the B arms. Noindex, no
+canonical, absent from `sitemap.ts` — same call as the guide arms and for the
+same reason. Full reasoning in `docs/SPLIT-TEST.md`, including the honest
+caveat that three variables move at once so the home-arm comparison will not
+be attributable. It is plumbing; the guide-level test is the experiment.
+
+Hero copy for B is Coco introducing herself ("Hello, I'm Coco the Frenchie")
+rather than naming the problem, because the home page is becoming her
+catch-all and a problem-led hook only works while the guides are the only
+thing on it.
+
+## Built as props, not duplicates
+
+- `Hero` takes `arm`, selecting from a module-local `HERO_COPY`. The 3D scene,
+  the motion and the LCP handling are byte-identical between arms, so the hero
+  staging is not a variable in the result.
+- `GuideSplit` takes `arm` and its two halves became local components, which
+  is what lets the order flip. `reveal-left`/`reveal-right` are now PASSED IN
+  rather than baked in — they follow position, not identity, or both halves
+  would slide the same way once Vet Bill leads.
+- `StickyNav` needed no code change. It already is the floating CTA.
+- `BrandLockup`'s `href` union widened from `"/" | false` to
+  `"/" | "/b" | false`. Deliberately still a union: the lockup may link HOME
+  or nowhere and never anywhere else. `/b` is in it because a lockup on `/b`
+  pointing at `/` walks the visitor out of the arm they were sent to — a
+  silent leak that would have read as B underperforming for no visible reason.
+
+## The share card has Coco in it now
+
+Chase: *"Sharing for this link should be better."*
+
+`opengraph-image.tsx` said Coco was left out because `ImageResponse` would
+have to fetch her over HTTP at render time, and a slow or failed fetch gives a
+broken card. Right about the failure mode, wrong that it was the only route:
+the PNG is read off disk at module scope and inlined as a data URI, so there
+is no request to fail. A missing file breaks the build, which is where you
+want to find out.
+
+Two things measured rather than eyeballed, both of which corrected something:
+
+- **The h1 wrapped to four lines at 1440px.** "Hello," / "I'm Coco" /
+  "the Frenchie" reads better but the left hero column fits about 11
+  characters at `t-hero`, so "the Frenchie" broke and stranded "the" alone.
+  Re-split to 10/8/8 — same words, three lines at both 390 and 1440.
+- **A measurement of the card was wrong before it was right.** The first
+  pass reported Coco clipped flush against the right border with her ear in
+  the accent bar. The detector was matching the full-width coral bar, not
+  Coco; she actually had 69px of clearance. The absolute positioning was fine.
+  It was still replaced with flexbox, because that is what `og.tsx`'s own
+  docblock mandates and because flex RESERVES her width so type can never run
+  under her — robustness, not a bug.
+
+## Control untouched, and verified that way
+
+Diffed the prerendered `/` markup before and after by stashing the change,
+building, and comparing `.next/server/app/index.html` with scripts and
+preloads stripped. Identical except the `og:image` cache-busting hash, which
+changed because the card changed.
+
+The one deliberate change to the control: `GuideSplit` now sends `page_path`
+with `view_content` on both arms, because `/` and `/b` otherwise fire the
+identical event and GA4 could not tell the home arms apart.
+
+## Test state
+
+`tsc --noEmit` clean, `eslint` clean, `next build` clean. `/b` prerenders
+static, carries `noindex`, is absent from the sitemap, renders the Vet Bill
+half first and links to `/decode/b` and `/vetbill/b` — all asserted against
+the built HTML. Screenshotted at 390x844 and 1440x900. No GHL sends.
+
+## Still open
+
+Unchanged from Session 7, plus:
+
+- **SEO scope was deliberately narrowed to the home share card.** The
+  `/decode` and `/vetbill` cards are still plain generated type, and the
+  titles/descriptions pass and the Article/FAQ structured data were both
+  declined for now. `ogImage()` takes `art` already, so the guide cards are
+  a two-line change each when wanted.
+- **"furparents" vs Chase's audience note.** He asked to "speak to both
+  audiences" and called the site "somewhat feminine"; the B hero copy is
+  warmer, not less. Eli's call, made knowingly.
+- The three `og*` manifest slots remain `ready: false` and unreferenced. The
+  `opengraph-image.tsx` files supersede them; flipping those flags still does
+  nothing on its own.

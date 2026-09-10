@@ -14,6 +14,11 @@ just two pages.
 | B (variant) | `/decode/b` | **no** | **no** | 430 |
 | A (control) | `/vetbill` | yes | yes | 1,727 |
 | B (variant) | `/vetbill/b` | **no** | **no** | 910 |
+| A (control) | `/` | yes | yes | — |
+| B (feeder) | `/b` | **no** | **no** | — |
+
+The home arm was added 2026-09-10 and is a different kind of thing — see
+**The home arm is plumbing, not a test** below.
 
 **A is the page we built through August and September:** long, FAQ-rich,
 SEO-optimised, form at the very bottom. On `/decode` the email field sits
@@ -74,6 +79,79 @@ for the quiz.
 bubblegum pink, and on B it is now the most prominent pink thing on the page,
 right beside the headline. Changing the cover is a brand decision, not a code
 one. Flagged, not done.
+
+---
+
+## The home arm is plumbing, not a test
+
+Added 2026-09-10. Eli:
+
+> we're not getting any traffic with the 2nd pages
+
+That was the whole problem, and it was structural rather than a measurement
+gap. Every route into a guide goes through the home page, and every button
+there pointed at the A arm. `/decode/b` and `/vetbill/b` had been live for
+days and could not win a test they were never entered in.
+
+`/b` is a second home page whose guide buttons go to `/decode/b` and
+`/vetbill/b`. Its job is to feed the B arm. It is **not** itself a clean
+experiment, and that is a deliberate trade rather than an oversight:
+
+| | `/` | `/b` |
+|---|---|---|
+| Hero headline | "Your dog is telling you something." | "Hello, I'm Coco the Frenchie" |
+| Hero echo | "Most owners miss it." | "This is everything I know." |
+| Guide order | Decode, then Vet Bill | **Vet Bill, then Decode** |
+| Guide links | `/decode`, `/vetbill` | `/decode/b`, `/vetbill/b` |
+| Everything below `GuideSplit` | identical | identical |
+
+Three variables move at once, so **if `/b` outperforms `/` it will not say
+which of the three did it.** Acceptable, because no decision hangs on the
+home-page comparison — the decision is which *guide* page converts better,
+and that test is still clean. Read the home arms as traffic plumbing and the
+guide arms as the experiment.
+
+### Why the hero copy changed at all
+
+The home page is becoming Coco's catch-all — guides now, products and a
+content gallery later. A page that opens by naming the problem
+("your dog is telling you something") works while the guides are the only
+thing on it and stops working the moment they aren't. Chase's note about the
+share preview is the same pressure from the other direction.
+
+`/` keeps the old headline until B is judged. The 3D scene, the motion and the
+LCP handling are byte-identical between arms — only the words differ, so the
+hero staging is not a variable in the result.
+
+### Vet Bill first, and it is not a neutral reorder
+
+`GuideSplit`'s own docblock argues the two halves are shaped differently
+because "curiosity and fear feel different". Leading with the bill inverts
+that order. On cold paid traffic the bill is probably the stronger hook, which
+is why Chase asked for it — but it means `/b` opens on fear, and
+`/vetbill/b` was already flagged in this file as the pure-fear arm.
+
+### The nav is the above-fold CTA — there is no `FloatingCta` on either home arm
+
+`/decode/b` uses `FloatingCta` because it has exactly one ask. A home page has
+two guides, so a single floating button would have to silently pick one, and
+"which one" is the decision the page exists to help with. `StickyNav` already
+solves it: the Hero renders the bar at `#topbar`, the sticky copy takes over
+when that scrolls away, and its button goes to `#guides`.
+
+Worth being precise, because it was briefly written down wrong: **the guide
+CTAs are below the fold on both home arms.** The hero is `min-h-[78svh]`, so
+the only route reachable without scrolling is the nav button. That is what
+"everything above the fold" means on a home page, as distinct from a landing
+page where it means the form.
+
+### One change to the control, and why it was worth it
+
+`GuideSplit` now sends `page_path` with its `view_content` events on **both**
+arms. `/` and `/b` otherwise fire the identical event with the identical lead
+magnet, so nothing in GA4 could tell the two home arms apart. This changes
+what the control reports but not how it behaves, and without it the home arms
+are unreadable.
 
 ---
 
